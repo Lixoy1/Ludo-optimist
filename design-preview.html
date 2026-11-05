@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b13">
+<title>OPTIMIST LUDO — Dice & Game UI</title>
+<style>
+:root{color-scheme:dark;--bg:#080a12;--panel:#121625;--line:#283047;--gold:#f6d58b;--gold2:#b98538;--cyan:#55dcff;--muted:#929bb4;--red:#ff5668;--green:#55e39e;--blue:#5a9dff;--violet:#a58aff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#23234b 0,transparent 42%),radial-gradient(ellipse at 100% 70%,#122e39 0,transparent 34%),var(--bg);color:#f8f7ff;font:500 14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:22px 18px 150px}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.shell{max-width:1120px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:28px}.brand{display:flex;gap:12px;align-items:center}.sigil{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;color:#11131c;font-size:25px;background:linear-gradient(140deg,#fff0bd,#d69b50 55%,#8b5122);box-shadow:0 0 28px #e1ae6540,inset 0 1px 1px #fff}.brand strong{display:block;letter-spacing:.13em;font-size:14px}.brand small,.muted{color:var(--muted)}.brand small{font-size:9px;letter-spacing:.21em}.top-right{display:flex;align-items:center;gap:10px}.pill{border:1px solid #46516d;background:#121827c9;border-radius:30px;padding:8px 13px;color:#c5cee2;font-size:11px}.online{width:7px;height:7px;border-radius:50%;background:#58e69d;display:inline-block;box-shadow:0 0 12px #58e69d;margin-right:6px}
+.hero{text-align:center;margin:8px auto 24px}.eyebrow{font-size:10px;letter-spacing:.28em;color:var(--gold);font-weight:800}.hero h1{font-size:clamp(27px,4vw,42px);line-height:1.05;letter-spacing:-.045em;margin:8px 0}.hero h1 span{background:linear-gradient(100deg,#fff4d5 0,#f0c47a 45%,#9a78ff 100%);background-clip:text;color:transparent}.hero p{color:#9ea7be;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px;align-items:start}.table-card,.side-card{border:1px solid #ffffff18;background:linear-gradient(145deg,#171c2cdd,#0f1320e8);border-radius:24px;box-shadow:0 18px 50px #0007,inset 0 1px #ffffff0c}.table-card{padding:clamp(12px,2vw,22px)}.table-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.table-head h2{font-size:13px;letter-spacing:.1em;margin:0}.table-head small{color:var(--muted)}
+.board{width:min(100%,620px);aspect-ratio:1;margin:auto;position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#292f47,#121a2b 55%,#1d2435);padding:3.5%;box-shadow:0 22px 45px #0008,inset 0 0 0 1px #ffffff24}
+.board:before{content:"";position:absolute;inset:3.5%;border:1px solid #f6d58b40;border-radius:12px;pointer-events:none}
+.gridboard{position:relative;width:100%;height:100%;display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(15,1fr);gap:1px;background:#b8c1d022;border-radius:11px;overflow:hidden}
+.cell{background:#e9e5dc;position:relative;display:grid;place-items:center;min-width:0;min-height:0}
+.cell.path{background:linear-gradient(145deg,#fffdf6,#d9d5cd)}.cell.safe:after{content:"✦";font-size:clamp(8px,1.5vw,14px);color:#b58b42;text-shadow:0 1px #fff}
+.home{position:absolute;width:39%;height:39%;border-radius:13px;padding:8%;display:grid;place-items:center;box-shadow:inset 0 0 0 1px #ffffff5c,inset 0 0 30px #0002}
+.home.red{left:5%;top:5%;background:linear-gradient(145deg,#ff7587,#9d233f)}.home.blue{right:5%;top:5%;background:linear-gradient(145deg,#77b9ff,#244ea4)}.home.green{left:5%;bottom:5%;background:linear-gradient(145deg,#69edb0,#147b65)}.home.yellow{right:5%;bottom:5%;background:linear-gradient(145deg,#ffe58c,#ae7624)}
+.base{width:100%;height:100%;border-radius:12px;background:#11182b2b;box-shadow:inset 0 2px 12px #0003;display:grid;grid-template-columns:1fr 1fr;place-items:center;padding:12%}
+.token{width:65%;aspect-ratio:1;border-radius:50%;position:relative;border:2px solid #ffffffd9;box-shadow:0 3px 0 #0006,0 0 10px #ffffff70,inset 0 -3px 6px #0003}
+.token:after{content:"";position:absolute;inset:22%;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,#ffffff62 45%,#ffffff10 75%)}
+.red .token{background:linear-gradient(145deg,#ffb3ba,#e72f50)}.blue .token{background:linear-gradient(145deg,#c2e8ff,#367cf0)}.green .token{background:linear-gradient(145deg,#b9ffde,#22a876)}.yellow .token{background:linear-gradient(145deg,#fff3bd,#daa33c)}
+.track{position:absolute;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,1fr);inset:0;pointer-events:none}
+.track span{border-radius:2px;background:#f3f0e9;box-shadow:inset 0 0 0 1px #747b8b35}
+.track .redlane{background:#f7a1ad}.track .bluelane{background:#9fc8ff}.track .greenlane{background:#9ce8c8}.track .yellowlane{background:#f5d27e}
+.center-mark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:17%;aspect-ratio:1;display:grid;place-items:center;background:linear-gradient(145deg,#fff1c9,#d5a04b 65%,#8e5e28);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);filter:drop-shadow(0 0 15px #e8bd6970);color:#211a16;font-weight:1000;font-size:clamp(10px,2vw,19px);letter-spacing:-.08em}
+.pawns{position:absolute;inset:0;pointer-events:none}.pawn{position:absolute;width:5.3%;aspect-ratio:1;border-radius:50%;border:2px solid #fff;box-shadow:0 3px 8px #0008,0 0 12px currentColor}.pawn.red{background:#ff5267;color:#ff5267;left:46%;top:8%}.pawn.blue{background:#58a4ff;color:#58a4ff;right:8%;top:46%}.pawn.green{background:#4ce0a0;color:#4ce0a0;left:46%;bottom:8%}.pawn.yellow{background:#f2c45b;color:#f2c45b;left:8%;top:46%}
+.turn{display:flex;align-items:center;gap:12px;margin:17px 0 0;padding:12px 14px;border-radius:15px;border:1px solid #ffffff13;background:#0b1020}
+.turn-avatar{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#c7ff79,#228c57);color:#07120c;font-size:20px;box-shadow:0 0 15px #55e39e50}
+.turn strong{font-size:12px}.turn small{display:block;color:var(--muted);font-size:10px}.turn .right{margin-left:auto;color:#66e7a8;font-size:10px;letter-spacing:.1em}
+.side{display:grid;gap:13px}.side-card{padding:17px}.side-card h3{margin:0 0 12px;font-size:12px;letter-spacing:.1em}.player{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #ffffff0d}.player:last-child{border:0}.avatar{width:35px;height:35px;border-radius:12px;display:grid;place-items:center;font-size:19px}.avatar.opt{background:linear-gradient(145deg,#b7ff78,#277951)}.avatar.cat{background:linear-gradient(145deg,#d9c7ff,#7156bd)}.avatar.detective{background:linear-gradient(145deg,#ffadb8,#9b3651)}.avatar.natalie{background:linear-gradient(145deg,#9fdcff,#285d9b)}.player b{font-size:11px}.player small{display:block;color:var(--muted);font-size:10px}.player .pts{margin-left:auto;font-variant-numeric:tabular-nums;color:#f5d78e;font-weight:800}
+.theme-row{display:flex;gap:7px;flex-wrap:wrap}.theme{border:1px solid #ffffff18;background:#151c2d;border-radius:12px;padding:8px 10px;font-size:10px;color:#aeb8d0}.theme.active{border-color:#e4bf79;color:#ffe4ad;background:#392b22}.side-note{color:#8e9ab3;font-size:10px;line-height:1.55;margin:12px 0 0}
+.dock{position:fixed;z-index:5;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(620px,calc(100% - 24px));padding:12px 14px;border:1px solid #f6d58b55;border-radius:22px;background:linear-gradient(115deg,#171c2ded,#111629f5 65%,#1c1730f2);box-shadow:0 16px 55px #000b,0 0 35px #d1a75c1a,inset 0 1px #fff2;display:flex;align-items:center;gap:14px;backdrop-filter:blur(18px)}
+.dice-wrap{width:90px;flex:0 0 90px;display:grid;place-items:center;perspective:700px}
+.die{width:62px;height:62px;position:relative;transform-style:preserve-3d;transform:rotateX(-18deg) rotateY(24deg);transition:transform .72s cubic-bezier(.16,.84,.22,1)}
+.face{position:absolute;inset:0;border-radius:13px;background:linear-gradient(145deg,#fffef9,#e6dfd0);border:1px solid #fff;box-shadow:inset 2px 2px 6px #fff,inset -3px -5px 8px #aaa29a,0 0 0 1px #b78b4f;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:10px;gap:3px;backface-visibility:hidden}
+.face.front{transform:translateZ(31px)}.face.back{transform:rotateY(180deg) translateZ(31px)}.face.right{transform:rotateY(90deg) translateZ(31px)}.face.left{transform:rotateY(-90deg) translateZ(31px)}.face.top{transform:rotateX(90deg) translateZ(31px)}.face.bottom{transform:rotateX(-90deg) translateZ(31px)}
+.pip{align-self:center;justify-self:center;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#e2ad55,#85501b 78%);box-shadow:inset 0 1px 2px #fff9,0 1px 2px #5c3b18}
+.face[data-value="1"] .pip:nth-child(5),.face[data-value="2"] .pip:nth-child(1),.face[data-value="2"] .pip:nth-child(9),.face[data-value="3"] .pip:nth-child(1),.face[data-value="3"] .pip:nth-child(5),.face[data-value="3"] .pip:nth-child(9),.face[data-value="4"] .pip:nth-child(1),.face[data-value="4"] .pip:nth-child(3),.face[data-value="4"] .pip:nth-child(7),.face[data-value="4"] .pip:nth-child(9),.face[data-value="5"] .pip:nth-child(1),.face[data-value="5"] .pip:nth-child(3),.face[data-value="5"] .pip:nth-child(5),.face[data-value="5"] .pip:nth-child(7),.face[data-value="5"] .pip:nth-child(9),.face[data-value="6"] .pip:nth-child(1),.face[data-value="6"] .pip:nth-child(3),.face[data-value="6"] .pip:nth-child(4),.face[data-value="6"] .pip:nth-child(6),.face[data-value="6"] .pip:nth-child(7),.face[data-value="6"] .pip:nth-child(9){opacity:1}.pip{opacity:0}
+.dock-copy{min-width:0;flex:1}.dock-kicker{font-size:9px;letter-spacing:.2em;color:var(--gold);font-weight:900}.dock-copy strong{font-size:13px;display:block;white-space:nowrap}.dock-copy small{display:block;color:var(--muted);font-size:10px}
+.roll{border:1px solid #ffebbb;border-radius:15px;padding:14px 19px;min-width:170px;background:linear-gradient(145deg,#fff1c5 0,#efc071 42%,#b87931 100%);color:#24180e;font-size:12px;font-weight:1000;letter-spacing:.09em;text-shadow:0 1px #fff8;box-shadow:0 6px 0 #74451e,0 12px 23px #0008,inset 0 1px 2px #fff;transition:transform .12s,filter .15s}
+.roll:active{transform:translateY(4px);box-shadow:0 2px 0 #74451e,0 7px 14px #0008}.roll:disabled{filter:grayscale(.5);opacity:.5;cursor:wait}.roll .arrow{font-size:16px;margin-left:7px}
+@keyframes rollFX{0%{transform:rotateX(-18deg) rotateY(24deg) translateY(0)}25%{transform:rotateX(155deg) rotateY(225deg) translateY(-10px)}50%{transform:rotateX(300deg) rotateY(395deg) translateY(0)}75%{transform:rotateX(470deg) rotateY(585deg) translateY(-7px)}100%{transform:rotateX(702deg) rotateY(744deg) translateY(0)}}
+.die.rolling{animation:rollFX .85s cubic-bezier(.2,.8,.2,1)}
+.toast{position:fixed;top:18px;left:50%;transform:translate(-50%,-12px);opacity:0;pointer-events:none;padding:10px 15px;border-radius:30px;background:#242c40;border:1px solid #f6d58b66;color:#ffedc7;font-size:11px;transition:.25s;z-index:10}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:820px){body{padding:15px 12px 135px}.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.board{width:min(100%,550px)}.hero{margin:8px auto 18px}}
+@media(max-width:520px){.top{margin-bottom:20px}.top-right .pill:first-child{display:none}.brand strong{font-size:12px}.brand small{font-size:8px}.sigil{width:38px;height:38px}.hero h1{font-size:29px}.hero p{font-size:11px}.side{grid-template-columns:1fr}.board{padding:2.8%}.home{border-radius:9px}.dock{gap:7px;padding:10px 9px;border-radius:18px}.dice-wrap{width:67px;flex-basis:67px}.die{transform:scale(.86) rotateX(-18deg) rotateY(24deg)}.face.front{transform:scale(.86) translateZ(31px)}.face.back{transform:scale(.86) rotateY(180deg) translateZ(31px)}.face.right{transform:scale(.86) rotateY(90deg) translateZ(31px)}.face.left{transform:scale(.86) rotateY(-90deg) translateZ(31px)}.face.top{transform:scale(.86) rotateX(90deg) translateZ(31px)}.face.bottom{transform:scale(.86) rotateX(-90deg) translateZ(31px)}.roll{min-width:120px;padding:13px 10px;font-size:10px}.dock-copy strong{font-size:11px}.dock-copy small{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top"><div class="brand"><div class="sigil">✦</div><div><strong>OPTIMIST <span style="color:#f2cd88">LUDO</span></strong><small>PLAY BRIGHT · MOVE SMART</small></div></div><div class="top-right"><span class="pill">CLASSIC · 4 PLAYERS</span><span class="pill"><i class="online"></i>ДЕМО-СТОЛ</span></div></header>
+<section class="hero"><div class="eyebrow">THE CLASSIC BOARD · REIMAGINED</div><h1>Твой ход. <span>Твоя история.</span></h1><p>Не просто бросай кубик — выходи на поле красиво.</p></section>
+<div class="layout">
+<section class="table-card"><div class="table-head"><h2>ИГРОВОЕ ПОЛЕ</h2><small>СТОЛ № 08 · CLASSIC</small></div>
+<div class="board"><div class="gridboard" id="gridboard"></div>
+<div class="home red"><div class="base"><i class="token"></i><i class="token"></i><i class="token"></i><i class="token"></i></div></div>
+<div class="home blue"><div class="base"><i class="token"></i><i class="token"></i><i class="token"></i><i class="token"></i></div></div>
+<div class="home green"><div class="base"><i class="token"></i><i class="token"></i><i class="token"></i><i class="token"></i></div></div>
+<div class="home yellow"><div class="base"><i class="token"></i><i class="token"></i><i class="token"></i><i class="token"></i></div></div>
+<div class="pawns"><i class="pawn red"></i><i class="pawn blue"></i><i class="pawn green"></i><i class="pawn yellow"></i></div>
+<div class="center-mark">O!</div></div>
+<div class="turn"><div class="turn-avatar">😎</div><div><strong>OPTIMIST · твой ход</strong><small>Шестёрка выведет фишку на старт</small></div><span class="right">● ТВОЙ ХОД</span></div>
+</section>
+<aside class="side">
+<section class="side-card"><h3>ИГРОКИ ЗА СТОЛОМ</h3>
+<div class="player"><div class="avatar opt">😎</div><div><b>OPTIMIST</b><small>Зелёный · ты</small></div><span class="pts">0 / 4</span></div>
+<div class="player"><div class="avatar cat">🐈‍⬛</div><div><b>CAT</b><small>Фиолетовый</small></div><span class="pts">0 / 4</span></div>
+<div class="player"><div class="avatar detective">🕵️</div><div><b>DETECTIVE</b><small>Красный</small></div><span class="pts">0 / 4</span></div>
+<div class="player"><div class="avatar natalie">🌙</div><div><b>NATALIE</b><small>Синий</small></div><span class="pts">0 / 4</span></div>
+</section>
+<section class="side-card"><h3>ТВОЯ ТЕМА</h3><div class="theme-row"><button class="theme active" data-theme="neon">NEON</button><button class="theme" data-theme="classic">CLASSIC</button><button class="theme" data-theme="elite">ELITE</button><button class="theme" data-theme="marble">MARBLE</button></div><p class="side-note">Тема доски меняется только у тебя. Персонажи и оформление фишек остаются видимыми всем игрокам.</p></section>
+<section class="side-card"><h3>ПРАВИЛА СТОЛА</h3><div class="player"><div class="avatar" style="background:#262f48">🎲</div><div><b>Классический режим</b><small>4 фишки · точный финиш</small></div></div><div class="player"><div class="avatar" style="background:#262f48">⚡</div><div><b>Бонус за шестёрку</b><small>Дополнительный бросок</small></div></div></section>
+</aside></div>
+</div>
+<div class="dock" role="region" aria-label="Кнопка броска кубика"><div class="dice-wrap"><div class="die" id="die"><div class="face front" data-value="5"></div><div class="face back" data-value="2"></div><div class="face right" data-value="3"></div><div class="face left" data-value="4"></div><div class="face top" data-value="6"></div><div class="face bottom" data-value="1"></div></div></div><div class="dock-copy"><span class="dock-kicker">OPTIMIST · YOUR MOVE</span><strong id="result">БРОСИТЬ КУБИК</strong><small id="hint">Коснись, чтобы сделать ход</small></div><button class="roll" id="roll">БРОСИТЬ <span class="arrow">↗</span></button></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const faces=document.querySelectorAll('.face');
+const pipMap={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+faces.forEach(face=>{for(let i=0;i<9;i++){const pip=document.createElement('i');pip.className='pip';face.append(pip)}});
+const die=document.getElementById('die'),roll=document.getElementById('roll'),result=document.getElementById('result'),hint=document.getElementById('hint'),toast=document.getElementById('toast');
+const orientations={1:'rotateX(90deg) rotateY(0deg)',2:'rotateX(0deg) rotateY(180deg)',3:'rotateX(0deg) rotateY(-90deg)',4:'rotateX(0deg) rotateY(90deg)',5:'rotateX(0deg) rotateY(0deg)',6:'rotateX(-90deg) rotateY(0deg)'};
+function showFace(value){faces.forEach(face=>{const active=pipMap[Number(face.dataset.value)]||[];face.querySelectorAll('.pip').forEach((pip,i)=>pip.style.opacity=active.includes(i)?'1':'0')})}
+function message(text){toast.textContent=text;toast.classList.add('show');clearTimeout(message.timer);message.timer=setTimeout(()=>toast.classList.remove('show'),1800)}
+showFace(5);
+roll.addEventListener('click',()=>{if(roll.disabled)return;roll.disabled=true;result.textContent='КУБИК В ДВИЖЕНИИ…';hint.textContent='Судьба хода решается';die.classList.remove('rolling');void die.offsetWidth;die.classList.add('rolling');const value=1+Math.floor(Math.random()*6);setTimeout(()=>{showFace(value);die.classList.remove('rolling');die.style.transform=orientations[value];result.textContent='ВЫПАЛО: '+value;hint.textContent=value===6?'Шестёрка! Тебе положен ещё бросок':'Ход за тобой — выбирай фишку';roll.disabled=false;message(value===6?'ШЕСТЁРКА! ЕЩЁ ОДИН БРОСОК':'Выпало '+value+' · твой ход')},850)});
+document.querySelectorAll('.theme').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.theme').forEach(x=>x.classList.toggle('active',x===btn));document.body.dataset.theme=btn.dataset.theme;const colors={neon:['#292f47','#121a2b','#1d2435'],classic:['#4b3b2c','#342719','#59422d'],elite:['#4a3a27','#211a17','#3d2a1c'],marble:['#525767','#242b3b','#41495c']};const c=colors[btn.dataset.theme];document.querySelector('.board').style.background='linear-gradient(135deg,'+c.join(',')+')';message('ТЕМА '+btn.dataset.theme.toUpperCase()+' ВКЛЮЧЕНА')}));
+const grid=document.getElementById('gridboard');for(let r=0;r<15;r++)for(let c=0;c<15;c++){const cell=document.createElement('span');cell.className='cell';const cross=(r>=6&&r<=8)||(c>=6&&c<=8);const outside=(r<6||r>8)&&(c<6||c>8);if(cross&&!outside){cell.classList.add('path');if((r===7&&(c===1||c===2||c===3||c===4||c===5||c===9||c===10||c===11||c===12||c===13))||(c===7&&(r===1||r===2||r===3||r===4||r===5||r===9||r===10||r===11||r===12||r===13)))cell.classList.add('safe')}grid.append(cell)}
+</script>
+</body>
+</html>
