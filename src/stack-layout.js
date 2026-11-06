@@ -4,12 +4,12 @@ export function getStackLayout(count, cellSize = 60) {
   if (count === 0) return { positions: [], hiddenCount: 0, scale: 1 };
   const patterns = {
     1: [[0, 0]],
-    2: [[-.22, 0], [.22, 0]],
-    3: [[0, -.22], [-.22, .22], [.22, .22]],
+    2: [[-.19, 0], [.19, 0]],
+    3: [[0, -.20], [-.20, .20], [.20, .20]],
     4: [[-.22, -.22], [.22, -.22], [-.22, .22], [.22, .22]],
   };
   const visible = Math.min(count, 4), offsets = patterns[visible];
-  const scale = visible === 1 ? 1 : visible === 2 ? .68 : visible === 3 ? .62 : .58;
+  const scale = visible === 1 ? 1 : visible === 2 ? .64 : visible === 3 ? .60 : .56;
   const positions = Array.from({ length: count }, (_, index) => {
     if (index >= visible) return { x: 0, y: 0, scale: 0, slot: index, visible: false };
     const [x, y] = offsets[index];

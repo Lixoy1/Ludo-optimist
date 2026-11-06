@@ -18,8 +18,8 @@ test('all 20 home-lane tiles match engine coordinates exactly',()=>{
  for(const theme of themes){const svg=asset(theme);for(const [color,config] of Object.entries(PLAYER_CONFIG))for(const [col,row] of config.lane){const tile=tileMarkup(svg,col,row);assert.ok(tile,`${theme}: missing ${color} lane cell ${col},${row}`);const {x,y}=gridToImage(col,row);assert.equal(tile[1],(x-19.2).toFixed(2));assert.equal(tile[2],(y-19.2).toFixed(2));}}
 });
 test('all 16 base wells align with the token spawn points',()=>{
- for(const theme of themes){const svg=asset(theme);for(const [color,points] of Object.entries(BASE_SLOT_POINTS))for(const [x,y] of points)assert.ok(svg.includes(`<circle cx="${x}" cy="${y}" r="13.2"`),`${theme}: misaligned ${color} base well ${x},${y}`);}
+ for(const theme of themes){const svg=asset(theme);for(const [color,points] of Object.entries(BASE_SLOT_POINTS))for(const [x,y] of points)assert.ok(svg.includes(`<circle cx="${x}" cy="${y}" r="18.5"`),`${theme}: misaligned ${color} base well ${x},${y}`);}
 });
 test('four finish wells align with FINISH_POINTS and four safe stars are marked',()=>{
- for(const theme of themes){const svg=asset(theme);for(const [x,y] of FINISH_POINTS)assert.ok(svg.includes(`<circle cx="${x}" cy="${y}" r="11"`));assert.equal((svg.match(/data-safe-index=/g)||[]).length,4);}
+ for(const theme of themes){const svg=asset(theme);for(const [x,y] of FINISH_POINTS)assert.ok(svg.includes(`<circle cx="${x}" cy="${y}" r="18.5"`));assert.equal((svg.match(/data-safe-index=/g)||[]).length,4);}
 });

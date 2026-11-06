@@ -10,9 +10,9 @@
 - Player yards: blue top-left, red top-right, green bottom-left, yellow bottom-right.
 - Safe indices: 0, 8, 13, 21, 26, 34, 39, 47; four starts use team colors, four additional cells have stars.
 ## Pawn sizing
-- Single pawn: 4.8% of stage width (0.9 route-tile diameter).
-- Two: 0.68 scale; three: 0.62; four: 0.58 in a 2×2 cluster.
-- Stack offsets: 0.22 of a logical cell; visible miniatures remain within the tile.
+- Single pawn: 5.3% of stage width (about 0.875 route-tile diameter).
+- Two: 0.64 scale; three: 0.60; four: 0.56 in a 2×2 cluster.
+- Stack offsets: 0.19 cell for two, 0.20 for three and 0.22 for four; visible miniatures remain within the tile.
 - Touch target remains 48×48 CSS px on mobile; hit targets are larger than visual pawns.
 - More than four tokens show four miniatures plus an overflow badge.
 ## Responsive behavior
