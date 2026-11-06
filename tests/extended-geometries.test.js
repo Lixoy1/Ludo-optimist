@@ -101,3 +101,20 @@ test('all four material themes render from the shared geometry without changing 
   }
   assert.equal(Object.keys(EXTENDED_THEMES).length,4);
 });
+
+
+test('PENTA and HEX pawn art and base sockets are sized from their own cell pitch',()=>{
+  const expected={penta:{pitch:35.98,tile:31.30,pawn:29.50,stack:18.00,span:30.23},hex:{pitch:33.63,tile:29.25,pawn:27.57,stack:16.82,span:28.25}};
+  for(const id of ids){
+    const g=EXTENDED_GEOMETRIES[id],e=expected[id];
+    assert.ok(Math.abs(g.cellPitch-e.pitch)<.02);
+    assert.ok(Math.abs(g.tileSize-e.tile)<.02);
+    assert.ok(Math.abs(g.cellPitch*g.pawnDiameterRatio-e.pawn)<.02);
+    const four=getExtendedStackLayout(id,4).tokens;
+    assert.ok(Math.abs(four[0].diameter-e.stack)<.02);
+    const span=Math.max(...four.map(t=>t.x+t.diameter/2))-Math.min(...four.map(t=>t.x-t.diameter/2));
+    assert.ok(Math.abs(span-e.span)<.03);
+    assert.ok(span<g.tileSize);
+    assert.ok(g.arms.every(a=>a.baseSlots.length===4));
+  }
+});

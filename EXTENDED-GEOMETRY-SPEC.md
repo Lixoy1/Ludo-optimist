@@ -62,3 +62,20 @@ The original four-player board's visual hierarchy is retained: square light trac
 
 ## Integration boundary
 The SVGs and geometry data are ready as a design/coordinate foundation. The live room manager, Classic rules engine, and room creation API still accept Classic 2–4 only. PENTA and HEX are not selectable/playable online until server movement, player colours, token rendering, room size, and complete multiplayer tests are connected.
+
+## Measured art dimensions (720 × 720 viewBox)
+All dimensions below are SVG units, derived from the shared radial cell pitch rather than guessed independently per screen.
+
+| Measure | PENTA | HEX |
+|---|---:|---:|
+| Logical cell pitch | 35.98 | 33.63 |
+| Visible square tile | 31.30 | 29.25 |
+| Single pawn art diameter | 29.50 | 27.57 |
+| Four-token pawn diameter | 18.00 | 16.82 |
+| Four-token cluster outer span | 30.23 | 28.25 |
+| Base socket outer diameter | 34.54 | 32.28 |
+| Base socket inner diameter | 30.94 | 28.92 |
+
+The four-token cluster span stays below the tile face (30.23 < 31.30 for PENTA; 28.25 < 29.25 for HEX). Base yards use a true 2×2 pawn layout: two rows, two columns, with center spacing chosen to keep the four pawn silhouettes distinct. Socket rims are deliberately larger than the pawn diameter to leave a visible metallic bezel.
+
+The board artwork is vector and scales proportionally. Pawn art size follows the local cell pitch; pointer/tap targets are a separate 48 CSS px layer and must not be scaled down with the artwork.
