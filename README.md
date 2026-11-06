@@ -1,30 +1,75 @@
-# OPTIMIST LUDO
+# OPTIMIST LUDO — Classic Online MVP
 
-OPTIMIST LUDO is a Telegram Mini App project for classic 2–4 player Ludo.
+Рабочая сборка объединяет авторитетный серверный движок Classic, комнаты, WebSocket-синхронизацию и Mini App на основе предоставленной доски OPTIMIST LUDO.
 
-## Design preview
+## Уже подключено
 
-Open [design-preview.html](./design-preview.html) to inspect the current visual direction: custom 3D six-sided dice, tactile throw button, bottom action dock, responsive board layout, player panels and NEON / CLASSIC / ELITE / MARBLE theme switching.
+- Фирменная нижняя панель хода: нарисованный CSS-кубик с корректными раскладками 1–6, объёмными гранями, бликами, подсветкой готовности и анимацией броска; на телефоне кнопка остаётся по центру снизу с учётом safe-area. Вспомогательные действия оформлены компактными иконками, состояния кнопок и клавиатурный фокус доступны.
 
-The preview is a standalone UI demonstration. Its dice result is simulated locally and is not connected to the multiplayer server.
+- Оригинальная доска как WebP-ресурс (`assets/optimist-ludo-board.webp`).
+- Геометрия Classic: 52 клетки маршрута, четыре домашние дорожки, четыре базы и финиш.
+- Отдельная пиксельная привязка стартовых лунок к изображению; цвета: синий — верх слева, красный — верх справа, зелёный — низ слева, золотой — низ справа.
+- 12 персонажей-фишек: 8 героев (OPTIMIST, Лиля, Натали, Никита, Poison, Лена, Эльвина, Ксюша) и 4 маскота (кот, сова, хаски, енот); сжатые WebP-ассеты.
+- Серверные броски кубика и проверка ходов: выход на 6, точный финиш, безопасные клетки, захват, блокировки, бонусные броски и пропуск после трёх шестёрок подряд.
+- Персональный выбор персонажа в лобби и прямо за столом; выбранный образ синхронизируется с комнатой, а цвет команды остаётся отдельным.
+- Живые фишки с анимацией перемещения/выбивания/финиша, компактным стеком, цветным свечением и подсветкой только разрешённых сервером ходов.
+- Четыре локальных оформления одной чистой игровой доски: NEON, CLASSIC, ELITE и MARBLE (цветокоррекция, рамка и подсветка); оформление не влияет на серверные координаты и одинаковость правил. Отдельные промо-арты CLASSIC WOOD / ELITE GOLD / NEON PINK сохранены как концепты, но пока не используются в партии: их крупные центральные эмблемы закрывают часть клеток и требуют отдельной чистой игровой перерисовки.
+- Кинематографичные игровые всплывающие эффекты для шестёрки, выхода фишки, захвата и финиша, плюс переключаемые процедурные звуки броска/хода/выбивания/победы.
+- Лобби с созданием открытых/закрытых столов на 2–4 игроков, входом по коду и списком открытых комнат.
+- WebSocket-комнаты, повторное подключение, full-state sync и room-bound resume token.
+- Текстовый чат комнаты и голосовые сообщения: удержание кнопки — запись, отпускание — отправка, смахивание влево — отмена. Голосовые передаются бинарным HTTP, не через WebSocket.
+- Telegram Mini App auth через серверную проверку `initData`; локальный dev-auth разрешается только явным флагом `ALLOW_DEV_AUTH=1` вне production.
 
-## Release status
+## Запуск локально
 
-The integrated Classic MVP source bundle is prepared separately and includes the client, server-authoritative game engine, room management, Telegram authentication, reconnect support, text chat, voice-message endpoints, board artwork and 12 optimized character assets.
+Требуется Node.js 22.9+.
 
-The full source bundle is not yet committed to this repository. Do not treat this design preview as a production multiplayer release.
+```bash
+npm install
+cp .env.example .env
+```
 
-## Local checks
+Для тестирования в обычном браузере без Telegram открой `.env` и установи:
 
-The prepared source bundle currently passes 49 automated tests. The backend smoke test still needs its `ws` dependency installed and a live runtime check.
+```env
+ALLOW_DEV_AUTH=1
+NODE_ENV=development
+```
 
-## Planned scope
+Затем запусти единый сервер (он отдаёт и интерфейс, и API, и WebSocket):
 
-- Classic board for 2–4 players
-- Twelve character skins and four board themes
-- Server-authoritative turns and moves
-- Room lobby and reconnect support
-- Text chat and short voice messages
-- Mobile-first controls and safe-area layout
+```bash
+npm start
+```
 
-See [ROADMAP.md](./ROADMAP.md) and [DESIGN-SPEC.md](./DESIGN-SPEC.md) once the integrated source is committed.
+Открой `http://localhost:3000`. В этом режиме можно создать комнату в двух вкладках/браузерах и играть друг против друга. При локальном dev-auth имена/ID создаются браузером автоматически; в Telegram используются реальные проверенные данные Mini App.
+
+## Production / Telegram
+
+1. Создай бота через BotFather и укажи его токен в `BOT_TOKEN`.
+2. Укажи точный публичный HTTPS origin в `ALLOWED_ORIGINS` (например, `https://your-app.example`).
+3. Оставь `ALLOW_DEV_AUTH=0` и `NODE_ENV=production`.
+4. В BotFather задай URL Mini App на этот же HTTPS origin.
+5. Запусти `npm start`.
+
+Не публикуй `.env` и не добавляй `BOT_TOKEN` в репозиторий.
+
+## Проверки
+
+```bash
+npm test
+npm run smoke
+```
+
+`npm test` выполняет unit-тесты геометрии, рендера фишек, движка, комнат, Telegram auth, reconnect/resume, голосового клиента/кэша и визуального контракта кубика/нижней панели. `npm run smoke` запускает реальный локальный HTTP/WebSocket сценарий: создание комнаты, вход двух игроков, запуск, бросок, ход, upload/playback голосового и reconnect с восстановлением состояния. Для smoke нужен установленный пакет `ws` (`npm install`).
+
+## Важные границы
+
+- Комнаты, resume-токены и аудиофайлы пока хранятся в памяти одного процесса. Обрыв WebSocket восстанавливается, пока процесс жив; полный рестарт процесса очищает незавершённые комнаты и голосовой кэш.
+- Временный voice cache ограничен: 512 КиБ на файл, до 30 секунд, 8 МиБ и 40 файлов на процесс, TTL шесть часов. При заполнении старые файлы вытесняются.
+- Реальную работу микрофона нужно проверить внутри Telegram WebView на Android/iOS: браузерные разрешения и поддержка MediaRecorder зависят от платформы.
+- После корректировки проверки оптимизированных WebP-ассетов `npm test` проходит: 49 тестов, 0 ошибок. Установка `ws` из npm registry в текущей среде не завершилась по тайм-ауту; поэтому сетевой `npm run smoke` здесь ещё не подтверждён.
+- Доступны все 12 текущих персонажей и четыре локальных цветовых оформления основной доски. Отдельные геометрически отличающиеся настольные макеты из промо-концептов пока не включены: на некоторых из них центральный логотип перекрывает игровые клетки.
+- Auto-Pilot, постоянное хранилище партий, рематч, рейтинг, HEX/PENTA и дополнительные режимы не входят в этот Classic MVP.
+
+Подробности: `apps/backend/README.md`, `FREE-HOSTING.md`, `VOICE-MESSAGES.md` и `ROADMAP.md`.

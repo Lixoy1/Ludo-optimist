@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#080912" />
+  <meta name="description" content="OPTIMIST LUDO — онлайн Ludo с друзьями. Classic 2–4 players." />
+  <title>OPTIMIST LUDO</title>
+  <link rel="preload" href="/assets/optimist-ludo-board.webp" as="image" type="image/webp" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="app-bg"></div>
+  <header class="topbar">
+    <div class="brand-lockup">
+      <span class="brand-crown">♛</span>
+      <div><div class="brand-name">OPTIMIST <b>LUDO</b></div><div class="brand-tag">PLAY BRIGHT. MOVE SMART.</div></div>
+    </div>
+    <div class="topbar-tools">
+      <label class="theme-select-label" for="boardThemeSelect">ДОСКА</label>
+      <select id="boardThemeSelect" class="theme-select" aria-label="Оформление доски">
+        <option value="neon">NEON</option><option value="classic">CLASSIC</option><option value="elite">ELITE</option><option value="marble">MARBLE</option>
+      </select>
+      <div class="connection-pill" id="connectionPill"><i></i><span id="connectionText">ПОДКЛЮЧАЕМСЯ</span></div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="view lobby-view" id="lobbyView">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="spark"></span> THE CLASSIC BOARD · ONLINE</div>
+        <h1>Твоя партия.<br><em>Твои правила.</em></h1>
+        <p>Собери друзей за столом, бросай кубик и веди четыре фишки к победе.</p>
+      </div>
+
+      <div class="lobby-layout">
+        <section class="lobby-panel character-panel">
+          <div class="character-panel-head"><div><div class="panel-kicker">00 / ТВОЙ ПЕРСОНАЖ</div><h2>Выбери свою фишку</h2><p class="panel-note">Персонаж будет виден всем игрокам за столом. Цвет дорожки останется цветом твоей команды.</p></div><span class="selected-character-chip" id="selectedCharacterChip">OPTIMIST</span></div>
+          <div class="character-grid" id="characterGrid" aria-label="Персонажи OPTIMIST LUDO"></div>
+        </section>
+        <section class="lobby-panel create-panel">
+          <div class="panel-kicker">01 / НОВАЯ ПАРТИЯ</div>
+          <h2>Создать стол</h2>
+          <p class="panel-note">Classic · 2–4 игрока · бесплатно</p>
+          <div class="player-count" role="group" aria-label="Количество игроков">
+            <button type="button" class="count-option" data-count="2">2 <small>ИГРОКА</small></button>
+            <button type="button" class="count-option" data-count="3">3 <small>ИГРОКА</small></button>
+            <button type="button" class="count-option active" data-count="4">4 <small>ИГРОКА</small></button>
+          </div>
+          <label class="switch-row"><span><b>Открытый стол</b><small>Видно в общем списке комнат</small></span><input type="checkbox" id="publicRoom" checked /><i class="switch"></i></label>
+          <button type="button" class="primary-button wide" id="createRoomBtn"><span>СОЗДАТЬ ИГРУ</span><b>↗</b></button>
+          <div class="fine-print">Создатель становится хозяином стола и запускает партию.</div>
+        </section>
+
+        <section class="lobby-panel join-panel">
+          <div class="panel-kicker">02 / ПРИСОЕДИНИТЬСЯ</div>
+          <h2>Есть код комнаты?</h2>
+          <p class="panel-note">Вставь код, который прислал друг.</p>
+          <form id="joinRoomForm" class="join-form">
+            <input id="roomCodeInput" type="text" maxlength="16" minlength="16" placeholder="16-значный код стола" autocomplete="off" spellcheck="false" />
+            <button type="submit" class="icon-button" aria-label="Войти в комнату">➜</button>
+          </form>
+          <div class="divider-label"><span></span> ИЛИ ВЫБЕРИ ОТКРЫТЫЙ СТОЛ <span></span></div>
+          <div class="room-list" id="roomList"><div class="empty-rooms">Пока нет открытых столов.<br />Создай свой и пригласи друзей.</div></div>
+          <button type="button" class="text-button" id="refreshRoomsBtn">↻ Обновить список</button>
+        </section>
+      </div>
+      <div class="lobby-foot"><span>♛</span> FOUR COLORS. ONE WINNER. <span>♛</span></div>
+    </section>
+
+    <section class="view game-view" id="gameView" hidden>
+      <div class="game-topline">
+        <button class="back-button" id="leaveRoomBtn" type="button">‹ <span>ЛОББИ</span></button>
+        <div class="room-code-block"><small>КОД КОМНАТЫ</small><strong id="roomCodeLabel">————————</strong></div>
+        <button class="icon-button copy-button" id="copyInviteBtn" type="button" title="Скопировать приглашение">⧉</button>
+      </div>
+
+      <section class="players-strip" id="playersStrip" aria-label="Игроки"></section>
+
+      <section class="turn-banner" id="turnBanner">
+        <div class="turn-indicator" id="turnIndicator">♛</div>
+        <div class="turn-copy"><strong id="turnTitle">Ожидание игроков</strong><span id="turnSub">Пригласи друзей по коду комнаты</span></div>
+        <div class="turn-meta" id="turnMeta">0 / 4</div>
+      </section>
+
+      <section class="board-wrap" id="boardWrap">
+        <div class="board-stage" id="boardStage">
+          <img class="board-art" src="/assets/optimist-ludo-board.webp" alt="Игровое поле OPTIMIST LUDO" draggable="false" />
+          <div class="token-layer" id="tokenLayer" aria-label="Игровые фишки"></div>
+          <div class="board-effect-overlay" id="boardEffectOverlay" aria-live="polite"></div>
+          <div class="board-vignette"></div>
+        </div>
+      </section>
+
+      <section class="game-controls">
+        <div class="dice-module">
+          <div class="dice-status" id="diceStatus">КУБИК ГОТОВ К БРОСКУ</div>
+          <button class="dice-button" id="rollDiceBtn" type="button" disabled aria-label="Бросить кубик">
+            <span class="dice-stage" aria-hidden="true">
+              <span class="dice-cube" id="diceCube" data-value="5">
+                <span class="dice-pips">
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </span>
+                <span class="dice-edge"></span>
+              </span>
+              <span class="dice-shadow"></span>
+              <span class="dice-spark dice-spark-one"></span>
+              <span class="dice-spark dice-spark-two"></span>
+            </span>
+            <span class="dice-copy">
+              <span class="dice-kicker">OPTIMIST · YOUR MOVE</span>
+              <span class="dice-label" id="diceLabel">БРОСИТЬ КУБИК</span>
+              <span class="dice-caption">Коснись, чтобы бросить</span>
+            </span>
+            <span class="dice-arrow" aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <div class="game-actions">
+          <button class="primary-button start-button" id="startGameBtn" type="button" hidden><span>НАЧАТЬ ПАРТИЮ</span><b>♛</b></button>
+          <button class="secondary-button" id="soundToggleBtn" type="button" aria-pressed="true" data-action="sound"><span class="action-glyph" aria-hidden="true">♫</span><span class="action-label">ЗВУК ВКЛ</span></button>
+          <button class="secondary-button" id="copyCodeBtn" type="button" data-action="copy"><span class="action-glyph" aria-hidden="true">⧉</span><span class="action-label">КОД</span></button>
+          <button class="secondary-button" id="chatToggleBtn" type="button" data-action="chat"><span class="action-glyph" aria-hidden="true">▤</span><span class="action-label">ЧАТ</span><span class="chat-count" id="chatCount">0</span></button>
+        </div>
+      </section>
+
+      <section class="move-hint" id="moveHint">Фишки подсветятся, когда придёт твой ход.</section>
+      <section class="chat-panel" id="chatPanel" hidden>
+        <div class="chat-panel-head"><div><b>КОМНАТНЫЙ ЧАТ</b><small id="voiceStatus">Сообщения видят все игроки за столом</small></div><button type="button" id="closeChatBtn" class="chat-close">×</button></div>
+        <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
+        <form id="chatForm" class="chat-form">
+          <input id="chatInput" type="text" maxlength="200" placeholder="Напиши что-нибудь…" autocomplete="off" />
+          <button id="voiceButton" class="voice-button" type="button" aria-label="Удерживай для голосового сообщения" title="Удерживай для записи">🎙</button>
+          <button class="send-button" type="submit" aria-label="Отправить">➤</button>
+        </form>
+        <div class="voice-tip">Удерживай 🎙 для записи · отпусти, чтобы отправить · смахни влево для отмены</div>
+      </section>
+      <div class="game-footer">OPTIMIST LUDO <span>·</span> CLASSIC ONLINE</div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
