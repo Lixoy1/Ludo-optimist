@@ -1,6 +1,7 @@
 /**
- * Returns deterministic compact offsets for multiple tokens on one logical cell.
- * Offsets are normalized to cell size and are shared by every visual theme.
+ * Deterministic compact layout for tokens sharing one logical board cell.
+ * Offsets use cell-relative units; scale is applied to the actual pawn element
+ * by renderTokens(). The patterns keep the pawn hit areas inside the cell.
  */
 export function getStackLayout(count, cellSize = 60) {
   if (!Number.isInteger(count) || count < 0) throw new RangeError('Token count must be a non-negative integer');
@@ -9,13 +10,16 @@ export function getStackLayout(count, cellSize = 60) {
 
   const patterns = {
     1: [[0, 0]],
-    2: [[-0.19, 0], [0.19, 0]],
-    3: [[0, -0.18], [-0.19, 0.17], [0.19, 0.17]],
-    4: [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]],
+    // Two mini-pawns side by side, with a small visible gap.
+    2: [[-0.26, 0], [0.26, 0]],
+    // Three mini-pawns in a compact triangle.
+    3: [[0, -0.25], [-0.26, 0.22], [0.26, 0.22]],
+    // Four mini-pawns in a 2x2 arrangement.
+    4: [[-0.28, -0.28], [0.28, -0.28], [-0.28, 0.28], [0.28, 0.28]],
   };
   const visibleCount = Math.min(count, 4);
   const offsets = patterns[visibleCount];
-  const scale = visibleCount === 1 ? 1 : visibleCount === 2 ? 0.78 : visibleCount === 3 ? 0.68 : 0.58;
+  const scale = visibleCount === 1 ? 1 : visibleCount === 2 ? 0.48 : visibleCount === 3 ? 0.48 : 0.44;
   return {
     positions: offsets.map(([x, y], index) => ({
       x: x * cellSize,

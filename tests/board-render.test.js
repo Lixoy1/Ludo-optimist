@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createClassicState, globalTrackIndex } from '../apps/backend/classic-engine.js';
+import { createClassicState } from '../apps/backend/classic-engine.js';
 import { tokenBoardPositions, gridToImage, BOARD_IMAGE_SIZE } from '../src/board-render.js';
 import { PLAYER_CONFIG, MAIN_TRACK } from '../src/geometry.js';
 
@@ -11,6 +11,7 @@ const roster = [
   { id: 'render-yellow', color: 'yellow', username: 'Yellow' },
 ];
 const tokenId = (player, index = 0) => `${player}:${index}`;
+const PAWN_DIAMETER_RATIO = 0.058;
 
 test('board image grid transform maps the logical board into the 720 square artwork', () => {
   assert.equal(BOARD_IMAGE_SIZE, 720);
@@ -19,11 +20,11 @@ test('board image grid transform maps the logical board into the 720 square artw
   assert.ok(Math.abs(center.y - 359.99) < 1);
 });
 
-test('all four player bases are rendered at their assigned colored quadrans', () => {
+test('all four player bases are rendered at their assigned colored quadrants', () => {
   const state = createClassicState(roster);
   const positions = tokenBoardPositions(state);
   const first = Object.fromEntries(positions.map((item) => [item.tokenId, item]));
-  for (let player of state.players) {
+  for (const player of state.players) {
     const owned = positions.filter((item) => item.owner === player.id);
     assert.equal(owned.length, 4);
     assert.equal(owned.every((item) => item.zone === 'base'), true);
@@ -62,16 +63,44 @@ test('outer track and home-lane positions are derived from the server token stat
   assert.ok(home.left > start.left);
 });
 
-test('tokens sharing a route cell receive different stack offsets', () => {
+test('tokens sharing a route cell receive distinct, non-overlapping scaled positions', () => {
   const state = createClassicState(roster);
   state.tokens[tokenId('render-green')].position = { zone: 'track', step: 5 };
   state.tokens[tokenId('render-green', 1)].position = { zone: 'track', step: 5 };
   const positions = tokenBoardPositions(state).filter((item) => item.zone === 'track');
   assert.equal(positions.length, 2);
   assert.notEqual(positions[0].left, positions[1].left);
-  assert.equal(positions[0].scale, 0.78);
+  assert.equal(positions[0].scale, 0.48);
+  const distance = Math.hypot(positions[0].x - positions[1].x, positions[0].y - positions[1].y);
+  assert.ok(distance > BOARD_IMAGE_SIZE * PAWN_DIAMETER_RATIO * positions[0].scale);
 });
 
+test('all four pawns on one square shrink into a separated 2x2 stack inside the cell', () => {
+  const state = createClassicState(roster);
+  for (let index = 0; index < 4; index += 1) {
+    state.tokens[tokenId('render-green', index)].position = { zone: 'track', step: 5 };
+  }
+  const positions = tokenBoardPositions(state)
+    .filter((item) => item.zone === 'track')
+    .sort((a, b) => a.index - b.index);
+  assert.equal(positions.length, 4);
+  assert.ok(positions.every((item) => item.scale === 0.44));
+  assert.equal(new Set(positions.map((item) => `${item.left.toFixed(4)}:${item.top.toFixed(4)}`)).size, 4);
+
+  const center = gridToImage(MAIN_TRACK[5].col, MAIN_TRACK[5].row);
+  const pawnDiameter = BOARD_IMAGE_SIZE * PAWN_DIAMETER_RATIO * 0.44;
+  const halfCell = 43.57 / 2;
+  for (const item of positions) {
+    assert.ok(Math.abs(item.x - center.x) + pawnDiameter / 2 <= halfCell);
+    assert.ok(Math.abs(item.y - center.y) + pawnDiameter / 2 <= halfCell);
+  }
+  for (let a = 0; a < positions.length; a += 1) {
+    for (let b = a + 1; b < positions.length; b += 1) {
+      const distance = Math.hypot(positions[a].x - positions[b].x, positions[a].y - positions[b].y);
+      assert.ok(distance > pawnDiameter, 'pawn hit areas must not overlap');
+    }
+  }
+});
 
 test('selected player character is mapped to all four of their visible pawns', () => {
   const state = createClassicState(roster);
@@ -80,7 +109,6 @@ test('selected player character is mapped to all four of their visible pawns', (
   assert.equal(owned.length, 4);
   assert.ok(owned.every((item) => item.characterId === 'lilya-detective'));
 });
-
 
 test('all track and home-lane centers stay inside the 720px artwork', () => {
   for (const color of Object.keys(PLAYER_CONFIG)) {
