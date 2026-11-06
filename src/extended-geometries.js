@@ -95,7 +95,7 @@ function makeGeometry(id,sides) {
                       CENTER.y+baseOutward.y*baseApothem+baseTangent.y*cornerOffset);
     const rowOneRadius=apexRadius+(baseApothem-apexRadius)*.35;
     const rowTwoRadius=apexRadius+(baseApothem-apexRadius)*.68;
-    const baseOffset=cellPitch*.45;
+    const baseOffset=cellPitch*.52;
     const baseSlots=[
       add(add(CENTER,baseOutward,rowOneRadius),baseTangent,-baseOffset),
       add(add(CENTER,baseOutward,rowOneRadius),baseTangent,baseOffset),
