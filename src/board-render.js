@@ -1,27 +1,28 @@
 import { MAIN_TRACK, PLAYER_CONFIG } from './geometry.js';
 import { getStackLayout } from './stack-layout.js';
 
-export const BOARD_IMAGE_SIZE = 1536;
-const DESIGN_SIZE = 1248;
-const IMAGE_SCALE = BOARD_IMAGE_SIZE / DESIGN_SIZE;
-const GRID_ORIGIN_X = 64;
-const GRID_ORIGIN_Y = 60;
-const GRID_CELL = 80;
+// The supplied board artwork is a 720x720 image. Token coordinates are
+// expressed directly in that image's coordinate space so the CSS percentage
+// positions stay aligned with the visible tile centers at every screen size.
+export const BOARD_IMAGE_SIZE = 720;
+const GRID_ORIGIN_X = 55;
+const GRID_ORIGIN_Y = 55;
+const GRID_CELL = 43.57;
 const BASE_SLOT_POINTS = {
-  blue: [[285, 312], [435, 312], [285, 465], [435, 465]],
-  red: [[1107, 312], [1258, 312], [1107, 465], [1258, 465]],
-  green: [[285, 1045], [435, 1045], [285, 1205], [435, 1205]],
-  yellow: [[1107, 1045], [1258, 1045], [1107, 1205], [1258, 1205]],
+  blue: [[132, 132], [182, 132], [132, 182], [182, 182]],
+  red: [[538, 132], [588, 132], [538, 182], [588, 182]],
+  green: [[132, 538], [182, 538], [132, 588], [182, 588]],
+  yellow: [[538, 538], [588, 538], [538, 588], [588, 588]],
 };
 const FINISH_POINTS = [
-  [733, 733], [803, 733], [733, 803], [803, 803],
+  [336, 336], [384, 336], [336, 384], [384, 384],
 ];
 
 export function gridToImage(col, row) {
   if (!Number.isFinite(col) || !Number.isFinite(row)) throw new TypeError('Grid coordinates must be finite numbers.');
   return {
-    x: (GRID_ORIGIN_X + col * GRID_CELL) * IMAGE_SCALE,
-    y: (GRID_ORIGIN_Y + row * GRID_CELL) * IMAGE_SCALE,
+    x: GRID_ORIGIN_X + col * GRID_CELL,
+    y: GRID_ORIGIN_Y + row * GRID_CELL,
   };
 }
 
@@ -69,7 +70,7 @@ export function tokenBoardPositions(state) {
 
   const positions = new Map(basePositions);
   for (const { point, tokens: stack } of grouped.values()) {
-    const layout = getStackLayout(stack.length, 80 * IMAGE_SCALE);
+    const layout = getStackLayout(stack.length, GRID_CELL);
     stack.forEach((token, index) => {
       const offset = layout.positions[index];
       positions.set(token.id, {

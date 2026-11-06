@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createClassicState, globalTrackIndex } from '../apps/backend/classic-engine.js';
 import { tokenBoardPositions, gridToImage, BOARD_IMAGE_SIZE } from '../src/board-render.js';
-import { PLAYER_CONFIG } from '../src/geometry.js';
+import { PLAYER_CONFIG, MAIN_TRACK } from '../src/geometry.js';
 
 const roster = [
   { id: 'render-green', color: 'green', username: 'Green' },
@@ -12,18 +12,18 @@ const roster = [
 ];
 const tokenId = (player, index = 0) => `${player}:${index}`;
 
-test('board image grid transform maps the logical board into the 1536 square artwork', () => {
-  assert.equal(BOARD_IMAGE_SIZE, 1536);
+test('board image grid transform maps the logical board into the 720 square artwork', () => {
+  assert.equal(BOARD_IMAGE_SIZE, 720);
   const center = gridToImage(7, 7);
-  assert.ok(Math.abs(center.x - 768) < 1);
-  assert.ok(Math.abs(center.y - 763) < 5);
+  assert.ok(Math.abs(center.x - 359.99) < 1);
+  assert.ok(Math.abs(center.y - 359.99) < 1);
 });
 
-test('all four player bases are rendered at their assigned colored quadrants', () => {
+test('all four player bases are rendered at their assigned colored quadrans', () => {
   const state = createClassicState(roster);
   const positions = tokenBoardPositions(state);
   const first = Object.fromEntries(positions.map((item) => [item.tokenId, item]));
-  for (const player of state.players) {
+  for (let player of state.players) {
     const owned = positions.filter((item) => item.owner === player.id);
     assert.equal(owned.length, 4);
     assert.equal(owned.every((item) => item.zone === 'base'), true);
@@ -35,10 +35,10 @@ test('all four player bases are rendered at their assigned colored quadrants', (
   assert.ok(first[tokenId('render-blue')].top < 40);
   assert.deepEqual(PLAYER_CONFIG.blue.base, { col: 0, row: 0 });
   const expectedCenters = {
-    blue: [[285, 312], [435, 312], [285, 465], [435, 465]],
-    red: [[1107, 312], [1258, 312], [1107, 465], [1258, 465]],
-    green: [[285, 1045], [435, 1045], [285, 1205], [435, 1205]],
-    yellow: [[1107, 1045], [1258, 1045], [1107, 1205], [1258, 1205]],
+    blue: [[132, 132], [182, 132], [132, 182], [182, 182]],
+    red: [[538, 132], [588, 132], [538, 182], [588, 182]],
+    green: [[132, 538], [182, 538], [132, 588], [182, 588]],
+    yellow: [[538, 538], [588, 538], [538, 588], [588, 588]],
   };
   for (const [color, centers] of Object.entries(expectedCenters)) {
     const firstFour = positions.filter((item) => item.color === color).sort((a, b) => a.index - b.index);
@@ -79,4 +79,18 @@ test('selected player character is mapped to all four of their visible pawns', (
   const owned = tokenBoardPositions(state).filter((item) => item.owner === 'render-blue');
   assert.equal(owned.length, 4);
   assert.ok(owned.every((item) => item.characterId === 'lilya-detective'));
+});
+
+
+test('all track and home-lane centers stay inside the 720px artwork', () => {
+  for (const color of Object.keys(PLAYER_CONFIG)) {
+    for (let step = 0; step < 52; step += 1) {
+      const config = PLAYER_CONFIG[color];
+      const index = (config.start + step) % 52;
+      const cell = MAIN_TRACK[index];
+      const point = gridToImage(cell.col, cell.row);
+      assert.ok(point.x >= 0 && point.x <= BOARD_IMAGE_SIZE);
+      assert.ok(point.y >= 0 && point.y <= BOARD_IMAGE_SIZE);
+    }
+  }
 });
