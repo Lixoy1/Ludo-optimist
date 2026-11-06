@@ -241,82 +241,96 @@ function starPoints(x,y,r) {
 }
 export function renderExtendedBoardSvg(geometry,theme='neon') {
   if(!EXTENDED_THEMES[theme]) throw new RangeError('Unknown board theme.');
-  const style=EXTENDED_THEMES[theme];
-  const n=geometry.sides;
-  const frame=regularVertices(n,348),inset=regularVertices(n,338);
-  const parts=[];
-  parts.push('<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" role="img" aria-label="OPTIMIST LUDO '+n+' players '+theme+'">');
-  parts.push('<title>OPTIMIST LUDO — '+n+' PLAYERS — '+theme.toUpperCase()+'</title><defs>');
-  parts.push('<linearGradient id="frame" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+style.glow+'"/><stop offset=".22" stop-color="'+style.gold+'"/><stop offset=".52" stop-color="'+style.outer+'"/><stop offset=".78" stop-color="'+style.gold+'"/><stop offset="1" stop-color="'+style.shadow+'"/></linearGradient>');
-  parts.push('<linearGradient id="surface" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+style.board+'"/><stop offset=".5" stop-color="'+style.bg+'"/><stop offset="1" stop-color="'+style.outer+'"/></linearGradient>');
-  parts.push('<linearGradient id="ivory" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#fffefb"/><stop offset=".52" stop-color="'+style.cell+'"/><stop offset="1" stop-color="'+style.tile2+'"/></linearGradient>');
-  parts.push('<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1bc"/><stop offset=".45" stop-color="'+style.gold+'"/><stop offset="1" stop-color="#8d5f2a"/></linearGradient>');
-  parts.push('<radialGradient id="well" cx=".3" cy=".22" r=".9"><stop stop-color="#67778a"/><stop offset=".26" stop-color="'+style.baseBg+'"/><stop offset="1" stop-color="#05070d"/></radialGradient>');
-  parts.push('<filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>');
-  parts.push('<pattern id="grain" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M0 13Q19 5 66 17M-8 39Q24 30 72 43M4 59Q28 51 70 61" fill="none" stroke="'+style.accent+'" stroke-opacity=".07" stroke-width="2"/></pattern>');
-  parts.push('<pattern id="marble" width="112" height="112" patternUnits="userSpaceOnUse"><path d="M-10 30Q24 2 55 30T128 24M-10 85Q28 62 58 89T128 82" fill="none" stroke="'+style.accent+'" stroke-opacity=".14" stroke-width="3"/><path d="M-10 33Q24 5 55 33T128 27" fill="none" stroke="'+style.glow+'" stroke-opacity=".1" stroke-width="1"/></pattern></defs>');
-  parts.push('<rect width="720" height="720" rx="30" fill="'+style.bg+'"/>');
-  parts.push('<rect x="8" y="8" width="704" height="704" rx="30" fill="url(#frame)" stroke="'+style.gold+'" stroke-width="1.6"/>');
-  parts.push('<rect x="16" y="16" width="688" height="688" rx="25" fill="url(#surface)" stroke="'+style.shadow+'" stroke-width="5"/>');
-  if(theme==='classic') parts.push('<rect x="20" y="20" width="680" height="680" rx="22" fill="url(#grain)" opacity=".75"/>');
-  if(theme==='marble') parts.push('<rect x="20" y="20" width="680" height="680" rx="22" fill="url(#marble)" opacity=".7"/>');
-  if(theme==='neon') parts.push('<g opacity=".18" filter="url(#glow)"><path d="M42 95Q95 42 146 78T208 54M512 72Q582 30 660 98M40 590Q110 650 190 624M532 642Q606 684 678 598" fill="none" stroke="#a64dff" stroke-width="7"/><path d="M55 138Q100 96 145 125M580 126Q625 92 667 142M46 548Q100 510 136 550" fill="none" stroke="#32d8ff" stroke-width="5"/></g>');
-  parts.push('<path d="'+poly(frame)+'" fill="none" stroke="'+style.gold+'" stroke-width="5"/>');
-  parts.push('<path d="'+poly(inset)+'" fill="none" stroke="'+style.accent+'" stroke-opacity=".28" stroke-width="1.4"/>');
+  if(!geometry||![5,6].includes(geometry.sides)) throw new TypeError('Expected PENTA or HEX geometry.');
+  const s=EXTENDED_THEMES[theme],n=geometry.sides,parts=[];
+  const fmt=v=>Number(v).toFixed(2);
+  const polygon=pts=>poly(pts);
+  const square=(x,y,size,fill,stroke,extra='')=>{
+    const half=size/2;
+    return '<g '+extra+'><rect x="'+fmt(x-half+1.8)+'" y="'+fmt(y-half+3)+'" width="'+fmt(size)+'" height="'+fmt(size)+'" rx="3.5" fill="'+s.shadow+'" opacity=".52"/>'+
+      '<rect x="'+fmt(x-half)+'" y="'+fmt(y-half)+'" width="'+fmt(size)+'" height="'+fmt(size)+'" rx="3.5" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.7"/>'+
+      '<rect x="'+fmt(x-half+2.2)+'" y="'+fmt(y-half+2.2)+'" width="'+fmt(size-4.4)+'" height="'+fmt(size-4.4)+'" rx="2.2" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width=".8"/>'+
+      '<path d="M'+fmt(x-half+4)+' '+fmt(y-half+3)+'h'+fmt(size-8)+'" stroke="#fff" stroke-opacity=".28" stroke-width="1.2"/></g>';
+  };
+  const frame=regularVertices(n,348),inner=regularVertices(n,337);
+  parts.push('<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" role="img" aria-label="OPTIMIST LUDO '+n+' players '+theme+'"><title>OPTIMIST LUDO — '+(n===5?'PENTA':'HEX')+' — '+theme.toUpperCase()+'</title><defs>');
+  parts.push('<linearGradient id="frame" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+s.glow+'"/><stop offset=".2" stop-color="'+s.gold+'"/><stop offset=".52" stop-color="'+s.outer+'"/><stop offset=".8" stop-color="'+s.gold+'"/><stop offset="1" stop-color="'+s.shadow+'"/></linearGradient>');
+  parts.push('<linearGradient id="surface" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+s.board+'"/><stop offset=".52" stop-color="'+s.bg+'"/><stop offset="1" stop-color="'+s.outer+'"/></linearGradient>');
+  parts.push('<linearGradient id="tile" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#fff"/><stop offset=".55" stop-color="'+s.cell+'"/><stop offset="1" stop-color="'+s.tile2+'"/></linearGradient>');
+  parts.push('<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff4cf"/><stop offset=".48" stop-color="'+s.gold+'"/><stop offset="1" stop-color="#76502b"/></linearGradient>');
+  parts.push('<radialGradient id="well" cx=".28" cy=".2" r=".95"><stop stop-color="#8793a5"/><stop offset=".25" stop-color="'+s.baseBg+'"/><stop offset="1" stop-color="#03050a"/></radialGradient>');
+  parts.push('<filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>');
+  parts.push('<pattern id="grain" width="66" height="66" patternUnits="userSpaceOnUse"><path d="M-4 14Q22 4 70 18M-8 43Q24 32 74 46M5 63Q32 54 72 64" fill="none" stroke="'+s.accent+'" stroke-opacity=".085" stroke-width="2"/></pattern>');
+  parts.push('<pattern id="marble" width="124" height="124" patternUnits="userSpaceOnUse"><path d="M-12 32Q25 1 59 34T137 26M-10 91Q27 65 62 96T138 85" fill="none" stroke="'+s.accent+'" stroke-opacity=".16" stroke-width="3"/><path d="M-12 36Q25 5 59 38T137 30" fill="none" stroke="'+s.glow+'" stroke-opacity=".11" stroke-width="1"/></pattern>');
+  parts.push('</defs>');
+  parts.push('<rect width="720" height="720" rx="34" fill="'+s.bg+'"/><path d="'+polygon(frame)+'" fill="url(#frame)" stroke="'+s.gold+'" stroke-width="2.2"/><path d="'+polygon(inner)+'" fill="url(#surface)" stroke="'+s.shadow+'" stroke-width="5"/>');
+  if(theme==='classic') parts.push('<path d="'+polygon(inner)+'" fill="url(#grain)" opacity=".8"/>');
+  if(theme==='marble') parts.push('<path d="'+polygon(inner)+'" fill="url(#marble)" opacity=".9"/>');
+  if(theme==='neon') parts.push('<g opacity=".24" filter="url(#softShadow)" fill="none" stroke-linecap="round"><path d="M55 100Q125 42 188 76T280 50M442 62Q540 20 665 105M52 602Q140 668 232 626M488 648Q585 690 672 590" stroke="#a64dff" stroke-width="8"/><path d="M48 150Q105 105 164 138M558 132Q624 88 674 150" stroke="#32d8ff" stroke-width="5"/></g>');
+  parts.push('<path d="'+polygon(frame)+'" fill="none" stroke="'+s.accent+'" stroke-opacity=".35" stroke-width="1.2"/>');
+
+  // The whole 3×6 arm plate is visible: two shared-track columns and the five-cell private home column.
   for(const arm of geometry.arms) {
-    const color=arm.player.color,triangle=arm.triangle;
-    parts.push('<path d="'+poly(triangle)+'" fill="'+color+'" fill-opacity=".30" stroke="url(#gold)" stroke-width="3.2"/>');
-    const apex=triangle[0],left=triangle[1],right=triangle[2];
-    const insetTriangle=[
-      {x:apex.x*.9+(left.x+right.x)*.05,y:apex.y*.9+(left.y+right.y)*.05},
-      {x:left.x*.9+apex.x*.1,y:left.y*.9+apex.y*.1},
-      {x:right.x*.9+apex.x*.1,y:right.y*.9+apex.y*.1},
+    const o=arm.outward,t=arm.tangent,p=geometry.cellPitch;
+    const corners=[
+      {x:360+o.x*(geometry.boardRadius+p*.55)+t.x*(-1.5*p),y:360+o.y*(geometry.boardRadius+p*.55)+t.y*(-1.5*p)},
+      {x:360+o.x*(geometry.boardRadius+p*.55)+t.x*(1.5*p),y:360+o.y*(geometry.boardRadius+p*.55)+t.y*(1.5*p)},
+      {x:360+o.x*(geometry.boardRadius-5.5*p)+t.x*(1.5*p),y:360+o.y*(geometry.boardRadius-5.5*p)+t.y*(1.5*p)},
+      {x:360+o.x*(geometry.boardRadius-5.5*p)+t.x*(-1.5*p),y:360+o.y*(geometry.boardRadius-5.5*p)+t.y*(-1.5*p)}
     ];
-    parts.push('<path d="'+poly(insetTriangle)+'" fill="none" stroke="'+color+'" stroke-opacity=".9" stroke-width="2"/>');
-    arm.baseSlots.forEach((p,index)=>{
-      parts.push('<circle data-base-slot="'+arm.index+':'+index+'" cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="16.2" fill="url(#gold)" stroke="'+style.gold+'" stroke-width="1.3"/>');
-      parts.push('<circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="13.5" fill="url(#well)" stroke="'+color+'" stroke-opacity=".95" stroke-width="1.5"/>');
-      parts.push('<circle cx="'+(p.x-4).toFixed(2)+'" cy="'+(p.y-4).toFixed(2)+'" r="2.3" fill="#fff9e8" fill-opacity=".30"/>');
-    });
+    parts.push('<path d="'+polygon(corners)+'" fill="'+s.outer+'" fill-opacity=".32" stroke="'+s.gold+'" stroke-opacity=".3" stroke-width="1.3"/>');
   }
-  for(const cell of geometry.track) {
-    const arm=geometry.arms[cell.arm],angle=arm.angle*180/Math.PI;
-    const isStart=cell.index===arm.startIndex,isSafe=cell.index===arm.starIndex;
-    const size=geometry.tileSize,x=cell.x,y=cell.y;
-    const fill=isStart?arm.player.color:'url(#ivory)';
-    const stroke=isStart?style.gold:style.edge;
-    parts.push('<rect x="'+(x-size/2+1.5).toFixed(2)+'" y="'+(y-size/2+2.5).toFixed(2)+'" width="'+size.toFixed(2)+'" height="'+size.toFixed(2)+'" rx="3" fill="'+style.shadow+'" opacity=".65" transform="rotate('+angle.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')"/>');
-    parts.push('<rect data-track-cell="'+cell.index+'" x="'+(x-size/2).toFixed(2)+'" y="'+(y-size/2).toFixed(2)+'" width="'+size.toFixed(2)+'" height="'+size.toFixed(2)+'" rx="2.6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5" transform="rotate('+angle.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')"/>');
-    parts.push('<rect x="'+(x-size/2+2).toFixed(2)+'" y="'+(y-size/2+2).toFixed(2)+'" width="'+(size-4).toFixed(2)+'" height="'+(size-4).toFixed(2)+'" rx="2" fill="none" stroke="#ffffff" stroke-opacity=".32" stroke-width=".7" transform="rotate('+angle.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')"/>');
-    if(isStart) {
-      parts.push('<path d="M '+(x-4).toFixed(2)+' '+(y+2).toFixed(2)+' l 4 -7 4 7 h -2 v 5 h -4 v -5 z" fill="#fff6dd" stroke="'+style.shadow+'" stroke-width=".5" transform="rotate('+angle.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')"/>');
-    } else if(isSafe) {
-      parts.push('<polygon data-safe-cell="'+cell.index+'" points="'+starPoints(x,y,7)+'" fill="url(#gold)" stroke="'+style.shadow+'" stroke-width=".6"/>');
-    }
-  }
+
+  // Triangular yards sit between the radial arms, not in square corner boxes.
   for(const arm of geometry.arms) {
-    arm.homeLane.forEach((p,index)=>{
-      const size=geometry.tileSize,angle=arm.angle*180/Math.PI,color=arm.player.color;
-      parts.push('<rect data-home-cell="'+arm.index+':'+index+'" x="'+(p.x-size/2).toFixed(2)+'" y="'+(p.y-size/2).toFixed(2)+'" width="'+size.toFixed(2)+'" height="'+size.toFixed(2)+'" rx="2.8" fill="'+color+'" stroke="'+style.gold+'" stroke-width="1.5" transform="rotate('+angle.toFixed(2)+' '+p.x.toFixed(2)+' '+p.y.toFixed(2)+')"/>');
-      parts.push('<rect x="'+(p.x-size/2+3).toFixed(2)+'" y="'+(p.y-size/2+3).toFixed(2)+'" width="'+(size-6).toFixed(2)+'" height="'+(size-6).toFixed(2)+'" rx="2" fill="none" stroke="'+style.accent+'" stroke-opacity=".42" stroke-width=".8" transform="rotate('+angle.toFixed(2)+' '+p.x.toFixed(2)+' '+p.y.toFixed(2)+')"/>');
-      parts.push('<circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="2.2" fill="'+style.accent+'" fill-opacity=".65"/>');
+    const color=arm.player.color,tri=arm.triangle;
+    parts.push('<path d="'+polygon(tri)+'" fill="'+color+'" fill-opacity=".32" stroke="url(#gold)" stroke-width="4" stroke-linejoin="round"/>');
+    const [apex,left,right]=tri;
+    const inset=[{x:apex.x*.91+(left.x+right.x)*.045,y:apex.y*.91+(left.y+right.y)*.045},
+      {x:left.x*.91+apex.x*.09,y:left.y*.91+apex.y*.09},
+      {x:right.x*.91+apex.x*.09,y:right.y*.91+apex.y*.09}];
+    parts.push('<path d="'+polygon(inset)+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-opacity=".95"/>');
+    const mid={x:(left.x+right.x)/2,y:(left.y+right.y)/2};
+    parts.push('<text x="'+fmt(mid.x)+'" y="'+fmt(mid.y-5)+'" text-anchor="middle" fill="#fff4d8" font-family="Arial,sans-serif" font-size="10" font-weight="900" letter-spacing="1.5">'+arm.player.label+'</text>');
+    arm.baseSlots.forEach((q,i)=>{
+      parts.push('<circle data-base-slot="'+arm.index+':'+i+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(p*.32)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.2"/>');
+      parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(p*.265)+'" fill="url(#well)" stroke="'+color+'" stroke-width="1.8"/>');
+      parts.push('<circle cx="'+fmt(q.x-p*.07)+'" cy="'+fmt(q.y-p*.07)+'" r="'+fmt(p*.045)+'" fill="#fff" fill-opacity=".35"/>');
     });
   }
+
+  // Shared loop cells: 13 per arm. The 3-column grid is retained exactly.
+  for(const cell of geometry.track) {
+    const arm=geometry.arms[cell.arm],isStart=cell.index===arm.startIndex,isStar=cell.index===arm.starIndex;
+    const size=geometry.tileSize,rot=arm.angle*180/Math.PI,fill=isStart?arm.player.color:'url(#tile)',stroke=isStart?'url(#gold)':s.edge;
+    parts.push(square(cell.x,cell.y,size,fill,stroke,'data-track-cell="'+cell.index+'" transform="rotate('+fmt(rot)+' '+fmt(cell.x)+' '+fmt(cell.y)+')"'));
+    if(isStart) parts.push('<path d="M'+fmt(cell.x-4)+' '+fmt(cell.y+2)+'l4 -8 4 8h-2v5h-4v-5z" fill="#fff4d5" stroke="'+s.shadow+'" stroke-width=".65" transform="rotate('+fmt(rot)+' '+fmt(cell.x)+' '+fmt(cell.y)+')"/>');
+    if(isStar) parts.push('<polygon data-safe-cell="'+cell.index+'" points="'+starPoints(cell.x,cell.y,size*.22)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width=".7"/>');
+  }
+
+  // Private five-cell home lane, in the centre column of each classic arm.
+  for(const arm of geometry.arms) arm.homeLane.forEach((q,index)=>{
+    const size=geometry.tileSize,rot=arm.angle*180/Math.PI,color=arm.player.color;
+    parts.push(square(q.x,q.y,size,color,'url(#gold)','data-home-cell="'+arm.index+':'+index+'" transform="rotate('+fmt(rot)+' '+fmt(q.x)+' '+fmt(q.y)+')"'));
+    parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(size*.09)+'" fill="#fff4d0" fill-opacity=".58"/>');
+  });
+
+  // The finish is a true polygonal home divided into one coloured wedge per player.
   for(let i=0;i<n;i++) {
-    const v1=geometry.homeVertices[i],v2=geometry.homeVertices[(i+1)%n],arm=geometry.arms[i],color=arm.player.color;
-    parts.push('<path d="M 360,360 L '+v1.x.toFixed(2)+','+v1.y.toFixed(2)+' L '+v2.x.toFixed(2)+','+v2.y.toFixed(2)+' Z" fill="'+color+'" fill-opacity=".90" stroke="url(#gold)" stroke-width="1.6"/>');
-    arm.finishSlots.forEach((p,index)=>{
-      parts.push('<circle data-finish-slot="'+arm.index+':'+index+'" cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="6.4" fill="url(#gold)" stroke="'+style.shadow+'" stroke-width=".8"/>');
-      parts.push('<circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="4.6" fill="'+style.shadow+'" fill-opacity=".70" stroke="'+style.accent+'" stroke-opacity=".55" stroke-width=".6"/>');
+    const a=geometry.homeVertices[i],b=geometry.homeVertices[(i+1)%n],arm=geometry.arms[i],color=arm.player.color;
+    parts.push('<path d="M360 360L'+fmt(a.x)+' '+fmt(a.y)+'L'+fmt(b.x)+' '+fmt(b.y)+'Z" fill="'+color+'" fill-opacity=".88" stroke="url(#gold)" stroke-width="2.2" stroke-linejoin="round"/>');
+    arm.finishSlots.forEach((q,index)=>{
+      parts.push('<circle data-finish-slot="'+arm.index+':'+index+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.19)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.1"/>');
+      parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.125)+'" fill="url(#well)" stroke="'+s.accent+'" stroke-opacity=".8" stroke-width=".8"/>');
     });
   }
-  parts.push('<circle cx="360" cy="360" r="10.5" fill="url(#frame)" stroke="'+style.gold+'" stroke-width="1.4"/>');
-  parts.push('<path d="M 352,363 L 354,356 L 357,359 L 360,351 L 363,359 L 366,356 L 368,363 Z" fill="'+style.accent+'" stroke="'+style.shadow+'" stroke-width=".8"/>');
-  parts.push('<text x="360" y="32" text-anchor="middle" fill="'+style.accent+'" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="2.6">OPTIMIST LUDO · '+n+' PLAYERS</text>');
-  parts.push('<text x="360" y="693" text-anchor="middle" fill="'+style.accent+'" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="2.2">PLAY BRIGHT · MOVE SMART</text>');
-  for(const [x,y] of [[32,32],[688,32],[32,688],[688,688]]) {
-    parts.push('<circle cx="'+x+'" cy="'+y+'" r="6" fill="url(#frame)" stroke="'+style.gold+'" stroke-width="1"/><circle cx="'+x+'" cy="'+y+'" r="2" fill="'+style.shadow+'"/>');
-  }
+  const hub=n===5?17:19;
+  parts.push('<circle cx="360" cy="360" r="'+(hub+5)+'" fill="url(#frame)" stroke="'+s.gold+'" stroke-width="1.8"/><circle cx="360" cy="360" r="'+hub+'" fill="'+s.bg+'" stroke="'+s.accent+'" stroke-opacity=".55" stroke-width="1"/>');
+  parts.push('<path d="M348 362l3-9 6 5 3-12 4 12 6-5 3 9z" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width=".8"/>');
+  parts.push('<text x="360" y="379" text-anchor="middle" fill="'+s.accent+'" font-family="Arial,sans-serif" font-size="5.5" font-weight="900" letter-spacing=".8">OPTIMIST</text>');
+  parts.push('<text x="360" y="31" text-anchor="middle" fill="'+s.accent+'" font-family="Arial,sans-serif" font-size="10" font-weight="900" letter-spacing="2.4">OPTIMIST LUDO · '+(n===5?'PENTA':'HEX')+'</text>');
+  parts.push('<text x="360" y="692" text-anchor="middle" fill="'+s.accent+'" font-family="Arial,sans-serif" font-size="8" font-weight="800" letter-spacing="2">PLAY BRIGHT · MOVE SMART</text>');
+  for(const [x,y] of [[31,31],[689,31],[31,689],[689,689]]) parts.push('<circle cx="'+x+'" cy="'+y+'" r="5.5" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1"/>');
   parts.push('</svg>');
   return parts.join('');
 }
