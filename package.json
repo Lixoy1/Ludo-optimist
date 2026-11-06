@@ -1,6 +1,6 @@
 {
   "name": "optimist-ludo",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "description": "OPTIMIST LUDO integrated Classic Mini App, authoritative multiplayer backend and room voice chat",
@@ -8,7 +8,8 @@
     "test": "node --test",
     "start": "node --env-file-if-exists=.env apps/backend/server.js",
     "dev": "node --env-file-if-exists=.env --watch apps/backend/server.js",
-    "smoke": "node --env-file-if-exists=.env scripts/server-smoke.mjs"
+    "smoke": "node --env-file-if-exists=.env scripts/server-smoke.mjs",
+    "build:boards": "node scripts/build-board-assets.mjs"
   },
   "engines": {
     "node": ">=22.9.0"
