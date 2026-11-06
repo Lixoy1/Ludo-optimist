@@ -93,13 +93,14 @@ function makeGeometry(id,sides) {
                      CENTER.y+baseOutward.y*baseApothem-baseTangent.y*cornerOffset);
     const right=point(CENTER.x+baseOutward.x*baseApothem+baseTangent.x*cornerOffset,
                       CENTER.y+baseOutward.y*baseApothem+baseTangent.y*cornerOffset);
-    const rowOneRadius=apexRadius+(baseApothem-apexRadius)*.45;
-    const rowTwoRadius=apexRadius+(baseApothem-apexRadius)*.76;
+    const rowOneRadius=apexRadius+(baseApothem-apexRadius)*.35;
+    const rowTwoRadius=apexRadius+(baseApothem-apexRadius)*.68;
+    const baseOffset=cellPitch*.45;
     const baseSlots=[
-      add(CENTER,baseOutward,rowOneRadius),
-      add(add(CENTER,baseOutward,rowOneRadius),baseTangent,-16),
-      add(add(CENTER,baseOutward,rowOneRadius),baseTangent,16),
-      add(CENTER,baseOutward,rowTwoRadius),
+      add(add(CENTER,baseOutward,rowOneRadius),baseTangent,-baseOffset),
+      add(add(CENTER,baseOutward,rowOneRadius),baseTangent,baseOffset),
+      add(add(CENTER,baseOutward,rowTwoRadius),baseTangent,-baseOffset),
+      add(add(CENTER,baseOutward,rowTwoRadius),baseTangent,baseOffset),
     ];
     const finishSlots=[];
     for(const radius of [31,53]) {
@@ -293,8 +294,8 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
     const mid={x:(left.x+right.x)/2,y:(left.y+right.y)/2};
     parts.push('<text x="'+fmt(mid.x)+'" y="'+fmt(mid.y-5)+'" text-anchor="middle" fill="#fff4d8" font-family="Arial,sans-serif" font-size="10" font-weight="900" letter-spacing="1.5">'+arm.player.label+'</text>');
     arm.baseSlots.forEach((q,i)=>{
-      parts.push('<circle data-base-slot="'+arm.index+':'+i+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(p*.32)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.2"/>');
-      parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(p*.265)+'" fill="url(#well)" stroke="'+color+'" stroke-width="1.8"/>');
+      parts.push('<circle data-base-slot="'+arm.index+':'+i+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(p*.48)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.2"/>');
+      parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(p*.43)+'" fill="url(#well)" stroke="'+color+'" stroke-width="1.8"/>');
       parts.push('<circle cx="'+fmt(q.x-p*.07)+'" cy="'+fmt(q.y-p*.07)+'" r="'+fmt(p*.045)+'" fill="#fff" fill-opacity=".35"/>');
     });
   }
