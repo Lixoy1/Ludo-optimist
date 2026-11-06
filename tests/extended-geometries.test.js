@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-import {resolve} from 'node:path';
-import {EXTENDED_GEOMETRIES,assertExtendedGeometry} from '../src/extended-geometries.js';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { EXTENDED_GEOMETRIES, assertExtendedGeometry } from '../src/extended-geometries.js';
 const ids=['diamond','penta','hex'],themes=['classic','neon','elite','marble'];
-test('geometry counts match selected rule set',()=>{const expected={diamond:[4,52,8],penta:[5,65,10],hex:[6,78,12]};for(const[id,[seats,track,safe]]of Object.entries(expected)){const g=EXTENDED_GEOMETRIES[id];assert.equal(assertExtendedGeometry(g),true);assert.equal(g.players.length,seats);assert.equal(g.trackLength,track);assert.equal(g.safeIndices.length,safe);assert.equal(g.homeCells,5);assert.equal(g.tokensPerPlayer,4);}});
+test('geometry counts match the chosen rule set',()=>{const expected={diamond:[4,52,8,100],penta:[5,65,10,105],hex:[6,78,12,110]};for(const[id,[seats,track,safe,goal]]of Object.entries(expected)){const g=EXTENDED_GEOMETRIES[id];assert.equal(assertExtendedGeometry(g),true);assert.equal(g.players.length,seats);assert.equal(g.trackLength,track);assert.equal(g.safeIndices.length,safe);assert.equal(g.homeCells,5);assert.equal(g.tokensPerPlayer,4);assert.equal(g.goalRadius,goal);}});
 test('each seat has four base wells, five home cells and four finish wells',()=>{for(const g of Object.values(EXTENDED_GEOMETRIES))for(const p of g.players){assert.equal(p.baseSlots.length,4);assert.equal(p.homeLane.length,5);assert.equal(p.finishSlots.length,4);}});
 test('starts are evenly spaced and safe cells are unique',()=>{for(const g of Object.values(EXTENDED_GEOMETRIES)){const starts=g.players.map(p=>p.startIndex);assert.equal(new Set(starts).size,g.sides);for(let i=1;i<starts.length;i++)assert.equal(starts[i]-starts[i-1],13);assert.equal(new Set(g.safeIndices).size,g.sides*2);}});
 test('all route, base, lane and finish points fit inside 720 square',()=>{for(const g of Object.values(EXTENDED_GEOMETRIES)){const all=[...g.track,...g.players.flatMap(p=>[...p.baseSlots,...p.homeLane,...p.finishSlots])];for(const p of all){assert.ok(p.x>10&&p.x<710);assert.ok(p.y>10&&p.y<710);}}});
