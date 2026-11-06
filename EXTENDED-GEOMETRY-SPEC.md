@@ -76,6 +76,6 @@ All dimensions below are SVG units, derived from the shared radial cell pitch ra
 | Base socket outer diameter | 34.54 | 32.28 |
 | Base socket inner diameter | 30.94 | 28.92 |
 
-The four-token cluster span stays below the tile face (30.23 < 31.30 for PENTA; 28.25 < 29.25 for HEX). Base yards use a true 2×2 pawn layout: two rows, two columns, with center spacing chosen to keep the four pawn silhouettes distinct. Socket rims are deliberately larger than the pawn diameter to leave a visible metallic bezel.
+The four-token cluster span stays below the tile face (30.23 < 31.30 for PENTA; 28.25 < 29.25 for HEX). Base yards use a true 2×2 pawn layout: two rows, two columns. The minimum center-to-center distance between sockets is 37.42 units in PENTA and 34.97 in HEX, both greater than the single-pawn art diameter. Socket rims are deliberately larger than the pawn diameter to leave a visible metallic bezel.
 
 The board artwork is vector and scales proportionally. Pawn art size follows the local cell pitch; pointer/tap targets are a separate 48 CSS px layer and must not be scaled down with the artwork.

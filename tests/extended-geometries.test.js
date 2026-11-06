@@ -118,3 +118,15 @@ test('PENTA and HEX pawn art and base sockets are sized from their own cell pitc
     assert.ok(g.arms.every(a=>a.baseSlots.length===4));
   }
 });
+
+
+test('the four base wells form a true 2x2 layout with enough separation for pawn art',()=>{
+  for(const id of ids){
+    const g=EXTENDED_GEOMETRIES[id],diameter=g.cellPitch*g.pawnDiameterRatio;
+    for(const arm of g.arms){
+      const points=arm.baseSlots;
+      for(let a=0;a<points.length;a++)for(let b=a+1;b<points.length;b++)
+        assert.ok(distance(points[a],points[b])>diameter,'base pawn silhouettes must not overlap');
+    }
+  }
+});
