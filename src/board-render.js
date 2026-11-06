@@ -10,12 +10,12 @@ export function tokenBoardPositions(state){
  const characters=new Map((state.players||[]).map(p=>[p.id,p.characterId||'optimist']));
  for(const token of tokens){
   const{zone,step}=token.position;
-  if(zone==='base'){const[x,y]=BASE_SLOT_POINTS[token.color]?.[token.index]??BASE_SLOT_POINTS.blue[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:1,slot:token.index,stackKey:\`base:\${token.id}\`,stackCount:1,visible:true,overflowCount:0});continue;}
-  if(zone==='finished'){const[x,y]=FINISH_POINTS[token.index]??FINISH_POINTS[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:.8,slot:token.index,stackKey:\`finished:\${token.id}\`,stackCount:1,visible:true,overflowCount:0});continue;}
+  if(zone==='base'){const[x,y]=BASE_SLOT_POINTS[token.color]?.[token.index]??BASE_SLOT_POINTS.blue[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:1,slot:token.index,stackKey:`base:${token.id}`,stackCount:1,visible:true,overflowCount:0});continue;}
+  if(zone==='finished'){const[x,y]=FINISH_POINTS[token.index]??FINISH_POINTS[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:.8,slot:token.index,stackKey:`finished:${token.id}`,stackCount:1,visible:true,overflowCount:0});continue;}
   let key,point;
-  if(zone==='track'){const config=PLAYER_CONFIG[token.color],i=(config.start+step)%MAIN_TRACK.length,cell=MAIN_TRACK[i];key=\`track:\${i}\`;point=gridToImage(cell.col,cell.row);}
-  else if(zone==='home'){const i=step-52,cell=PLAYER_CONFIG[token.color]?.lane[i];if(!cell)throw new RangeError(\`Invalid home lane step \${step} for \${token.color}.\`);key=\`home:\${token.color}:\${i}\`;point=gridToImage(cell[0],cell[1]);}
-  else throw new Error(\`Unknown token zone: \${zone}\`);
+  if(zone==='track'){const config=PLAYER_CONFIG[token.color],i=(config.start+step)%MAIN_TRACK.length,cell=MAIN_TRACK[i];key=`track:${i}`;point=gridToImage(cell.col,cell.row);}
+  else if(zone==='home'){const i=step-52,cell=PLAYER_CONFIG[token.color]?.lane[i];if(!cell)throw new RangeError(`Invalid home lane step ${step} for ${token.color}.`);key=`home:${token.color}:${i}`;point=gridToImage(cell[0],cell[1]);}
+  else throw new Error(`Unknown token zone: ${zone}`);
   const bucket=grouped.get(key)??{point,tokens:[]};bucket.tokens.push(token);grouped.set(key,bucket);
  }
  const positions=new Map(base);

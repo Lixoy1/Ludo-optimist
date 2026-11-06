@@ -68,13 +68,14 @@ test('roll control is a custom six-state die and remains fixed in the bottom pla
 });
 
 test('vector board themes and mobile stack selection are wired', async () => {
-  const boards = await Promise.all(['classic','neon','elite','marble'].map((theme) => readFile(new URL(\`../assets/boards/optimist-ludo-\${theme}.svg\`, import.meta.url), 'utf8')));
+  const boards = await Promise.all(['classic','neon','elite','marble'].map((theme) => readFile(new URL(`../assets/boards/optimist-ludo-${theme}.svg`, import.meta.url), 'utf8')));
   assert.doesNotMatch(html, /maximum-scale=1/);
   assert.match(html, /id="boardArt"/);
   assert.match(html, /id="tokenChooser"/);
   assert.match(main, /createStackBadge/);
   assert.match(main, /handleBoardPointerUp/);
-  assert.match(css, /\\.pawn-overflow-badge/);
+  assert.match(html, /id="boardEffectOverlay"/);
+  assert.match(css, /\.pawn-overflow-badge/);
   for (const svg of boards) assert.match(svg, /viewBox="0 0 720 720"/);
 });
 

@@ -322,8 +322,8 @@ function activatePawnCell(button) {
     option.type = 'button'; option.className = 'token-choice';
     const image = document.createElement('img'); image.src = getCharacter(item.characterId).src; image.alt = ''; image.draggable = false;
     const copy = document.createElement('span');
-    const title = document.createElement('strong'); title.textContent = \`ФИШКА \${item.index + 1}\`;
-    const subtitle = document.createElement('small'); subtitle.textContent = \`\${COLOR_LABELS[item.color]} · \${item.zone === 'base' ? 'В БАЗЕ' : 'НА ДОРОЖКЕ'}\`;
+    const title = document.createElement('strong'); title.textContent = `ФИШКА ${item.index + 1}`;
+    const subtitle = document.createElement('small'); subtitle.textContent = `${COLOR_LABELS[item.color]} · ${item.zone === 'base' ? 'В БАЗЕ' : 'НА ДОРОЖКЕ'}`;
     copy.append(title, subtitle); option.append(image, copy);
     option.addEventListener('click', () => moveSelectedToken(item.tokenId));
     tokenChooserOptions.append(option);
@@ -394,12 +394,12 @@ function renderTokens(snapshot) {
     if (old && (old.zone !== position.zone || old.left !== position.left || old.top !== position.top)) {
       motion = position.zone === 'base' && old.zone !== 'base' ? ' captured' : position.zone === 'finished' ? ' finished-pop' : ' moving';
     }
-    element.className = \`pawn-art pawn-\${position.color}\${legal ? ' legal' : ''}\${ownerIsCurrent ? ' current-owner' : ''}\${motion}\`;
+    element.className = `pawn-art pawn-${position.color}${legal ? ' legal' : ''}${ownerIsCurrent ? ' current-owner' : ''}${motion}`;
     element.hidden = position.visible === false;
     const character = getCharacter(position.characterId), image = element.querySelector('.pawn-character');
     if (image.dataset.character !== character.id) { image.src = character.src; image.dataset.character = character.id; }
     element.style.setProperty('--token-color', colorHex(position.color));
-    element.style.left = \`\${position.left}%\`; element.style.top = \`\${position.top}%\`;
+    element.style.left = `${position.left}%`; element.style.top = `${position.top}%`;
     element.style.setProperty('--pawn-scale', String(position.scale));
     element.style.zIndex = String(4 + index);
     if (motion) animateToken(element, motion.trim());
@@ -410,17 +410,17 @@ function renderTokens(snapshot) {
     let hit = cellHitElements.get(stackKey);
     if (!hit) { hit = createPawnHitElement(stackKey); cellHitElements.set(stackKey, hit); tokenLayer.append(hit); }
     const first = stack[0], legalStack = activeTurn ? stack.filter((item) => legalIds.has(item.tokenId)) : [];
-    hit.style.left = \`\${first.centerLeft}%\`; hit.style.top = \`\${first.centerTop}%\`;
+    hit.style.left = `${first.centerLeft}%`; hit.style.top = `${first.centerTop}%`;
     hit.dataset.centerX = String(first.centerX); hit.dataset.centerY = String(first.centerY);
     hit.dataset.legalTokenIds = JSON.stringify(legalStack.map((item) => item.tokenId));
     hit.disabled = legalStack.length === 0;
     hit.setAttribute('aria-label', legalStack.length > 1
-      ? \`Выбрать одну из \${legalStack.length} доступных фишек\`
-      : legalStack.length === 1 ? \`Передвинуть фишку \${legalStack[0].index + 1}\` : 'Фишки на клетке');
+      ? `Выбрать одну из ${legalStack.length} доступных фишек`
+      : legalStack.length === 1 ? `Передвинуть фишку ${legalStack[0].index + 1}` : 'Фишки на клетке');
     if (stack.length > 4) {
       let badge = stackBadgeElements.get(stackKey);
       if (!badge) { badge = createStackBadge(stackKey); stackBadgeElements.set(stackKey, badge); tokenLayer.append(badge); }
-      badge.textContent = \`+\${stack.length - 4}\`; badge.style.left = \`\${first.centerLeft}%\`; badge.style.top = \`\${first.centerTop}%\`;
+      badge.textContent = `+${stack.length - 4}`; badge.style.left = `${first.centerLeft}%`; badge.style.top = `${first.centerTop}%`;
     }
   }
 }
