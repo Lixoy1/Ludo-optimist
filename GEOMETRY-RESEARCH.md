@@ -1,7 +1,18 @@
-# Open-source research — extended Ludo boards
+# Open-source research — classic 5/6-player Ludo
 
-- SECUSO Privacy Friendly Ludo: https://github.com/SecUSo/privacy-friendly-ludo — GPL-3.0; open Android implementation for up to six players. Used only as proof that six seats are a recognized Ludo variant; no source code, assets, screenshots or trademarks copied.
-- SECUSO F-Droid listing: https://f-droid.org/en/packages/org.secuso.privacyfriendlyludo/ — confirms 4–6 player support and GPLv3-or-later licence.
-- PlayLudo, “Ludo for 5 and 6 Players”: https://play-ludo.com/blog/ludo-for-5-and-6-players — 13 shared-track cells per arm (65/78), five home cells and two safe squares per player.
-- LudoLive strategy guide: https://www.playludolive.in/guides/ludo-strategy — describes another valid variant (55/66 outer cells and four home cells); those values are intentionally not combined with PlayLudo's longer variant.
-- OPTIMIST LUDO uses 13 cells per arm and five home cells for PENTA/HEX; DIAMOND is an original four-seat 52-cell layout.
+## Public references consulted
+- PlayLudo, “Ludo for 5 and 6 Players: How Bigger Games Work”: https://play-ludo.com/blog/ludo-for-5-and-6-players
+  - Describes one arm per player; each arm has three columns of squares and a central home column.
+  - Describes triangular yards, five-player pentagon, six-player hexagon, and route counts 65/78 with five home cells and two safe cells per arm.
+- PlayLudo, “Ludo Safe Squares (Stars) Explained”: https://play-ludo.com/blog/ludo-safe-squares-explained
+  - Confirms two safe positions per arm: start and star; its standard star position is eight squares after the start.
+- Mas Que Puzzles, Parchís para 5 jugadores: https://masquepuzzles.com/parchis/59-parchis-5.html
+  - Used only as a visual cross-check for the pentagon outline, triangular home yards, square track tiles, and central coloured finish. No image, texture, or source artwork copied.
+- Small Foot, Ludo for 6 Players instructions: https://b2b.small-foot.de/media/articles/pdf/1800_Ludo_fuer_6_Spieler.pdf
+  - Used as a second six-player layout/rules cross-check. No PDF artwork copied.
+
+## Chosen ruleset
+Some commercial Ludo variants use shorter 55/66-cell laps and four-cell home lanes. OPTIMIST LUDO intentionally chooses the 65/78-cell, five-home-cell ruleset above. These variants are not mixed.
+
+## Original work
+All coordinates, SVG illustrations, materials, colours, cell bevels, triangular yards, pawn wells, and finish sockets in this repository are newly authored for OPTIMIST LUDO. Third-party references are used only for general board topology and public rule descriptions.

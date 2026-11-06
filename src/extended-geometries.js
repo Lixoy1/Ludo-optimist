@@ -1,18 +1,322 @@
-/** Original OPTIMIST LUDO radial geometries. No third-party code or artwork is copied. */
-export const EXTENDED_GEOMETRIES = Object.freeze({"diamond":{"id":"diamond","sides":4,"maxPlayers":4,"players":[{"id":"red","label":"RED","color":"#ef5365","dark":"#8f2636","side":0,"startIndex":6,"homeEntryIndex":5,"safeIndices":[6,13],"baseCenter":{"x":533.648,"y":186.352},"baseSlots":[{"x":514.98,"y":186.352},{"x":533.648,"y":205.02},{"x":533.648,"y":167.684},{"x":552.316,"y":186.352}],"homeLane":[{"x":467.869,"y":212.906},{"x":458.122,"y":226.196},{"x":448.376,"y":239.487},{"x":438.629,"y":252.778},{"x":428.883,"y":266.069}],"goalCenter":{"x":430.711,"y":289.289},"finishSlots":[{"x":418.691,"y":289.289},{"x":430.711,"y":301.309},{"x":430.711,"y":277.269},{"x":442.731,"y":289.289}],"tangentAngle":0.7853981633974483,"outward":{"x":0.7071067811865475,"y":-0.7071067811865475},"cellSize":26.613},{"id":"blue","label":"BLUE","color":"#24a8e5","dark":"#155b91","side":1,"startIndex":19,"homeEntryIndex":18,"safeIndices":[19,26],"baseCenter":{"x":533.648,"y":533.648},"baseSlots":[{"x":533.648,"y":514.98},{"x":514.98,"y":533.648},{"x":552.316,"y":533.648},{"x":533.648,"y":552.316}],"homeLane":[{"x":507.094,"y":467.869},{"x":493.804,"y":458.122},{"x":480.513,"y":448.376},{"x":467.222,"y":438.629},{"x":453.931,"y":428.883}],"goalCenter":{"x":430.711,"y":430.711},"finishSlots":[{"x":430.711,"y":418.691},{"x":418.691,"y":430.711},{"x":442.731,"y":430.711},{"x":430.711,"y":442.731}],"tangentAngle":2.356194490192345,"outward":{"x":0.7071067811865475,"y":0.7071067811865475},"cellSize":26.613},{"id":"yellow","label":"YELLOW","color":"#edbd48","dark":"#94651b","side":2,"startIndex":32,"homeEntryIndex":31,"safeIndices":[32,39],"baseCenter":{"x":186.352,"y":533.648},"baseSlots":[{"x":205.02,"y":533.648},{"x":186.352,"y":514.98},{"x":186.352,"y":552.316},{"x":167.684,"y":533.648}],"homeLane":[{"x":252.131,"y":507.094},{"x":261.878,"y":493.804},{"x":271.624,"y":480.513},{"x":281.371,"y":467.222},{"x":291.117,"y":453.931}],"goalCenter":{"x":289.289,"y":430.711},"finishSlots":[{"x":301.309,"y":430.711},{"x":289.289,"y":418.691},{"x":289.289,"y":442.731},{"x":277.269,"y":430.711}],"tangentAngle":-2.356194490192345,"outward":{"x":-0.7071067811865475,"y":0.7071067811865475},"cellSize":26.613},{"id":"green","label":"GREEN","color":"#43b878","dark":"#1c704b","side":3,"startIndex":45,"homeEntryIndex":44,"safeIndices":[45,0],"baseCenter":{"x":186.352,"y":186.352},"baseSlots":[{"x":186.352,"y":205.02},{"x":205.02,"y":186.352},{"x":167.684,"y":186.352},{"x":186.352,"y":167.684}],"homeLane":[{"x":212.906,"y":252.131},{"x":226.196,"y":261.878},{"x":239.487,"y":271.624},{"x":252.778,"y":281.371},{"x":266.069,"y":291.117}],"goalCenter":{"x":289.289,"y":289.289},"finishSlots":[{"x":289.289,"y":301.309},{"x":301.309,"y":289.289},{"x":277.269,"y":289.289},{"x":289.289,"y":277.269}],"tangentAngle":-0.7853981633974483,"outward":{"x":-0.7071067811865475,"y":-0.7071067811865475},"cellSize":26.613}],"track":[{"index":0,"side":0,"cell":0,"x":370.692,"y":92.692,"angle":0.7853981633974483,"cellSize":26.613},{"index":1,"side":0,"cell":1,"x":392.077,"y":114.077,"angle":0.7853981633974483,"cellSize":26.613},{"index":2,"side":0,"cell":2,"x":413.462,"y":135.462,"angle":0.7853981633974483,"cellSize":26.613},{"index":3,"side":0,"cell":3,"x":434.846,"y":156.846,"angle":0.7853981633974483,"cellSize":26.613},{"index":4,"side":0,"cell":4,"x":456.231,"y":178.231,"angle":0.7853981633974483,"cellSize":26.613},{"index":5,"side":0,"cell":5,"x":477.615,"y":199.615,"angle":0.7853981633974483,"cellSize":26.613},{"index":6,"side":0,"cell":6,"x":499,"y":221,"angle":0.7853981633974483,"cellSize":26.613},{"index":7,"side":0,"cell":7,"x":520.385,"y":242.385,"angle":0.7853981633974483,"cellSize":26.613},{"index":8,"side":0,"cell":8,"x":541.769,"y":263.769,"angle":0.7853981633974483,"cellSize":26.613},{"index":9,"side":0,"cell":9,"x":563.154,"y":285.154,"angle":0.7853981633974483,"cellSize":26.613},{"index":10,"side":0,"cell":10,"x":584.538,"y":306.538,"angle":0.7853981633974483,"cellSize":26.613},{"index":11,"side":0,"cell":11,"x":605.923,"y":327.923,"angle":0.7853981633974483,"cellSize":26.613},{"index":12,"side":0,"cell":12,"x":627.308,"y":349.308,"angle":0.7853981633974483,"cellSize":26.613},{"index":13,"side":1,"cell":0,"x":627.308,"y":370.692,"angle":2.356194490192345,"cellSize":26.613},{"index":14,"side":1,"cell":1,"x":605.923,"y":392.077,"angle":2.356194490192345,"cellSize":26.613},{"index":15,"side":1,"cell":2,"x":584.538,"y":413.462,"angle":2.356194490192345,"cellSize":26.613},{"index":16,"side":1,"cell":3,"x":563.154,"y":434.846,"angle":2.356194490192345,"cellSize":26.613},{"index":17,"side":1,"cell":4,"x":541.769,"y":456.231,"angle":2.356194490192345,"cellSize":26.613},{"index":18,"side":1,"cell":5,"x":520.385,"y":477.615,"angle":2.356194490192345,"cellSize":26.613},{"index":19,"side":1,"cell":6,"x":499,"y":499,"angle":2.356194490192345,"cellSize":26.613},{"index":20,"side":1,"cell":7,"x":477.615,"y":520.385,"angle":2.356194490192345,"cellSize":26.613},{"index":21,"side":1,"cell":8,"x":456.231,"y":541.769,"angle":2.356194490192345,"cellSize":26.613},{"index":22,"side":1,"cell":9,"x":434.846,"y":563.154,"angle":2.356194490192345,"cellSize":26.613},{"index":23,"side":1,"cell":10,"x":413.462,"y":584.538,"angle":2.356194490192345,"cellSize":26.613},{"index":24,"side":1,"cell":11,"x":392.077,"y":605.923,"angle":2.356194490192345,"cellSize":26.613},{"index":25,"side":1,"cell":12,"x":370.692,"y":627.308,"angle":2.356194490192345,"cellSize":26.613},{"index":26,"side":2,"cell":0,"x":349.308,"y":627.308,"angle":-2.356194490192345,"cellSize":26.613},{"index":27,"side":2,"cell":1,"x":327.923,"y":605.923,"angle":-2.356194490192345,"cellSize":26.613},{"index":28,"side":2,"cell":2,"x":306.538,"y":584.538,"angle":-2.356194490192345,"cellSize":26.613},{"index":29,"side":2,"cell":3,"x":285.154,"y":563.154,"angle":-2.356194490192345,"cellSize":26.613},{"index":30,"side":2,"cell":4,"x":263.769,"y":541.769,"angle":-2.356194490192345,"cellSize":26.613},{"index":31,"side":2,"cell":5,"x":242.385,"y":520.385,"angle":-2.356194490192345,"cellSize":26.613},{"index":32,"side":2,"cell":6,"x":221,"y":499,"angle":-2.356194490192345,"cellSize":26.613},{"index":33,"side":2,"cell":7,"x":199.615,"y":477.615,"angle":-2.356194490192345,"cellSize":26.613},{"index":34,"side":2,"cell":8,"x":178.231,"y":456.231,"angle":-2.356194490192345,"cellSize":26.613},{"index":35,"side":2,"cell":9,"x":156.846,"y":434.846,"angle":-2.356194490192345,"cellSize":26.613},{"index":36,"side":2,"cell":10,"x":135.462,"y":413.462,"angle":-2.356194490192345,"cellSize":26.613},{"index":37,"side":2,"cell":11,"x":114.077,"y":392.077,"angle":-2.356194490192345,"cellSize":26.613},{"index":38,"side":2,"cell":12,"x":92.692,"y":370.692,"angle":-2.356194490192345,"cellSize":26.613},{"index":39,"side":3,"cell":0,"x":92.692,"y":349.308,"angle":-0.7853981633974483,"cellSize":26.613},{"index":40,"side":3,"cell":1,"x":114.077,"y":327.923,"angle":-0.7853981633974483,"cellSize":26.613},{"index":41,"side":3,"cell":2,"x":135.462,"y":306.538,"angle":-0.7853981633974483,"cellSize":26.613},{"index":42,"side":3,"cell":3,"x":156.846,"y":285.154,"angle":-0.7853981633974483,"cellSize":26.613},{"index":43,"side":3,"cell":4,"x":178.231,"y":263.769,"angle":-0.7853981633974483,"cellSize":26.613},{"index":44,"side":3,"cell":5,"x":199.615,"y":242.385,"angle":-0.7853981633974483,"cellSize":26.613},{"index":45,"side":3,"cell":6,"x":221,"y":221,"angle":-0.7853981633974483,"cellSize":26.613},{"index":46,"side":3,"cell":7,"x":242.385,"y":199.615,"angle":-0.7853981633974483,"cellSize":26.613},{"index":47,"side":3,"cell":8,"x":263.769,"y":178.231,"angle":-0.7853981633974483,"cellSize":26.613},{"index":48,"side":3,"cell":9,"x":285.154,"y":156.846,"angle":-0.7853981633974483,"cellSize":26.613},{"index":49,"side":3,"cell":10,"x":306.538,"y":135.462,"angle":-0.7853981633974483,"cellSize":26.613},{"index":50,"side":3,"cell":11,"x":327.923,"y":114.077,"angle":-0.7853981633974483,"cellSize":26.613},{"index":51,"side":3,"cell":12,"x":349.308,"y":92.692,"angle":-0.7853981633974483,"cellSize":26.613}],"trackLength":52,"cellsPerArm":13,"homeCells":5,"tokensPerPlayer":4,"safeIndices":[0,6,13,19,26,32,39,45],"vertices":[{"x":360,"y":82},{"x":638,"y":360},{"x":360,"y":638},{"x":82,"y":360}],"center":{"x":360,"y":360},"radius":278,"goalRadius":100,"pawnDiameterRatio":0.82,"stackLayout":{"1":{"scale":1,"offsets":[[0,0]]},"2":{"scale":0.48,"offsets":[[-0.21,0],[0.21,0]]},"3":{"scale":0.46,"offsets":[[0,-0.22],[-0.21,0.19],[0.21,0.19]]},"4":{"scale":0.43,"offsets":[[-0.22,-0.22],[0.22,-0.22],[-0.22,0.22],[0.22,0.22]]}},"touchTargetCssPx":48,"bounds":{"minX":92.692,"maxX":627.308,"minY":92.692,"maxY":627.308}},"penta":{"id":"penta","sides":5,"maxPlayers":5,"players":[{"id":"red","label":"RED","color":"#ef5365","dark":"#8f2636","side":0,"startIndex":6,"homeEntryIndex":5,"safeIndices":[6,13],"baseCenter":{"x":527.655,"y":129.241},"baseSlots":[{"x":509.478,"y":132.12},{"x":530.534,"y":147.418},{"x":524.776,"y":111.064},{"x":545.832,"y":126.362}],"homeLane":[{"x":466.56,"y":172.59},{"x":455.628,"y":191.816},{"x":444.696,"y":211.043},{"x":433.763,"y":230.27},{"x":422.831,"y":249.496}],"goalCenter":{"x":421.717,"y":275.053},"finishSlots":[{"x":409.844,"y":276.934},{"x":423.598,"y":286.926},{"x":419.836,"y":263.18},{"x":433.59,"y":273.172}],"tangentAngle":0.6283163789231738,"outward":{"x":0.587783511452563,"y":-0.809018259166315},"cellSize":23.237},{"id":"blue","label":"BLUE","color":"#24a8e5","dark":"#155b91","side":1,"startIndex":19,"homeEntryIndex":18,"safeIndices":[19,26],"baseCenter":{"x":631.273,"y":448.142},"baseSlots":[{"x":622.918,"y":431.745},{"x":614.876,"y":456.497},{"x":647.67,"y":439.787},{"x":639.628,"y":464.539}],"homeLane":[{"x":571.167,"y":403.431},{"x":549.503,"y":398.976},{"x":527.839,"y":394.52},{"x":506.175,"y":390.064},{"x":484.511,"y":385.609}],"goalCenter":{"x":459.861,"y":392.447},"finishSlots":[{"x":454.404,"y":381.736},{"x":449.15,"y":397.904},{"x":470.572,"y":386.99},{"x":465.318,"y":403.158}],"tangentAngle":1.884955459007111,"outward":{"x":0.9510565574397583,"y":0.3090168677448462},"cellSize":23.237},{"id":"yellow","label":"YELLOW","color":"#edbd48","dark":"#94651b","side":2,"startIndex":32,"homeEntryIndex":31,"safeIndices":[32,39],"baseCenter":{"x":360,"y":645.233},"baseSlots":[{"x":373.012,"y":632.221},{"x":346.988,"y":632.221},{"x":373.012,"y":658.245},{"x":346.988,"y":658.245}],"homeLane":[{"x":383.948,"y":574.253},{"x":381.491,"y":552.272},{"x":379.034,"y":530.292},{"x":376.578,"y":508.311},{"x":374.121,"y":486.331}],"goalCenter":{"x":360,"y":465},"finishSlots":[{"x":368.5,"y":456.5},{"x":351.5,"y":456.5},{"x":368.5,"y":473.5},{"x":351.5,"y":473.5}],"tangentAngle":3.141592653589793,"outward":{"x":0,"y":1},"cellSize":23.236},{"id":"green","label":"GREEN","color":"#43b878","dark":"#1c704b","side":3,"startIndex":45,"homeEntryIndex":44,"safeIndices":[45,52],"baseCenter":{"x":88.727,"y":448.142},"baseSlots":[{"x":105.124,"y":456.497},{"x":97.082,"y":431.745},{"x":80.372,"y":464.539},{"x":72.33,"y":439.787}],"homeLane":[{"x":163.634,"y":448.984},{"x":183.78,"y":439.855},{"x":203.925,"y":430.726},{"x":224.071,"y":421.597},{"x":244.216,"y":412.468}],"goalCenter":{"x":260.139,"y":392.447},"finishSlots":[{"x":270.85,"y":397.904},{"x":265.596,"y":381.736},{"x":254.682,"y":403.158},{"x":249.428,"y":386.99}],"tangentAngle":-1.884955459007111,"outward":{"x":-0.9510565574397583,"y":0.30901686774484627},"cellSize":23.237},{"id":"purple","label":"PURPLE","color":"#a77aeb","dark":"#62419b","side":4,"startIndex":58,"homeEntryIndex":57,"safeIndices":[58,0],"baseCenter":{"x":192.344,"y":129.242},"baseSlots":[{"x":189.465,"y":147.419},{"x":210.521,"y":132.121},{"x":174.167,"y":126.363},{"x":195.223,"y":111.065}],"homeLane":[{"x":214.691,"y":200.742},{"x":229.598,"y":217.081},{"x":244.506,"y":233.419},{"x":259.413,"y":249.758},{"x":274.321,"y":266.096}],"goalCenter":{"x":298.282,"y":275.053},"finishSlots":[{"x":296.401,"y":286.926},{"x":310.155,"y":276.934},{"x":286.409,"y":273.172},{"x":300.163,"y":263.18}],"tangentAngle":-0.6283198035735982,"outward":{"x":-0.5877862820538406,"y":-0.8090162462085188},"cellSize":23.237}],"track":[{"index":0,"side":0,"cell":0,"x":370.681,"y":75.76,"angle":0.6283175905609644,"cellSize":23.237},{"index":1,"side":0,"cell":1,"x":392.043,"y":91.281,"angle":0.6283175905609644,"cellSize":23.237},{"index":2,"side":0,"cell":2,"x":413.406,"y":106.801,"angle":0.6283175905609644,"cellSize":23.237},{"index":3,"side":0,"cell":3,"x":434.768,"y":122.322,"angle":0.6283175905609644,"cellSize":23.237},{"index":4,"side":0,"cell":4,"x":456.13,"y":137.842,"angle":0.6283175905609644,"cellSize":23.237},{"index":5,"side":0,"cell":5,"x":477.492,"y":153.363,"angle":0.6283175905609644,"cellSize":23.237},{"index":6,"side":0,"cell":6,"x":498.854,"y":168.883,"angle":0.6283175905609644,"cellSize":23.237},{"index":7,"side":0,"cell":7,"x":520.217,"y":184.404,"angle":0.6283175905609644,"cellSize":23.237},{"index":8,"side":0,"cell":8,"x":541.579,"y":199.925,"angle":0.6283175905609644,"cellSize":23.237},{"index":9,"side":0,"cell":9,"x":562.941,"y":215.445,"angle":0.6283175905609644,"cellSize":23.237},{"index":10,"side":0,"cell":10,"x":584.303,"y":230.966,"angle":0.6283175905609644,"cellSize":23.237},{"index":11,"side":0,"cell":11,"x":605.666,"y":246.486,"angle":0.6283175905609644,"cellSize":23.237},{"index":12,"side":0,"cell":12,"x":627.028,"y":262.007,"angle":0.6283175905609644,"cellSize":23.237},{"index":13,"side":1,"cell":0,"x":633.629,"y":282.323,"angle":1.8849577156819701,"cellSize":23.237},{"index":14,"side":1,"cell":1,"x":625.469,"y":307.436,"angle":1.8849577156819701,"cellSize":23.237},{"index":15,"side":1,"cell":2,"x":617.31,"y":332.549,"angle":1.8849577156819701,"cellSize":23.237},{"index":16,"side":1,"cell":3,"x":609.15,"y":357.662,"angle":1.8849577156819701,"cellSize":23.237},{"index":17,"side":1,"cell":4,"x":600.99,"y":382.774,"angle":1.8849577156819701,"cellSize":23.237},{"index":18,"side":1,"cell":5,"x":592.831,"y":407.887,"angle":1.8849577156819701,"cellSize":23.237},{"index":19,"side":1,"cell":6,"x":584.671,"y":433,"angle":1.8849577156819701,"cellSize":23.237},{"index":20,"side":1,"cell":7,"x":576.511,"y":458.113,"angle":1.8849577156819701,"cellSize":23.237},{"index":21,"side":1,"cell":8,"x":568.352,"y":483.226,"angle":1.8849577156819701,"cellSize":23.237},{"index":22,"side":1,"cell":9,"x":560.192,"y":508.338,"angle":1.8849577156819701,"cellSize":23.237},{"index":23,"side":1,"cell":10,"x":552.032,"y":533.451,"angle":1.8849577156819701,"cellSize":23.237},{"index":24,"side":1,"cell":11,"x":543.873,"y":558.564,"angle":1.8849577156819701,"cellSize":23.237},{"index":25,"side":1,"cell":12,"x":535.713,"y":583.677,"angle":1.8849577156819701,"cellSize":23.237},{"index":26,"side":2,"cell":0,"x":518.43,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":27,"side":2,"cell":1,"x":492.025,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":28,"side":2,"cell":2,"x":465.62,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":29,"side":2,"cell":3,"x":439.215,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":30,"side":2,"cell":4,"x":412.81,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":31,"side":2,"cell":5,"x":386.405,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":32,"side":2,"cell":6,"x":360,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":33,"side":2,"cell":7,"x":333.595,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":34,"side":2,"cell":8,"x":307.19,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":35,"side":2,"cell":9,"x":280.785,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":36,"side":2,"cell":10,"x":254.38,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":37,"side":2,"cell":11,"x":227.975,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":38,"side":2,"cell":12,"x":201.57,"y":596.233,"angle":3.141592653589793,"cellSize":23.236},{"index":39,"side":3,"cell":0,"x":184.287,"y":583.677,"angle":-1.8849577156819703,"cellSize":23.237},{"index":40,"side":3,"cell":1,"x":176.127,"y":558.564,"angle":-1.8849577156819703,"cellSize":23.237},{"index":41,"side":3,"cell":2,"x":167.968,"y":533.451,"angle":-1.8849577156819703,"cellSize":23.237},{"index":42,"side":3,"cell":3,"x":159.808,"y":508.338,"angle":-1.8849577156819703,"cellSize":23.237},{"index":43,"side":3,"cell":4,"x":151.648,"y":483.226,"angle":-1.8849577156819703,"cellSize":23.237},{"index":44,"side":3,"cell":5,"x":143.489,"y":458.113,"angle":-1.8849577156819703,"cellSize":23.237},{"index":45,"side":3,"cell":6,"x":135.329,"y":433,"angle":-1.8849577156819703,"cellSize":23.237},{"index":46,"side":3,"cell":7,"x":127.169,"y":407.887,"angle":-1.8849577156819703,"cellSize":23.237},{"index":47,"side":3,"cell":8,"x":119.01,"y":382.774,"angle":-1.8849577156819703,"cellSize":23.237},{"index":48,"side":3,"cell":9,"x":110.85,"y":357.662,"angle":-1.8849577156819703,"cellSize":23.237},{"index":49,"side":3,"cell":10,"x":102.69,"y":332.549,"angle":-1.8849577156819703,"cellSize":23.237},{"index":50,"side":3,"cell":11,"x":94.531,"y":307.436,"angle":-1.8849577156819703,"cellSize":23.237},{"index":51,"side":3,"cell":12,"x":86.371,"y":282.323,"angle":-1.8849577156819703,"cellSize":23.237},{"index":52,"side":4,"cell":0,"x":92.972,"y":262.007,"angle":-0.6283175905609644,"cellSize":23.237},{"index":53,"side":4,"cell":1,"x":114.334,"y":246.486,"angle":-0.6283175905609644,"cellSize":23.237},{"index":54,"side":4,"cell":2,"x":135.697,"y":230.966,"angle":-0.6283175905609644,"cellSize":23.237},{"index":55,"side":4,"cell":3,"x":157.059,"y":215.445,"angle":-0.6283175905609644,"cellSize":23.237},{"index":56,"side":4,"cell":4,"x":178.421,"y":199.925,"angle":-0.6283175905609644,"cellSize":23.237},{"index":57,"side":4,"cell":5,"x":199.783,"y":184.404,"angle":-0.6283175905609644,"cellSize":23.237},{"index":58,"side":4,"cell":6,"x":221.145,"y":168.883,"angle":-0.6283175905609644,"cellSize":23.237},{"index":59,"side":4,"cell":7,"x":242.508,"y":153.363,"angle":-0.6283175905609644,"cellSize":23.237},{"index":60,"side":4,"cell":8,"x":263.87,"y":137.842,"angle":-0.6283175905609644,"cellSize":23.237},{"index":61,"side":4,"cell":9,"x":285.232,"y":122.322,"angle":-0.6283175905609644,"cellSize":23.237},{"index":62,"side":4,"cell":10,"x":306.594,"y":106.801,"angle":-0.6283175905609644,"cellSize":23.237},{"index":63,"side":4,"cell":11,"x":327.957,"y":91.281,"angle":-0.6283175905609644,"cellSize":23.237},{"index":64,"side":4,"cell":12,"x":349.319,"y":75.76,"angle":-0.6283175905609644,"cellSize":23.237}],"trackLength":65,"cellsPerArm":13,"homeCells":5,"tokensPerPlayer":4,"safeIndices":[0,6,13,19,26,32,39,45,52,58],"vertices":[{"x":360,"y":68},{"x":637.709,"y":269.767},{"x":531.633,"y":596.233},{"x":188.367,"y":596.233},{"x":82.291,"y":269.767}],"center":{"x":360,"y":360},"radius":292,"goalRadius":105,"pawnDiameterRatio":0.82,"stackLayout":{"1":{"scale":1,"offsets":[[0,0]]},"2":{"scale":0.48,"offsets":[[-0.21,0],[0.21,0]]},"3":{"scale":0.46,"offsets":[[0,-0.22],[-0.21,0.19],[0.21,0.19]]},"4":{"scale":0.43,"offsets":[[-0.22,-0.22],[0.22,-0.22],[-0.22,0.22],[0.22,0.22]]}},"touchTargetCssPx":48,"bounds":{"minX":72.33,"maxX":647.67,"minY":75.76,"maxY":658.245}},"hex":{"id":"hex","sides":6,"maxPlayers":6,"players":[{"id":"red","label":"RED","color":"#ef5365","dark":"#8f2636","side":0,"startIndex":6,"homeEntryIndex":5,"safeIndices":[6,13],"baseCenter":{"x":518.734,"y":85.065},"baseSlots":[{"x":502.681,"y":89.366},{"x":523.035,"y":101.118},{"x":514.433,"y":69.012},{"x":534.787,"y":80.764}],"homeLane":[{"x":462.379,"y":139.688},{"x":451.174,"y":163.8},{"x":439.97,"y":187.911},{"x":428.765,"y":212.022},{"x":417.561,"y":236.133}],"goalCenter":{"x":415,"y":264.737},"finishSlots":[{"x":403.389,"y":267.848},{"x":418.111,"y":276.348},{"x":411.889,"y":253.126},{"x":426.611,"y":261.626}],"tangentAngle":0.5235989769318625,"outward":{"x":0.5000001743599707,"y":-0.8660253031176394},"cellSize":20.985},{"id":"blue","label":"BLUE","color":"#24a8e5","dark":"#155b91","side":1,"startIndex":19,"homeEntryIndex":18,"safeIndices":[19,26],"baseCenter":{"x":677.468,"y":360},"baseSlots":[{"x":665.716,"y":348.248},{"x":665.716,"y":371.752},{"x":689.22,"y":348.248},{"x":689.22,"y":371.752}],"homeLane":[{"x":601.985,"y":338.506},{"x":575.502,"y":340.859},{"x":549.018,"y":343.211},{"x":522.535,"y":345.563},{"x":496.052,"y":347.916}],"goalCenter":{"x":470,"y":360},"finishSlots":[{"x":461.5,"y":351.5},{"x":461.5,"y":368.5},{"x":478.5,"y":351.5},{"x":478.5,"y":368.5}],"tangentAngle":1.5707963267948966,"outward":{"x":1,"y":0},"cellSize":20.985},{"id":"yellow","label":"YELLOW","color":"#edbd48","dark":"#94651b","side":2,"startIndex":32,"homeEntryIndex":31,"safeIndices":[32,39],"baseCenter":{"x":518.734,"y":634.935},"baseSlots":[{"x":523.035,"y":618.882},{"x":502.681,"y":630.634},{"x":534.787,"y":639.236},{"x":514.433,"y":650.988}],"homeLane":[{"x":499.606,"y":558.818},{"x":484.328,"y":537.059},{"x":469.049,"y":515.3},{"x":453.77,"y":493.541},{"x":438.491,"y":471.782}],"goalCenter":{"x":415,"y":455.263},"finishSlots":[{"x":418.111,"y":443.652},{"x":403.389,"y":452.152},{"x":426.611,"y":458.374},{"x":411.889,"y":466.874}],"tangentAngle":2.617993676657931,"outward":{"x":0.5000001743599707,"y":0.8660253031176394},"cellSize":20.985},{"id":"green","label":"GREEN","color":"#43b878","dark":"#1c704b","side":3,"startIndex":45,"homeEntryIndex":44,"safeIndices":[45,52],"baseCenter":{"x":201.266,"y":634.935},"baseSlots":[{"x":217.319,"y":630.634},{"x":196.965,"y":618.882},{"x":205.567,"y":650.988},{"x":185.213,"y":639.236}],"homeLane":[{"x":257.621,"y":580.312},{"x":268.826,"y":556.2},{"x":280.03,"y":532.089},{"x":291.235,"y":507.978},{"x":302.439,"y":483.867}],"goalCenter":{"x":305,"y":455.263},"finishSlots":[{"x":316.611,"y":452.152},{"x":301.889,"y":443.652},{"x":308.111,"y":466.874},{"x":293.389,"y":458.374}],"tangentAngle":-2.617993676657931,"outward":{"x":-0.5000001743599707,"y":0.8660253031176391},"cellSize":20.985},{"id":"purple","label":"PURPLE","color":"#a77aeb","dark":"#62419b","side":4,"startIndex":58,"homeEntryIndex":57,"safeIndices":[58,65],"baseCenter":{"x":42.532,"y":360},"baseSlots":[{"x":54.284,"y":371.752},{"x":54.284,"y":348.248},{"x":30.78,"y":371.752},{"x":30.78,"y":348.248}],"homeLane":[{"x":118.015,"y":381.494},{"x":144.498,"y":379.141},{"x":170.982,"y":376.789},{"x":197.465,"y":374.437},{"x":223.948,"y":372.084}],"goalCenter":{"x":250,"y":360},"finishSlots":[{"x":258.5,"y":368.5},{"x":258.5,"y":351.5},{"x":241.5,"y":368.5},{"x":241.5,"y":351.5}],"tangentAngle":-1.5707963267948966,"outward":{"x":-1,"y":0},"cellSize":20.985},{"id":"orange","label":"ORANGE","color":"#f18c48","dark":"#99491f","side":5,"startIndex":71,"homeEntryIndex":70,"safeIndices":[71,0],"baseCenter":{"x":201.266,"y":85.065},"baseSlots":[{"x":196.965,"y":101.118},{"x":217.319,"y":89.366},{"x":185.213,"y":80.764},{"x":205.567,"y":69.012}],"homeLane":[{"x":220.394,"y":161.182},{"x":235.672,"y":182.941},{"x":250.951,"y":204.7},{"x":266.23,"y":226.459},{"x":281.509,"y":248.218}],"goalCenter":{"x":305,"y":264.737},"finishSlots":[{"x":301.889,"y":276.348},{"x":316.611,"y":267.848},{"x":293.389,"y":261.626},{"x":308.111,"y":253.126}],"tangentAngle":-0.5235989769318626,"outward":{"x":-0.5000001743599707,"y":-0.8660253031176391},"cellSize":20.985}],"track":[{"index":0,"side":0,"cell":0,"x":370.326,"y":55.962,"angle":0.5235985742647821,"cellSize":20.985},{"index":1,"side":0,"cell":1,"x":390.977,"y":67.885,"angle":0.5235985742647821,"cellSize":20.985},{"index":2,"side":0,"cell":2,"x":411.628,"y":79.808,"angle":0.5235985742647821,"cellSize":20.985},{"index":3,"side":0,"cell":3,"x":432.28,"y":91.731,"angle":0.5235985742647821,"cellSize":20.985},{"index":4,"side":0,"cell":4,"x":452.931,"y":103.654,"angle":0.5235985742647821,"cellSize":20.985},{"index":5,"side":0,"cell":5,"x":473.583,"y":115.577,"angle":0.5235985742647821,"cellSize":20.985},{"index":6,"side":0,"cell":6,"x":494.234,"y":127.5,"angle":0.5235985742647821,"cellSize":20.985},{"index":7,"side":0,"cell":7,"x":514.885,"y":139.423,"angle":0.5235985742647821,"cellSize":20.985},{"index":8,"side":0,"cell":8,"x":535.537,"y":151.346,"angle":0.5235985742647821,"cellSize":20.985},{"index":9,"side":0,"cell":9,"x":556.188,"y":163.269,"angle":0.5235985742647821,"cellSize":20.985},{"index":10,"side":0,"cell":10,"x":576.84,"y":175.192,"angle":0.5235985742647821,"cellSize":20.985},{"index":11,"side":0,"cell":11,"x":597.491,"y":187.115,"angle":0.5235985742647821,"cellSize":20.985},{"index":12,"side":0,"cell":12,"x":618.142,"y":199.038,"angle":0.5235985742647821,"cellSize":20.985},{"index":13,"side":1,"cell":0,"x":628.468,"y":216.923,"angle":1.5707963267948966,"cellSize":20.985},{"index":14,"side":1,"cell":1,"x":628.468,"y":240.769,"angle":1.5707963267948966,"cellSize":20.985},{"index":15,"side":1,"cell":2,"x":628.468,"y":264.615,"angle":1.5707963267948966,"cellSize":20.985},{"index":16,"side":1,"cell":3,"x":628.468,"y":288.462,"angle":1.5707963267948966,"cellSize":20.985},{"index":17,"side":1,"cell":4,"x":628.468,"y":312.308,"angle":1.5707963267948966,"cellSize":20.985},{"index":18,"side":1,"cell":5,"x":628.468,"y":336.154,"angle":1.5707963267948966,"cellSize":20.985},{"index":19,"side":1,"cell":6,"x":628.468,"y":360,"angle":1.5707963267948966,"cellSize":20.985},{"index":20,"side":1,"cell":7,"x":628.468,"y":383.846,"angle":1.5707963267948966,"cellSize":20.985},{"index":21,"side":1,"cell":8,"x":628.468,"y":407.692,"angle":1.5707963267948966,"cellSize":20.985},{"index":22,"side":1,"cell":9,"x":628.468,"y":431.538,"angle":1.5707963267948966,"cellSize":20.985},{"index":23,"side":1,"cell":10,"x":628.468,"y":455.385,"angle":1.5707963267948966,"cellSize":20.985},{"index":24,"side":1,"cell":11,"x":628.468,"y":479.231,"angle":1.5707963267948966,"cellSize":20.985},{"index":25,"side":1,"cell":12,"x":628.468,"y":503.077,"angle":1.5707963267948966,"cellSize":20.985},{"index":26,"side":2,"cell":0,"x":618.142,"y":520.962,"angle":2.6179940793250114,"cellSize":20.985},{"index":27,"side":2,"cell":1,"x":597.491,"y":532.885,"angle":2.6179940793250114,"cellSize":20.985},{"index":28,"side":2,"cell":2,"x":576.84,"y":544.808,"angle":2.6179940793250114,"cellSize":20.985},{"index":29,"side":2,"cell":3,"x":556.188,"y":556.731,"angle":2.6179940793250114,"cellSize":20.985},{"index":30,"side":2,"cell":4,"x":535.537,"y":568.654,"angle":2.6179940793250114,"cellSize":20.985},{"index":31,"side":2,"cell":5,"x":514.885,"y":580.577,"angle":2.6179940793250114,"cellSize":20.985},{"index":32,"side":2,"cell":6,"x":494.234,"y":592.5,"angle":2.6179940793250114,"cellSize":20.985},{"index":33,"side":2,"cell":7,"x":473.583,"y":604.423,"angle":2.6179940793250114,"cellSize":20.985},{"index":34,"side":2,"cell":8,"x":452.931,"y":616.346,"angle":2.6179940793250114,"cellSize":20.985},{"index":35,"side":2,"cell":9,"x":432.28,"y":628.269,"angle":2.6179940793250114,"cellSize":20.985},{"index":36,"side":2,"cell":10,"x":411.628,"y":640.192,"angle":2.6179940793250114,"cellSize":20.985},{"index":37,"side":2,"cell":11,"x":390.977,"y":652.115,"angle":2.6179940793250114,"cellSize":20.985},{"index":38,"side":2,"cell":12,"x":370.326,"y":664.038,"angle":2.6179940793250114,"cellSize":20.985},{"index":39,"side":3,"cell":0,"x":349.674,"y":664.038,"angle":-2.6179940793250114,"cellSize":20.985},{"index":40,"side":3,"cell":1,"x":329.023,"y":652.115,"angle":-2.6179940793250114,"cellSize":20.985},{"index":41,"side":3,"cell":2,"x":308.372,"y":640.192,"angle":-2.6179940793250114,"cellSize":20.985},{"index":42,"side":3,"cell":3,"x":287.72,"y":628.269,"angle":-2.6179940793250114,"cellSize":20.985},{"index":43,"side":3,"cell":4,"x":267.069,"y":616.346,"angle":-2.6179940793250114,"cellSize":20.985},{"index":44,"side":3,"cell":5,"x":246.417,"y":604.423,"angle":-2.6179940793250114,"cellSize":20.985},{"index":45,"side":3,"cell":6,"x":225.766,"y":592.5,"angle":-2.6179940793250114,"cellSize":20.985},{"index":46,"side":3,"cell":7,"x":205.115,"y":580.577,"angle":-2.6179940793250114,"cellSize":20.985},{"index":47,"side":3,"cell":8,"x":184.463,"y":568.654,"angle":-2.6179940793250114,"cellSize":20.985},{"index":48,"side":3,"cell":9,"x":163.812,"y":556.731,"angle":-2.6179940793250114,"cellSize":20.985},{"index":49,"side":3,"cell":10,"x":143.16,"y":544.808,"angle":-2.6179940793250114,"cellSize":20.985},{"index":50,"side":3,"cell":11,"x":122.509,"y":532.885,"angle":-2.6179940793250114,"cellSize":20.985},{"index":51,"side":3,"cell":12,"x":101.858,"y":520.962,"angle":-2.6179940793250114,"cellSize":20.985},{"index":52,"side":4,"cell":0,"x":91.532,"y":503.077,"angle":-1.5707963267948966,"cellSize":20.985},{"index":53,"side":4,"cell":1,"x":91.532,"y":479.231,"angle":-1.5707963267948966,"cellSize":20.985},{"index":54,"side":4,"cell":2,"x":91.532,"y":455.385,"angle":-1.5707963267948966,"cellSize":20.985},{"index":55,"side":4,"cell":3,"x":91.532,"y":431.538,"angle":-1.5707963267948966,"cellSize":20.985},{"index":56,"side":4,"cell":4,"x":91.532,"y":407.692,"angle":-1.5707963267948966,"cellSize":20.985},{"index":57,"side":4,"cell":5,"x":91.532,"y":383.846,"angle":-1.5707963267948966,"cellSize":20.985},{"index":58,"side":4,"cell":6,"x":91.532,"y":360,"angle":-1.5707963267948966,"cellSize":20.985},{"index":59,"side":4,"cell":7,"x":91.532,"y":336.154,"angle":-1.5707963267948966,"cellSize":20.985},{"index":60,"side":4,"cell":8,"x":91.532,"y":312.308,"angle":-1.5707963267948966,"cellSize":20.985},{"index":61,"side":4,"cell":9,"x":91.532,"y":288.462,"angle":-1.5707963267948966,"cellSize":20.985},{"index":62,"side":4,"cell":10,"x":91.532,"y":264.615,"angle":-1.5707963267948966,"cellSize":20.985},{"index":63,"side":4,"cell":11,"x":91.532,"y":240.769,"angle":-1.5707963267948966,"cellSize":20.985},{"index":64,"side":4,"cell":12,"x":91.532,"y":216.923,"angle":-1.5707963267948966,"cellSize":20.985},{"index":65,"side":5,"cell":0,"x":101.858,"y":199.038,"angle":-0.523598574264782,"cellSize":20.985},{"index":66,"side":5,"cell":1,"x":122.509,"y":187.115,"angle":-0.523598574264782,"cellSize":20.985},{"index":67,"side":5,"cell":2,"x":143.16,"y":175.192,"angle":-0.523598574264782,"cellSize":20.985},{"index":68,"side":5,"cell":3,"x":163.812,"y":163.269,"angle":-0.523598574264782,"cellSize":20.985},{"index":69,"side":5,"cell":4,"x":184.463,"y":151.346,"angle":-0.523598574264782,"cellSize":20.985},{"index":70,"side":5,"cell":5,"x":205.115,"y":139.423,"angle":-0.523598574264782,"cellSize":20.985},{"index":71,"side":5,"cell":6,"x":225.766,"y":127.5,"angle":-0.523598574264782,"cellSize":20.985},{"index":72,"side":5,"cell":7,"x":246.417,"y":115.577,"angle":-0.523598574264782,"cellSize":20.985},{"index":73,"side":5,"cell":8,"x":267.069,"y":103.654,"angle":-0.523598574264782,"cellSize":20.985},{"index":74,"side":5,"cell":9,"x":287.72,"y":91.731,"angle":-0.523598574264782,"cellSize":20.985},{"index":75,"side":5,"cell":10,"x":308.372,"y":79.808,"angle":-0.523598574264782,"cellSize":20.985},{"index":76,"side":5,"cell":11,"x":329.023,"y":67.885,"angle":-0.523598574264782,"cellSize":20.985},{"index":77,"side":5,"cell":12,"x":349.674,"y":55.962,"angle":-0.523598574264782,"cellSize":20.985}],"trackLength":78,"cellsPerArm":13,"homeCells":5,"tokensPerPlayer":4,"safeIndices":[0,6,13,19,26,32,39,45,52,58,65,71],"vertices":[{"x":360,"y":50},{"x":628.468,"y":205},{"x":628.468,"y":515},{"x":360,"y":670},{"x":91.532,"y":515},{"x":91.532,"y":205}],"center":{"x":360,"y":360},"radius":310,"goalRadius":110,"pawnDiameterRatio":0.82,"stackLayout":{"1":{"scale":1,"offsets":[[0,0]]},"2":{"scale":0.48,"offsets":[[-0.21,0],[0.21,0]]},"3":{"scale":0.46,"offsets":[[0,-0.22],[-0.21,0.19],[0.21,0.19]]},"4":{"scale":0.43,"offsets":[[-0.22,-0.22],[0.22,-0.22],[-0.22,0.22],[0.22,0.22]]}},"touchTargetCssPx":48,"bounds":{"minX":30.78,"maxX":689.22,"minY":55.962,"maxY":664.038}}});
-export const EXTENDED_GEOMETRY_IDS = Object.freeze(['diamond','penta','hex']);
+/**
+ * Classic radial Ludo geometries for OPTIMIST LUDO.
+ * Each arm is the classic 3-column x 6-row construction:
+ * 12 flank squares + 1 outer connector = 13 shared route cells;
+ * the centre column's remaining five cells form the private home lane.
+ * Original geometry and artwork; only the high-level game topology follows public Ludo rules.
+ */
+export const EXTENDED_THEMES = Object.freeze({
+  classic: { bg:'#090912', outer:'#60412a', board:'#9b7045', cell:'#f7ecd7', tile2:'#ead8b8', edge:'#a67a47', gold:'#e7c47a', shadow:'#09080b', ink:'#392517', accent:'#f2dba8', glow:'#f1c96d', baseBg:'#6f4428' },
+  neon: { bg:'#080a13', outer:'#0f1123', board:'#151a30', cell:'#f4efe4', tile2:'#d9d0c0', edge:'#b79b70', gold:'#edc879', shadow:'#04050b', ink:'#281c16', accent:'#f9e5b3', glow:'#65d8ff', baseBg:'#0e1328' },
+  elite: { bg:'#080708', outer:'#21120d', board:'#382116', cell:'#efe0c1', tile2:'#d5bd92', edge:'#956c3d', gold:'#e6c276', shadow:'#080504', ink:'#3a2415', accent:'#ffebbd', glow:'#d9a74c', baseBg:'#32180f' },
+  marble: { bg:'#09111a', outer:'#1e3340', board:'#2d4350', cell:'#f6fbfd', tile2:'#d7e4ea', edge:'#91aab7', gold:'#c2dce7', shadow:'#050a10', ink:'#263f4d', accent:'#edfaff', glow:'#92d9ef', baseBg:'#203746' },
+});
+export const EXTENDED_PLAYER_COLORS = Object.freeze({
+  penta: [
+    { id:'blue', label:'BLUE', color:'#19a8ea', dark:'#075a8e' },
+    { id:'red', label:'RED', color:'#f0445b', dark:'#851a2b' },
+    { id:'yellow', label:'YELLOW', color:'#f5bb35', dark:'#8c5a09' },
+    { id:'green', label:'GREEN', color:'#39b86b', dark:'#12623b' },
+    { id:'purple', label:'PURPLE', color:'#a16de9', dark:'#51268d' },
+  ],
+  hex: [
+    { id:'blue', label:'BLUE', color:'#19a8ea', dark:'#075a8e' },
+    { id:'red', label:'RED', color:'#f0445b', dark:'#851a2b' },
+    { id:'yellow', label:'YELLOW', color:'#f5bb35', dark:'#8c5a09' },
+    { id:'green', label:'GREEN', color:'#39b86b', dark:'#12623b' },
+    { id:'purple', label:'PURPLE', color:'#a16de9', dark:'#51268d' },
+    { id:'orange', label:'ORANGE', color:'#f18440', dark:'#883e17' },
+  ],
+});
+const TAU = Math.PI * 2;
+const CENTER = Object.freeze({ x:360, y:360 });
+const point = (x,y) => ({ x:Number(x.toFixed(3)), y:Number(y.toFixed(3)) });
+const unit = (x,y) => { const length=Math.hypot(x,y)||1; return { x:x/length, y:y/length }; };
+const add = (a,b,scale=1) => point(a.x+b.x*scale, a.y+b.y*scale);
+const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
+function regularVertices(sides,radius,offset=-Math.PI/2) {
+  return Array.from({length:sides},(_,i)=>{
+    const angle=offset+i*TAU/sides;
+    return point(CENTER.x+Math.cos(angle)*radius,CENTER.y+Math.sin(angle)*radius);
+  });
+}
+function makeGeometry(id,sides) {
+  const h=Math.PI/sides;
+  const routeToInnerRatio=(Math.cos(h)+.5)/Math.sin(h);
+  const boardRadius=260;
+  const cellPitch=boardRadius/(5+routeToInnerRatio);
+  const innerRadius=routeToInnerRatio*cellPitch;
+  const frameRadius=348;
+  const baseAngles=Array.from({length:sides},(_,i)=>-Math.PI/2+i*TAU/sides);
+  const armAngles=Array.from({length:sides},(_,i)=>-Math.PI/2+(i+.5)*TAU/sides);
+  const track=[];
+  const arms=[];
+  const colors=EXTENDED_PLAYER_COLORS[id];
+  for(let armIndex=0;armIndex<sides;armIndex+=1) {
+    const angle=armAngles[armIndex];
+    const outward={x:Math.cos(angle),y:Math.sin(angle)};
+    const tangent={x:-Math.sin(angle),y:Math.cos(angle)};
+    const sideCells=new Map();
+    const centerCells=new Map();
+    for(let row=0;row<6;row+=1) {
+      const radial=boardRadius-row*cellPitch;
+      for(const column of [-1,1]) {
+        sideCells.set(column+':'+row,point(
+          CENTER.x+outward.x*radial+tangent.x*column*cellPitch,
+          CENTER.y+outward.y*radial+tangent.y*column*cellPitch
+        ));
+      }
+      centerCells.set(row,point(CENTER.x+outward.x*radial,CENTER.y+outward.y*radial));
+    }
+    const armTrackStart=track.length;
+    for(let row=5;row>=0;row-=1) {
+      const p=sideCells.get('-1:'+row);
+      track.push({index:track.length,arm:armIndex,column:-1,row,x:p.x,y:p.y,kind:'flank'});
+    }
+    const connector=centerCells.get(0);
+    track.push({index:track.length,arm:armIndex,column:0,row:0,x:connector.x,y:connector.y,kind:'connector'});
+    for(let row=0;row<6;row+=1) {
+      const p=sideCells.get('1:'+row);
+      track.push({index:track.length,arm:armIndex,column:1,row,x:p.x,y:p.y,kind:'flank'});
+    }
+    const startIndex=armTrackStart+5;
+    const starIndex=(startIndex+8)%(sides*13);
+    const homeLane=Array.from({length:5},(_,index)=>centerCells.get(index+1));
+    const baseAngle=baseAngles[armIndex];
+    const baseOutward={x:Math.cos(baseAngle),y:Math.sin(baseAngle)};
+    const baseTangent={x:-Math.sin(baseAngle),y:Math.cos(baseAngle)};
+    const baseApothem=frameRadius*Math.cos(h);
+    const cornerOffset=frameRadius*Math.sin(h);
+    const apexRadius=sides===5?162:178;
+    const apex=add(CENTER,baseOutward,apexRadius);
+    const left=point(CENTER.x+baseOutward.x*baseApothem-baseTangent.x*cornerOffset,
+                     CENTER.y+baseOutward.y*baseApothem-baseTangent.y*cornerOffset);
+    const right=point(CENTER.x+baseOutward.x*baseApothem+baseTangent.x*cornerOffset,
+                      CENTER.y+baseOutward.y*baseApothem+baseTangent.y*cornerOffset);
+    const rowOneRadius=apexRadius+(baseApothem-apexRadius)*.45;
+    const rowTwoRadius=apexRadius+(baseApothem-apexRadius)*.76;
+    const baseSlots=[
+      add(CENTER,baseOutward,rowOneRadius),
+      add(add(CENTER,baseOutward,rowOneRadius),baseTangent,-16),
+      add(add(CENTER,baseOutward,rowOneRadius),baseTangent,16),
+      add(CENTER,baseOutward,rowTwoRadius),
+    ];
+    const finishSlots=[];
+    for(const radius of [31,53]) {
+      finishSlots.push(add(add(CENTER,outward,radius),tangent,-9));
+      finishSlots.push(add(add(CENTER,outward,radius),tangent,9));
+    }
+    arms.push({
+      index:armIndex,
+      player:colors[armIndex],
+      angle,
+      outward,
+      tangent,
+      baseAngle,
+      triangle:[apex,left,right],
+      baseSlots,
+      startIndex,
+      homeEntryIndex:(startIndex-1)%(sides*13),
+      starIndex,
+      homeLane,
+      finishSlots,
+      cellPitch,
+      tileSize:cellPitch*.87,
+      pawnDiameter:cellPitch*.82,
+    });
+  }
+  const safeIndices=[...new Set(arms.flatMap(arm=>[arm.startIndex,arm.starIndex]))].sort((a,b)=>a-b);
+  const allPoints=[
+    ...track.map(cell=>({x:cell.x,y:cell.y})),
+    ...arms.flatMap(arm=>[...arm.baseSlots,...arm.homeLane,...arm.finishSlots]),
+    ...arms.flatMap(arm=>arm.triangle),
+  ];
+  const hubRadius=(innerRadius-cellPitch*.5)/Math.cos(h);
+  return {
+    id,
+    sides,
+    maxPlayers:sides,
+    tokensPerPlayer:4,
+    cellsPerArm:13,
+    gridColumns:3,
+    gridRows:6,
+    homeCells:5,
+    trackLength:sides*13,
+    boardRadius,
+    frameRadius,
+    cellPitch,
+    tileSize:cellPitch*.87,
+    innerRadius,
+    hubRadius,
+    center:CENTER,
+    baseAngles,
+    armAngles,
+    players:arms,
+    arms,
+    track,
+    safeIndices,
+    homeVertices:regularVertices(sides,hubRadius),
+    pawnDiameterRatio:.82,
+    stackLayout:{
+      1:{scale:1,offsets:[[0,0]]},
+      2:{scale:.68,offsets:[[-.15,0],[.15,0]]},
+      3:{scale:.64,offsets:[[0,-.16],[-.16,.16],[.16,.16]]},
+      4:{scale:.61,offsets:[[-.17,-.17],[.17,-.17],[-.17,.17],[.17,.17]]},
+    },
+    touchTargetCssPx:48,
+    bounds:{
+      minX:Math.min(...allPoints.map(p=>p.x)),
+      maxX:Math.max(...allPoints.map(p=>p.x)),
+      minY:Math.min(...allPoints.map(p=>p.y)),
+      maxY:Math.max(...allPoints.map(p=>p.y)),
+    },
+  };
+}
+export const EXTENDED_GEOMETRIES=Object.freeze({
+  penta:makeGeometry('penta',5),
+  hex:makeGeometry('hex',6),
+});
+export const EXTENDED_GEOMETRY_IDS=Object.freeze(['penta','hex']);
 export function getExtendedGeometry(id) {
- const geometry = EXTENDED_GEOMETRIES[String(id || '').toLowerCase()];
- if (!geometry) throw new RangeError('Unknown extended board geometry.');
- return geometry;
+  const geometry=EXTENDED_GEOMETRIES[String(id||'').toLowerCase()];
+  if(!geometry) throw new RangeError('Unknown extended board geometry.');
+  return geometry;
+}
+export function distance(a,b) { return Math.hypot(a.x-b.x,a.y-b.y); }
+export function pointInTriangle(p,triangle,epsilon=.001) {
+  const [a,b,c]=triangle;
+  const v0={x:b.x-a.x,y:b.y-a.y},v1={x:c.x-a.x,y:c.y-a.y},v2={x:p.x-a.x,y:p.y-a.y};
+  const den=v0.x*v1.y-v1.x*v0.y;
+  const u=(v2.x*v1.y-v1.x*v2.y)/den;
+  const v=(v0.x*v2.y-v0.y*v2.x)/den;
+  const w=1-u-v;
+  return u>=-epsilon&&v>=-epsilon&&w>=-epsilon;
+}
+export function getExtendedStackLayout(geometryId,count) {
+  const geometry=getExtendedGeometry(geometryId);
+  if(!Number.isInteger(count)||count<0) throw new RangeError('Token count must be a non-negative integer.');
+  if(count===0) return {tokens:[],hiddenCount:0};
+  const visible=Math.min(count,4);
+  const config=geometry.stackLayout[visible];
+  return {
+    hiddenCount:Math.max(0,count-visible),
+    tokens:config.offsets.map((offset,index)=>({
+      index,
+      x:offset[0]*geometry.cellPitch,
+      y:offset[1]*geometry.cellPitch,
+      scale:config.scale,
+      diameter:geometry.pawnDiameter*config.scale,
+    })),
+  };
 }
 export function assertExtendedGeometry(geometry) {
- if (!geometry || ![4,5,6].includes(geometry.sides)) throw new TypeError('Unknown extended board geometry.');
- if (geometry.track.length !== geometry.sides * 13) throw new Error('Track must contain 13 cells per arm.');
- if (geometry.players.length !== geometry.sides) throw new Error('Every arm must have one player.');
- if (geometry.safeIndices.length !== geometry.sides * 2) throw new Error('Every player must have exactly two safe cells.');
- const keys = new Set(geometry.track.map(({x,y}) => `${x.toFixed(3)},${y.toFixed(3)}`));
- if (keys.size !== geometry.track.length) throw new Error('Track cells must be unique.');
- for (const player of geometry.players) if (player.baseSlots.length !== 4 || player.homeLane.length !== 5 || player.finishSlots.length !== 4) throw new Error(`Invalid pawn slots for ${player.id}`);
- return true;
+  if(!geometry||![5,6].includes(geometry.sides)) throw new TypeError('Only PENTA and HEX are supported.');
+  if(geometry.track.length!==geometry.sides*13) throw new Error('Shared track must have 13 cells per arm.');
+  if(geometry.arms.length!==geometry.sides) throw new Error('Every player must have one classic three-column arm.');
+  if(geometry.safeIndices.length!==geometry.sides*2) throw new Error('Every player must have two safe squares.');
+  const keys=new Set(geometry.track.map(cell=>cell.x.toFixed(3)+','+cell.y.toFixed(3)));
+  if(keys.size!==geometry.trackLength) throw new Error('Route cell centers must be unique.');
+  const pitch=geometry.cellPitch;
+  for(let i=0;i<geometry.track.length;i+=1) {
+    const next=geometry.track[(i+1)%geometry.track.length];
+    if(Math.abs(distance(geometry.track[i],next)-pitch)>.02) throw new Error('Shared route has a broken cell-to-cell connection.');
+  }
+  for(const arm of geometry.arms) {
+    if(arm.homeLane.length!==5||arm.baseSlots.length!==4||arm.finishSlots.length!==4) throw new Error('Every player must have 4 base slots, 5 home cells and 4 finish slots.');
+    if(arm.starIndex!==(arm.startIndex+8)%geometry.trackLength) throw new Error('Star safety position must be eight route steps after start.');
+    if(!arm.baseSlots.every(p=>pointInTriangle(p,arm.triangle))) throw new Error('A pawn well lies outside its triangular base.');
+    if(arm.baseSlots.some(p=>p.x<0||p.y<0||p.x>720||p.y>720)) throw new Error('Base slot outside board art.');
+  }
+  return true;
+}
+function poly(points) {
+  return points.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')+' Z';
+}
+function starPoints(x,y,r) {
+  return Array.from({length:10},(_,i)=>{
+    const angle=-Math.PI/2+i*Math.PI/5;
+    const radius=i%2?r*.42:r;
+    return (x+Math.cos(angle)*radius).toFixed(2)+','+(y+Math.sin(angle)*radius).toFixed(2);
+  }).join(' ');
+}
+export function renderExtendedBoardSvg(geometry,theme='neon') {
+  if(!EXTENDED_THEMES[theme]) throw new RangeError('Unknown board theme.');
+  const style=EXTENDED_THEMES[theme];
+  const n=geometry.sides;
+  const frame=regularVertices(n,348),inset=regularVertices(n,338);
+  const parts=[];
+  parts.push('<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" role="img" aria-label="OPTIMIST LUDO '+n+' players '+theme+'">');
+  parts.push('<title>OPTIMIST LUDO — '+n+' PLAYERS — '+theme.toUpperCase()+'</title><defs>');
+  parts.push('<linearGradient id="frame" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+style.glow+'"/><stop offset=".22" stop-color="'+style.gold+'"/><stop offset=".52" stop-color="'+style.outer+'"/><stop offset=".78" stop-color="'+style.gold+'"/><stop offset="1" stop-color="'+style.shadow+'"/></linearGradient>');
+  parts.push('<linearGradient id="surface" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+style.board+'"/><stop offset=".5" stop-color="'+style.bg+'"/><stop offset="1" stop-color="'+style.outer+'"/></linearGradient>');
+  parts.push('<linearGradient id="ivory" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#fffefb"/><stop offset=".52" stop-color="'+style.cell+'"/><stop offset="1" stop-color="'+style.tile2+'"/></linearGradient>');
+  parts.push('<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1bc"/><stop offset=".45" stop-color="'+style.gold+'"/><stop offset="1" stop-color="#8d5f2a"/></linearGradient>');
+  parts.push('<radialGradient id="well" cx=".3" cy=".22" r=".9"><stop stop-color="#67778a"/><stop offset=".26" stop-color="'+style.baseBg+'"/><stop offset="1" stop-color="#05070d"/></radialGradient>');
+  parts.push('<filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>');
+  parts.push('<pattern id="grain" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M0 13Q19 5 66 17M-8 39Q24 30 72 43M4 59Q28 51 70 61" fill="none" stroke="'+style.accent+'" stroke-opacity=".07" stroke-width="2"/></pattern>');
+  parts.push('<pattern id="marble" width="112" height="112" patternUnits="userSpaceOnUse"><path d="M-10 30Q24 2 55 30T128 24M-10 85Q28 62 58 89T128 82" fill="none" stroke="'+style.accent+'" stroke-opacity=".14" stroke-width="3"/><path d="M-10 33Q24 5 55 33T128 27" fill="none" stroke="'+style.glow+'" stroke-opacity=".1" stroke-width="1"/></pattern></defs>');
+  parts.push('<rect width="720" height="720" rx="30" fill="'+style.bg+'"/>');
+  parts.push('<rect x="8" y="8" width="704" height="704" rx="30" fill="url(#frame)" stroke="'+style.gold+'" stroke-width="1.6"/>');
+  parts.push('<rect x="16" y="16" width="688" height="688" rx="25" fill="url(#surface)" stroke="'+style.shadow+'" stroke-width="5"/>');
+  if(theme==='classic') parts.push('<rect x="20" y="20" width="680" height="680" rx="22" fill="url(#grain)" opacity=".75"/>');
+  if(theme==='marble') parts.push('<rect x="20" y="20" width="680" height="680" rx="22" fill="url(#marble)" opacity=".7"/>');
+  if(theme==='neon') parts.push('<g opacity=".18" filter="url(#glow)"><path d="M42 95Q95 42 146 78T208 54M512 72Q582 30 660 98M40 590Q110 650 190 624M532 642Q606 684 678 598" fill="none" stroke="#a64dff" stroke-width="7"/><path d="M55 138Q100 96 145 125M580 126Q625 92 667 142M46 548Q100 510 136 550" fill="none" stroke="#32d8ff" stroke-width="5"/></g>');
+  parts.push('<path d="'+poly(frame)+'" fill="none" stroke="'+style.gold+'" stroke-width="5"/>');
+  parts.push('<path d="'+poly(inset)+'" fill="none" stroke="'+style.accent+'" stroke-opacity=".28" stroke-width="1.4"/>');
+  for(const arm of geometry.arms) {
+    const color=arm.player.color,triangle=arm.triangle;
+    parts.push('<path d="'+poly(triangle)+'" fill="'+color+'" fill-opacity=".30" stroke="url(#gold)" stroke-width="3.2"/>');
+    const apex=triangle[0],left=triangle[1],right=triangle[2];
+    const insetTriangle=[
+      {x:apex.x*.9+(left.x+right.x)*.05,y:apex.y*.9+(left.y+right.y)*.05},
+      {x:left.x*.9+apex.x*.1,y:left.y*.9+apex.y*.1},
+      {x:right.x*.9+apex.x*.1,y:right.y*.9+apex.y*.1},
+    ];
+    parts.push('<path d="'+poly(insetTriangle)+'" fill="none" stroke="'+color+'" stroke-opacity=".9" stroke-width="2"/>');
+    arm.baseSlots.forEach((p,index)=>{
+      parts.push('<circle data-base-slot="'+arm.index+':'+index+'" cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="16.2" fill="url(#gold)" stroke="'+style.gold+'" stroke-width="1.3"/>');
+      parts.push('<circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="13.5" fill="url(#well)" stroke="'+color+'" stroke-opacity=".95" stroke-width="1.5"/>');
+      parts.push('<circle cx="'+(p.x-4).toFixed(2)+'" cy="'+(p.y-4).toFixed(2)+'" r="2.3" fill="#fff9e8" fill-opacity=".30"/>');
+    });
+  }
+  for(const cell of geometry.track) {
+    const arm=geometry.arms[cell.arm],angle=arm.angle*180/Math.PI;
+    const isStart=cell.index===arm.startIndex,isSafe=cell.index===arm.starIndex;
+    const size=geometry.tileSize,x=cell.x,y=cell.y;
+    const fill=isStart?arm.player.color:'url(#ivory)';
+    const stroke=isStart?style.gold:style.edge;
+    parts.push('<rect x="'+(x-size/2+1.5).toFixed(2)+'" y="'+(y-size/2+2.5).toFixed(2)+'" width="'+size.toFixed(2)+'" height="'+size.toFixed(2)+'" rx="3" fill="'+style.shadow+'" opacity=".65" transform="rotate('+angle.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')"/>');
+    parts.push('<rect data-track-cell="'+cell.index+'" x="'+(x-size/2).toFixed(2)+'" y="'+(y-size/2).toFixed(2)+'" width="'+size.toFixed(2)+'" height="'+size.toFixed(2)+'" rx="2.6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5" transform="rotate('+angle.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')"/>');
+    parts.push('<rect x="'+(x-size/2+2).toFixed(2)+'" y="'+(y-size/2+2).toFixed(2)+'" width="'+(size-4).toFixed(2)+'" height="'+(size-4).toFixed(2)+'" rx="2" fill="none" stroke="#ffffff" stroke-opacity=".32" stroke-width=".7" transform="rotate('+angle.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')"/>');
+    if(isStart) {
+      parts.push('<path d="M '+(x-4).toFixed(2)+' '+(y+2).toFixed(2)+' l 4 -7 4 7 h -2 v 5 h -4 v -5 z" fill="#fff6dd" stroke="'+style.shadow+'" stroke-width=".5" transform="rotate('+angle.toFixed(2)+' '+x.toFixed(2)+' '+y.toFixed(2)+')"/>');
+    } else if(isSafe) {
+      parts.push('<polygon data-safe-cell="'+cell.index+'" points="'+starPoints(x,y,7)+'" fill="url(#gold)" stroke="'+style.shadow+'" stroke-width=".6"/>');
+    }
+  }
+  for(const arm of geometry.arms) {
+    arm.homeLane.forEach((p,index)=>{
+      const size=geometry.tileSize,angle=arm.angle*180/Math.PI,color=arm.player.color;
+      parts.push('<rect data-home-cell="'+arm.index+':'+index+'" x="'+(p.x-size/2).toFixed(2)+'" y="'+(p.y-size/2).toFixed(2)+'" width="'+size.toFixed(2)+'" height="'+size.toFixed(2)+'" rx="2.8" fill="'+color+'" stroke="'+style.gold+'" stroke-width="1.5" transform="rotate('+angle.toFixed(2)+' '+p.x.toFixed(2)+' '+p.y.toFixed(2)+')"/>');
+      parts.push('<rect x="'+(p.x-size/2+3).toFixed(2)+'" y="'+(p.y-size/2+3).toFixed(2)+'" width="'+(size-6).toFixed(2)+'" height="'+(size-6).toFixed(2)+'" rx="2" fill="none" stroke="'+style.accent+'" stroke-opacity=".42" stroke-width=".8" transform="rotate('+angle.toFixed(2)+' '+p.x.toFixed(2)+' '+p.y.toFixed(2)+')"/>');
+      parts.push('<circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="2.2" fill="'+style.accent+'" fill-opacity=".65"/>');
+    });
+  }
+  for(let i=0;i<n;i++) {
+    const v1=geometry.homeVertices[i],v2=geometry.homeVertices[(i+1)%n],arm=geometry.arms[i],color=arm.player.color;
+    parts.push('<path d="M 360,360 L '+v1.x.toFixed(2)+','+v1.y.toFixed(2)+' L '+v2.x.toFixed(2)+','+v2.y.toFixed(2)+' Z" fill="'+color+'" fill-opacity=".90" stroke="url(#gold)" stroke-width="1.6"/>');
+    arm.finishSlots.forEach((p,index)=>{
+      parts.push('<circle data-finish-slot="'+arm.index+':'+index+'" cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="6.4" fill="url(#gold)" stroke="'+style.shadow+'" stroke-width=".8"/>');
+      parts.push('<circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="4.6" fill="'+style.shadow+'" fill-opacity=".70" stroke="'+style.accent+'" stroke-opacity=".55" stroke-width=".6"/>');
+    });
+  }
+  parts.push('<circle cx="360" cy="360" r="10.5" fill="url(#frame)" stroke="'+style.gold+'" stroke-width="1.4"/>');
+  parts.push('<path d="M 352,363 L 354,356 L 357,359 L 360,351 L 363,359 L 366,356 L 368,363 Z" fill="'+style.accent+'" stroke="'+style.shadow+'" stroke-width=".8"/>');
+  parts.push('<text x="360" y="32" text-anchor="middle" fill="'+style.accent+'" font-family="Arial,sans-serif" font-size="10" font-weight="800" letter-spacing="2.6">OPTIMIST LUDO · '+n+' PLAYERS</text>');
+  parts.push('<text x="360" y="693" text-anchor="middle" fill="'+style.accent+'" font-family="Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="2.2">PLAY BRIGHT · MOVE SMART</text>');
+  for(const [x,y] of [[32,32],[688,32],[32,688],[688,688]]) {
+    parts.push('<circle cx="'+x+'" cy="'+y+'" r="6" fill="url(#frame)" stroke="'+style.gold+'" stroke-width="1"/><circle cx="'+x+'" cy="'+y+'" r="2" fill="'+style.shadow+'"/>');
+  }
+  parts.push('</svg>');
+  return parts.join('');
 }
