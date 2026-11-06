@@ -46,7 +46,9 @@ test('one to four tokens receive compact deterministic positions', () => {
 
 test('crowded squares keep four visible tokens and report overflow', () => {
   const result = getStackLayout(6);
-  assert.equal(result.positions.length, 4);
+  assert.equal(result.positions.length, 6);
+  assert.equal(result.positions.filter((position) => position.visible).length, 4);
+  assert.equal(result.positions.filter((position) => !position.visible).length, 2);
   assert.equal(result.hiddenCount, 2);
 });
 

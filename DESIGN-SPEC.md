@@ -83,3 +83,20 @@ interface CellOccupancy {
 - Голосовые сообщения реализуются через MediaRecorder и бинарные HTTP endpoints по проверенному шаблону OPTIMIST DURAK; WebSocket передаёт только метаданные и chat event.
 - Размер, длительность, число файлов, объём RAM и TTL ограничиваются сервером. Подробности: `VOICE-MESSAGES.md`.
 - Бесплатное размещение и его ограничения описаны в `FREE-HOSTING.md`. Восстановление после разрыва WebSocket и восстановление после полного перезапуска процесса — разные гарантии.
+
+
+## 1.2. Vector board artwork contract
+
+Each finish is an independent SVG in `assets/boards/optimist-ludo-{classic,neon,elite,marble}.svg`. All four files use `viewBox="0 0 720 720"`, intrinsic dimensions 1440×1440 for HiDPI rendering, and the same coordinate contract as `src/board-render.js`.
+
+- Grid origin: (55, 55); logical cell pitch: 43.57 image units; tile artwork: 38 units.
+- The 52-cell route comes from `MAIN_TRACK`; protected squares come from `SAFE_TRACK_INDICES`.
+- All four five-cell home lanes come from `PLAYER_CONFIG`.
+- Each base has four pawn sockets; the four finish sockets are fixed at (336,336), (384,336), (336,384), (384,384).
+- Changing table material never changes a route cell, token anchor or game rule. Rebuild the artwork with `node scripts/build-board-assets.mjs`.
+
+## 1.3. Mobile scale and selection
+
+The board is square and scales to the available width (maximum 650 CSS px). Pawn art is 6.2% of board width. Stacks use separated layouts at 48%, 46% and 44% for two, three and four tokens. When a stack exceeds four, four figures stay visible and a +N badge reports the overflow; all tokens remain available in the selection sheet.
+
+Taps resolve to the nearest legal cell center, not to the tiny transparent edge of a pawn. The chooser buttons are at least 52px high. Keyboard and screen-reader activation use the same action path. Browser zoom remains enabled. This design follows Android's 48dp touch guidance, Apple's 44pt control guidance and WCAG 2.2 target-size criteria.

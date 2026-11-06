@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createClassicState } from '../apps/backend/classic-engine.js';
-import { tokenBoardPositions, gridToImage, BOARD_IMAGE_SIZE } from '../src/board-render.js';
+import { tokenBoardPositions, gridToImage, BOARD_IMAGE_SIZE, BASE_SLOT_POINTS, FINISH_POINTS, GRID_CELL, PAWN_DIAMETER_RATIO } from '../src/board-render.js';
 import { PLAYER_CONFIG, MAIN_TRACK } from '../src/geometry.js';
 
 const roster = [
@@ -11,7 +11,6 @@ const roster = [
   { id: 'render-yellow', color: 'yellow', username: 'Yellow' },
 ];
 const tokenId = (player, index = 0) => `${player}:${index}`;
-const PAWN_DIAMETER_RATIO = 0.058;
 
 test('board image grid transform maps the logical board into the 720 square artwork', () => {
   assert.equal(BOARD_IMAGE_SIZE, 720);
