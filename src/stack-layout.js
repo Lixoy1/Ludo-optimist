@@ -1,44 +1,10 @@
-/**
- * Deterministic compact layout for tokens sharing one logical board cell.
- * Offsets use cell-relative units; scale is applied to the actual pawn element
- * by renderTokens(). The patterns keep the pawn hit areas inside the cell.
- */
-export function getStackLayout(count, cellSize = 60) {
-  if (!Number.isInteger(count) || count < 0) throw new RangeError('Token count must be a non-negative integer');
-  if (!Number.isFinite(cellSize) || cellSize <= 0) throw new RangeError('cellSize must be positive');
-  if (count === 0) return { positions: [], hiddenCount: 0, scale: 1 };
-
-  const patterns = {
-    1: [[0, 0]],
-    // Two mini-pawns side by side, with a small visible gap.
-    2: [[-0.26, 0], [0.26, 0]],
-    // Three mini-pawns in a compact triangle.
-    3: [[0, -0.25], [-0.26, 0.22], [0.26, 0.22]],
-    // Four mini-pawns in a 2x2 arrangement.
-    4: [[-0.28, -0.28], [0.28, -0.28], [-0.28, 0.28], [0.28, 0.28]],
-  };
-  const visibleCount = Math.min(count, 4);
-  const offsets = patterns[visibleCount];
-  const scale = visibleCount === 1 ? 1 : visibleCount === 2 ? 0.48 : visibleCount === 3 ? 0.48 : 0.44;
-  return {
-    positions: offsets.map(([x, y], index) => ({
-      x: x * cellSize,
-      y: y * cellSize,
-      scale,
-      slot: index,
-    })),
-    hiddenCount: Math.max(0, count - visibleCount),
-    scale,
-  };
+export function getStackLayout(count,cellSize=60){
+ if(!Number.isInteger(count)||count<0)throw new RangeError('Token count must be a non-negative integer');
+ if(!Number.isFinite(cellSize)||cellSize<=0)throw new RangeError('cellSize must be positive');
+ if(count===0)return{positions:[],hiddenCount:0,scale:1};
+ const patterns={1:[[0,0]],2:[[-.26,0],[.26,0]],3:[[0,-.25],[-.25,.25],[.25,.25]],4:[[-.25,-.25],[.25,-.25],[-.25,.25],[.25,.25]]};
+ const visible=Math.min(count,4),offsets=patterns[visible],scale=visible===1?1:visible===2?.48:visible===3?.46:.44;
+ const positions=Array.from({length:count},(_,i)=>{if(i>=visible)return{x:0,y:0,scale:0,slot:i,visible:false};const[x,y]=offsets[i];return{x:x*cellSize,y:y*cellSize,scale,slot:i,visible:true};});
+ return{positions,hiddenCount:Math.max(0,count-visible),scale};
 }
-
-export function layoutTokens(tokens, cellSize = 60) {
-  const layout = getStackLayout(tokens.length, cellSize);
-  return {
-    ...layout,
-    tokens: tokens.slice(0, 4).map((token, index) => ({
-      ...token,
-      ...layout.positions[index],
-    })),
-  };
-}
+export function layoutTokens(tokens,cellSize=60){const layout=getStackLayout(tokens.length,cellSize);return{...layout,tokens:tokens.slice(0,4).map((token,i)=>({...token,...layout.positions[i]}))};}

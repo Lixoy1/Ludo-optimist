@@ -39,7 +39,11 @@ const characterGrid = $('#characterGrid');
 const boardThemeSelect = $('#boardThemeSelect');
 const soundToggleBtn = $('#soundToggleBtn');
 const boardStage = $('#boardStage');
+const boardArt = $('#boardArt');
 const boardWrap = $('#boardWrap');
+const tokenChooser = $('#tokenChooser');
+const tokenChooserOptions = $('#tokenChooserOptions');
+const tokenChooserClose = $('#tokenChooserClose');
 const boardEffectOverlay = $('#boardEffectOverlay');
 
 const COLOR_ORDER = ['blue', 'red', 'green', 'yellow'];
@@ -54,6 +58,8 @@ let toastTimer = null;
 let lobbyRefreshTimer = null;
 let rollingAnimationTimer = null;
 const tokenElements = new Map();
+const cellHitElements = new Map();
+const stackBadgeElements = new Map();
 const previousTokenPositions = new Map();
 const BOARD_THEMES = ['neon', 'classic', 'elite', 'marble'];
 let selectedCharacterId = (() => { try { const saved = localStorage.getItem('optimist-ludo-character'); return CHARACTERS.some((item) => item.id === saved) ? saved : DEFAULT_CHARACTER_ID; } catch { return DEFAULT_CHARACTER_ID; } })();
@@ -156,6 +162,11 @@ function applyBoardTheme(theme) {
   selectedBoardTheme = BOARD_THEMES.includes(theme) ? theme : 'neon';
   if (boardStage) boardStage.dataset.theme = selectedBoardTheme;
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
+  if (boardArt) {
+    const nextSrc = `/assets/boards/optimist-ludo-${selectedBoardTheme}.svg`;
+    if (!boardArt.getAttribute('src')?.endsWith(nextSrc)) boardArt.setAttribute('src', nextSrc);
+    boardArt.alt = `Игровое поле OPTIMIST LUDO — ${selectedBoardTheme.toUpperCase()}`;
+  }
   if (boardThemeSelect) boardThemeSelect.value = selectedBoardTheme;
   try { localStorage.setItem('optimist-ludo-board-theme', selectedBoardTheme); } catch { /* Optional preference. */ }
 }
@@ -253,21 +264,90 @@ async function refreshRooms() {
 }
 
 function createPawnElement(tokenId) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'pawn';
-  button.dataset.tokenId = tokenId;
+  const visual = document.createElement('div');
+  visual.className = 'pawn-art';
+  visual.dataset.tokenId = tokenId;
+  visual.setAttribute('aria-hidden', 'true');
   const halo = document.createElement('span'); halo.className = 'pawn-halo';
   const image = document.createElement('img'); image.className = 'pawn-character'; image.alt = ''; image.draggable = false;
   const colorRing = document.createElement('span'); colorRing.className = 'pawn-color-ring';
   const glint = document.createElement('span'); glint.className = 'pawn-glint';
-  button.append(halo, image, colorRing, glint);
-  button.addEventListener('click', () => {
-    if (!activeClient || !currentSnapshot?.legalTokenIds?.includes(tokenId)) return;
-    try { activeClient.moveToken(tokenId); }
-    catch (error) { showToast(error.message); }
+  visual.append(halo, image, colorRing, glint);
+  return visual;
+}
+
+function createPawnHitElement(stackKey) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'pawn-hit';
+  button.dataset.stackKey = stackKey;
+  button.setAttribute('aria-label', 'Выбрать фишку на клетке');
+  button.addEventListener('click', (event) => {
+    if (event.detail === 0) activatePawnCell(button);
   });
   return button;
+}
+
+function createStackBadge(stackKey) {
+  const badge = document.createElement('span');
+  badge.className = 'pawn-overflow-badge';
+  badge.dataset.stackKey = stackKey;
+  badge.setAttribute('aria-hidden', 'true');
+  return badge;
+}
+
+function closeTokenChooser() {
+  if (!tokenChooser) return;
+  tokenChooser.hidden = true;
+  tokenChooserOptions?.replaceChildren();
+}
+
+function moveSelectedToken(tokenId) {
+  closeTokenChooser();
+  if (!activeClient || !currentSnapshot?.legalTokenIds?.includes(tokenId)) return;
+  try { activeClient.moveToken(tokenId); }
+  catch (error) { showToast(error.message); }
+}
+
+function activatePawnCell(button) {
+  if (!button || button.disabled || !currentSnapshot?.state) return;
+  const legalIds = JSON.parse(button.dataset.legalTokenIds || '[]');
+  if (legalIds.length === 1) { moveSelectedToken(legalIds[0]); return; }
+  if (legalIds.length < 2) return;
+  const positions = tokenBoardPositions(currentSnapshot.state);
+  const legal = new Set(legalIds);
+  tokenChooserOptions.replaceChildren();
+  positions.filter((item) => legal.has(item.tokenId)).forEach((item) => {
+    const option = document.createElement('button');
+    option.type = 'button'; option.className = 'token-choice';
+    const image = document.createElement('img'); image.src = getCharacter(item.characterId).src; image.alt = ''; image.draggable = false;
+    const copy = document.createElement('span');
+    const title = document.createElement('strong'); title.textContent = \`ФИШКА \${item.index + 1}\`;
+    const subtitle = document.createElement('small'); subtitle.textContent = \`\${COLOR_LABELS[item.color]} · \${item.zone === 'base' ? 'В БАЗЕ' : 'НА ДОРОЖКЕ'}\`;
+    copy.append(title, subtitle); option.append(image, copy);
+    option.addEventListener('click', () => moveSelectedToken(item.tokenId));
+    tokenChooserOptions.append(option);
+  });
+  tokenChooser.hidden = false;
+  tokenChooserOptions.querySelector('button')?.focus();
+}
+
+function handleBoardPointerUp(event) {
+  if (tokenChooser && !tokenChooser.hidden) return;
+  if (event.button !== undefined && event.button !== 0) return;
+  const rect = boardStage.getBoundingClientRect();
+  if (!rect.width) return;
+  const legal = [...cellHitElements.values()].filter((button) => !button.disabled);
+  let best = null, bestDistance = Infinity;
+  for (const button of legal) {
+    const x = rect.left + Number(button.dataset.centerX) / 720 * rect.width;
+    const y = rect.top + Number(button.dataset.centerY) / 720 * rect.height;
+    const distance = Math.hypot(event.clientX - x, event.clientY - y);
+    if (distance < bestDistance) { best = button; bestDistance = distance; }
+  }
+  // Mobile cell artwork is smaller than a finger; map the tap to its nearest legal cell center.
+  const radius = Math.max(24, Math.min(30, rect.width / 15 * 1.05));
+  if (best && bestDistance <= radius) { event.preventDefault(); activatePawnCell(best); }
 }
 
 function colorHex(color) {
@@ -286,47 +366,63 @@ function renderTokens(snapshot) {
   const state = snapshot?.state;
   if (!state?.tokens) {
     for (const element of tokenElements.values()) element.remove();
-    tokenElements.clear();
-    previousTokenPositions.clear();
+    for (const element of cellHitElements.values()) element.remove();
+    for (const element of stackBadgeElements.values()) element.remove();
+    tokenElements.clear(); cellHitElements.clear(); stackBadgeElements.clear(); previousTokenPositions.clear();
     return;
   }
   const positions = tokenBoardPositions(state);
   const legalIds = new Set(snapshot.legalTokenIds || []);
+  const activeTurn = state.currentPlayer === activeClient?.currentUserId;
+  const groups = new Map();
+  positions.forEach((position) => {
+    const group = groups.get(position.stackKey) || [];
+    group.push(position); groups.set(position.stackKey, group);
+  });
   const existingIds = new Set(positions.map((position) => position.tokenId));
-
-  for (const [tokenId, element] of tokenElements) {
-    if (!existingIds.has(tokenId)) { element.remove(); tokenElements.delete(tokenId); }
-  }
+  for (const [tokenId, element] of tokenElements) if (!existingIds.has(tokenId)) { element.remove(); tokenElements.delete(tokenId); }
+  for (const [key, element] of cellHitElements) if (!groups.has(key)) { element.remove(); cellHitElements.delete(key); }
+  for (const [key, element] of stackBadgeElements) if (!groups.has(key) || groups.get(key).length <= 4) { element.remove(); stackBadgeElements.delete(key); }
 
   positions.forEach((position, index) => {
     let element = tokenElements.get(position.tokenId);
-    if (!element) {
-      element = createPawnElement(position.tokenId);
-      tokenElements.set(position.tokenId, element);
-      tokenLayer.append(element);
-    }
-    const legal = legalIds.has(position.tokenId) && state.currentPlayer === activeClient?.currentUserId;
+    if (!element) { element = createPawnElement(position.tokenId); tokenElements.set(position.tokenId, element); tokenLayer.append(element); }
+    const legal = activeTurn && legalIds.has(position.tokenId);
     const ownerIsCurrent = position.owner === state.currentPlayer;
-    const oldPosition = previousTokenPositions.get(position.tokenId);
+    const old = previousTokenPositions.get(position.tokenId);
     let motion = '';
-    if (oldPosition && (oldPosition.zone !== position.zone || oldPosition.left !== position.left || oldPosition.top !== position.top)) {
-      motion = position.zone === 'base' && oldPosition.zone !== 'base' ? ' captured' : position.zone === 'finished' ? ' finished-pop' : ' moving';
+    if (old && (old.zone !== position.zone || old.left !== position.left || old.top !== position.top)) {
+      motion = position.zone === 'base' && old.zone !== 'base' ? ' captured' : position.zone === 'finished' ? ' finished-pop' : ' moving';
     }
-    element.className = `pawn pawn-${position.color}${legal ? ' legal' : ''}${ownerIsCurrent ? ' current-owner' : ''}${motion}`;
-    const character = getCharacter(position.characterId);
-    const image = element.querySelector('.pawn-character');
+    element.className = \`pawn-art pawn-\${position.color}\${legal ? ' legal' : ''}\${ownerIsCurrent ? ' current-owner' : ''}\${motion}\`;
+    element.hidden = position.visible === false;
+    const character = getCharacter(position.characterId), image = element.querySelector('.pawn-character');
     if (image.dataset.character !== character.id) { image.src = character.src; image.dataset.character = character.id; }
     element.style.setProperty('--token-color', colorHex(position.color));
-    if (motion) animateToken(element, motion.trim());
-    element.style.left = `${position.left}%`;
-    element.style.top = `${position.top}%`;
+    element.style.left = \`\${position.left}%\`; element.style.top = \`\${position.top}%\`;
     element.style.setProperty('--pawn-scale', String(position.scale));
     element.style.zIndex = String(4 + index);
-    element.disabled = !legal;
-    element.title = `${COLOR_LABELS[position.color]} · фишка ${position.index + 1}${legal ? ' · нажми, чтобы походить' : ''}`;
-    element.setAttribute('aria-label', element.title);
+    if (motion) animateToken(element, motion.trim());
     previousTokenPositions.set(position.tokenId, { zone: position.zone, left: position.left, top: position.top });
   });
+
+  for (const [stackKey, stack] of groups) {
+    let hit = cellHitElements.get(stackKey);
+    if (!hit) { hit = createPawnHitElement(stackKey); cellHitElements.set(stackKey, hit); tokenLayer.append(hit); }
+    const first = stack[0], legalStack = activeTurn ? stack.filter((item) => legalIds.has(item.tokenId)) : [];
+    hit.style.left = \`\${first.centerLeft}%\`; hit.style.top = \`\${first.centerTop}%\`;
+    hit.dataset.centerX = String(first.centerX); hit.dataset.centerY = String(first.centerY);
+    hit.dataset.legalTokenIds = JSON.stringify(legalStack.map((item) => item.tokenId));
+    hit.disabled = legalStack.length === 0;
+    hit.setAttribute('aria-label', legalStack.length > 1
+      ? \`Выбрать одну из \${legalStack.length} доступных фишек\`
+      : legalStack.length === 1 ? \`Передвинуть фишку \${legalStack[0].index + 1}\` : 'Фишки на клетке');
+    if (stack.length > 4) {
+      let badge = stackBadgeElements.get(stackKey);
+      if (!badge) { badge = createStackBadge(stackKey); stackBadgeElements.set(stackKey, badge); tokenLayer.append(badge); }
+      badge.textContent = \`+\${stack.length - 4}\`; badge.style.left = \`\${first.centerLeft}%\`; badge.style.top = \`\${first.centerTop}%\`;
+    }
+  }
 }
 
 function renderPlayers(snapshot) {
@@ -496,7 +592,10 @@ async function enterRoom(roomId) {
   currentRoomId = roomId;
   currentSnapshot = null;
   tokenElements.forEach((element) => element.remove());
-  tokenElements.clear();
+  cellHitElements.forEach((element) => element.remove());
+  stackBadgeElements.forEach((element) => element.remove());
+  tokenElements.clear(); cellHitElements.clear(); stackBadgeElements.clear();
+  closeTokenChooser();
   previousTokenPositions.clear();
   chatMessages.replaceChildren();
   closeChat();
@@ -581,6 +680,10 @@ async function copyText(text) {
 
 renderCharacterGrid();
 applyBoardTheme(selectedBoardTheme);
+if (tokenLayer) tokenLayer.addEventListener('pointerup', handleBoardPointerUp);
+if (tokenChooserClose) tokenChooserClose.addEventListener('click', closeTokenChooser);
+if (tokenChooser) tokenChooser.addEventListener('click', (event) => { if (event.target === tokenChooser) closeTokenChooser(); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && tokenChooser && !tokenChooser.hidden) closeTokenChooser(); });
 if (boardThemeSelect) boardThemeSelect.addEventListener('change', () => applyBoardTheme(boardThemeSelect.value));
 if (soundToggleBtn) {
   const updateSoundButton = () => { soundToggleBtn.querySelector('.action-label').textContent = soundEnabled ? 'ЗВУК ВКЛ' : 'ЗВУК ВЫКЛ'; soundToggleBtn.setAttribute('aria-pressed', String(soundEnabled)); soundToggleBtn.classList.toggle('sound-off', !soundEnabled); };

@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080912" />
   <meta name="description" content="OPTIMIST LUDO — онлайн Ludo с друзьями. Classic 2–4 players." />
   <title>OPTIMIST LUDO</title>
-  <link rel="preload" href="/assets/optimist-ludo-board.webp" as="image" type="image/webp" />
+  <link rel="preload" href="/assets/boards/optimist-ludo-neon.svg" as="image" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -86,9 +86,18 @@
 
       <section class="board-wrap" id="boardWrap">
         <div class="board-stage" id="boardStage">
-          <img class="board-art" src="/assets/optimist-ludo-board.webp" alt="Игровое поле OPTIMIST LUDO" draggable="false" />
+          <img class="board-art" id="boardArt" src="/assets/boards/optimist-ludo-neon.svg" alt="Игровое поле OPTIMIST LUDO — NEON" draggable="false" />
           <div class="token-layer" id="tokenLayer" aria-label="Игровые фишки"></div>
-          <div class="board-effect-overlay" id="boardEffectOverlay" aria-live="polite"></div>
+          <div class="token-chooser" id="tokenChooser" hidden>
+            <section class="token-chooser-panel" role="dialog" aria-modal="true" aria-labelledby="tokenChooserTitle">
+              <div class="token-chooser-head">
+                <div><strong id="tokenChooserTitle">ВЫБЕРИ ФИШКУ</strong><small>На этой клетке несколько твоих фишек</small></div>
+                <button class="token-chooser-close" id="tokenChooserClose" type="button" aria-label="Закрыть">×</button>
+              </div>
+              <div class="token-chooser-options" id="tokenChooserOptions"></div>
+            </section>
+          </div>
+          <div class="board-effect-overlay id="boardEffectOverlay" aria-live="polite"></div>
           <div class="board-vignette"></div>
         </div>
       </section>
