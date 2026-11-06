@@ -135,3 +135,40 @@
   .dice-pips { width: 25px; height: 25px; }
   .dice-pips i { width: 5px; height: 5px; }
 }
+
+
+/* Dice control follows the supplied mobile reference: gold bottom bar + a simple ivory die. */
+.dice-button {
+  border: 1px solid #f9e5bc;
+  color: #2a1b0d;
+  background: linear-gradient(115deg, #fff1ca, #f0c77f 48%, #dca653);
+  box-shadow: 0 5px 0 #855323, 0 10px 22px rgba(0,0,0,.55), inset 0 1px 2px rgba(255,255,255,.78);
+}
+.dice-button:active {
+  box-shadow: 0 2px 0 #855323, 0 5px 13px rgba(0,0,0,.55), inset 0 1px 2px rgba(255,255,255,.65);
+}
+.dice-kicker { color: #7b5428; }
+.dice-label { color: #2d1c0c; text-shadow: 0 1px rgba(255,255,255,.3); }
+.dice-caption { color: #76552d; }
+.dice-arrow { color: #6c431c; }
+.dice-cube {
+  background: linear-gradient(145deg, #fffef8, #f0eadc 72%, #ddd3c0);
+  border: 1.5px solid #fff9e9;
+  box-shadow:
+    0 0 0 2px rgba(120,82,39,.12),
+    0 4px 8px rgba(66,43,19,.28),
+    inset 0 1px 2px #fff;
+}
+.dice-cube::before {
+  border-color: rgba(120,88,47,.18);
+}
+.dice-cube::after {
+  background: rgba(255,255,255,.85);
+}
+.dice-pips i {
+  background: radial-gradient(circle at 32% 25%, #4b4034, #141317 78%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.16), 0 1px 1px rgba(0,0,0,.18);
+}
+.dice-button.rolling .dice-cube {
+  animation: diceFlatRoll .72s cubic-bezier(.2,.78,.25,1);
+}
