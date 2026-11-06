@@ -242,7 +242,7 @@ function starPoints(x,y,r) {
 export function renderExtendedBoardSvg(geometry,theme='neon') {
   if(!EXTENDED_THEMES[theme]) throw new RangeError('Unknown board theme.');
   if(!geometry||![5,6].includes(geometry.sides)) throw new TypeError('Expected PENTA or HEX geometry.');
-  const s=EXTENDED_THEMES[theme],n=geometry.sides,parts=[];
+  const s=EXTENDED_THEMES[theme],n=geometry.sides,parts=[],safeStarIndices=new Set(geometry.arms.map(arm=>arm.starIndex));
   const fmt=v=>Number(v).toFixed(2);
   const polygon=pts=>poly(pts);
   const square=(x,y,size,fill,stroke,extra='')=>{
@@ -301,7 +301,7 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
 
   // Shared loop cells: 13 per arm. The 3-column grid is retained exactly.
   for(const cell of geometry.track) {
-    const arm=geometry.arms[cell.arm],isStart=cell.index===arm.startIndex,isStar=cell.index===arm.starIndex;
+    const arm=geometry.arms[cell.arm],isStart=cell.index===arm.startIndex,isStar=safeStarIndices.has(cell.index);
     const size=geometry.tileSize,rot=arm.angle*180/Math.PI,fill=isStart?arm.player.color:'url(#tile)',stroke=isStart?'url(#gold)':s.edge;
     parts.push(square(cell.x,cell.y,size,fill,stroke,'data-track-cell="'+cell.index+'" transform="rotate('+fmt(rot)+' '+fmt(cell.x)+' '+fmt(cell.y)+')"'));
     if(isStart) parts.push('<path d="M'+fmt(cell.x-4)+' '+fmt(cell.y+2)+'l4 -8 4 8h-2v5h-4v-5z" fill="#fff4d5" stroke="'+s.shadow+'" stroke-width=".65" transform="rotate('+fmt(rot)+' '+fmt(cell.x)+' '+fmt(cell.y)+')"/>');
