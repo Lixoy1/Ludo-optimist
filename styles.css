@@ -212,3 +212,6 @@
 .token-choice small{margin-top:3px;color:#aeb6c9;font-size:7px}
 .token-choice:focus-visible,.token-chooser-close:focus-visible{outline:2px solid #fff0bb;outline-offset:2px}
 @media(max-width:680px){.board-wrap{padding:5px;border-radius:18px}.board-stage{border-radius:13px}.pawn-hit{width:48px;height:48px}}
+
+/* Keep every fixed-dock control comfortably tappable on narrow phones. */
+@media(max-width:680px){.game-actions .secondary-button{width:42px;min-width:42px;min-height:44px;padding:0}.token-chooser-close{width:48px;height:48px}}

@@ -77,3 +77,8 @@ test('vector board themes and mobile stack selection are wired', async () => {
   assert.match(css, /\\.pawn-overflow-badge/);
   for (const svg of boards) assert.match(svg, /viewBox="0 0 720 720"/);
 });
+
+test('mobile secondary controls and chooser close have accessible touch dimensions', () => {
+  assert.match(css, /@media\(max-width:680px\)\{\.game-actions \.secondary-button\{width:42px;min-width:42px;min-height:44px/);
+  assert.match(css, /\.token-chooser-close\{width:48px;height:48px\}/);
+});
