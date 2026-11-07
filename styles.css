@@ -283,7 +283,7 @@
 .join-panel-collapsed .panel-note { margin-bottom:9px; }
 .player-card.bot { border-style:dashed; }
 .player-card.bot .player-state { color:#d4b77c; }
-.player-card.bot .player-name:after { content:' BOT'; color:#d3b36f; font-size:7px; letter-spacing:.08em; }
+
 .game-footer { display:none; }
 
 /* A centered, icon-first dice dock: text remains accessible but no longer crowds the button. */
