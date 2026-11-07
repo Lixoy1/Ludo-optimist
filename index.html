@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080912" />
-  <meta name="description" content="OPTIMIST LUDO — онлайн Ludo с друзьями. Classic 2–4, PENTA 5 and HEX 6 players." />
+  <meta name="description" content="OPTIMIST LUDO — онлайн Ludo с друзьями. Classic, Diamond, Penta and Hex. Play with friends or bots." />
   <title>OPTIMIST LUDO</title>
   <link rel="preload" href="/assets/boards/optimist-ludo-neon.svg" as="image" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
@@ -18,8 +18,7 @@
       <div><div class="brand-name">OPTIMIST <b>LUDO</b></div><div class="brand-tag">PLAY BRIGHT. MOVE SMART.</div></div>
     </div>
     <div class="topbar-tools">
-      <label class="theme-select-label" for="boardThemeSelect">ДОСКА</label>
-      <select id="boardThemeSelect" class="theme-select" aria-label="Оформление доски">
+      <select id="boardThemeSelect" class="theme-select" aria-label="Оформление доски" hidden>
         <option value="neon">NEON</option><option value="classic">CLASSIC</option><option value="elite">ELITE</option><option value="marble">MARBLE</option>
       </select>
       <div class="connection-pill" id="connectionPill"><i></i><span id="connectionText">ПОДКЛЮЧАЕМСЯ</span></div>
@@ -89,7 +88,7 @@
           <div class="start-summary"><div><div class="panel-kicker">03 / ГОТОВ К ИГРЕ</div><h2 id="startSummaryTitle">CLASSIC · NEON</h2><p class="panel-note" id="startSummaryText">4 участника · 1 человек + 3 бота</p></div><span class="summary-die">⚄</span></div>
           <input type="checkbox" id="publicRoom" checked hidden />
           <button type="button" class="primary-button wide" id="createRoomBtn"><span>ИГРАТЬ</span><b>↗</b></button>
-          <p class="bot-note"><icon aria-hidden="true">♟</icon> Недостающие места займут боты. Начинать можно одному.</p>
+          <p class="bot-note"><span aria-hidden="true">♟</span> Недостающие места займут боты. Начинать можно одному.</p>
         </section>
 
         <details class="lobby-panel join-panel join-panel-collapsed">
