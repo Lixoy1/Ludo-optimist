@@ -155,7 +155,7 @@ for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
   });
 
   test(mode + ' board renderer stacks four pawns within one extended route cell', () => {
-    const geometry = getExtendedGeometry(mode.toLowerCase());
+    const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-stack-' + index, username: 'Player ' + index, color: arm.player.id }));
     const state = createExtendedState(mode, roster);
     const owner = state.players[0];
@@ -199,9 +199,9 @@ test('Classic movement path follows the five-cell home lane and maps its finish 
   assert.deepEqual(finish[0], { x: FINISH_POINTS[2][0], y: FINISH_POINTS[2][1] });
 });
 
-for (const mode of ['PENTA', 'HEX']) {
+for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
   test(mode + ' movement path follows every extended outer-track step and the player home lane', () => {
-    const geometry = getExtendedGeometry(mode.toLowerCase());
+    const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-path-' + index, username: 'Player ' + index, color: arm.player.id }));
     const state = createExtendedState(mode, roster);
     const player = state.players[0];
