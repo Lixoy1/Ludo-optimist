@@ -24,17 +24,17 @@ async function createRoom(origin, userId, boardType, maxPlayers) {
 
 test('HTTP room API creates HEXA and ROYAL rooms with exact board type and capacity', async () => {
   await withServer(async (origin) => {
-    const pentaResponse = await createRoom(origin, 'api-hexa-host', 'HEXA', 5);
-    assert.equal(pentaResponse.status, 201);
-    const penta = await pentaResponse.json();
-    assert.equal(penta.snapshot.boardType, 'HEXA');
+    const hexaResponse = await createRoom(origin, 'api-hexa-host', 'HEXA', 6);
+    assert.equal(hexaResponse.status, 201);
+    const hexa = await hexaResponse.json();
+    assert.equal(hexa.snapshot.boardType, 'HEXA');
     assert.equal(penta.snapshot.maxPlayers, 6);
     assert.equal(penta.snapshot.players.length, 1);
 
-    const hexResponse = await createRoom(origin, 'api-royal-host', 'ROYAL', 6);
-    assert.equal(hexResponse.status, 201);
-    const hex = await hexResponse.json();
-    assert.equal(hex.snapshot.boardType, 'ROYAL');
+    const royalResponse = await createRoom(origin, 'api-royal-host', 'ROYAL', 4);
+    assert.equal(royalResponse.status, 201);
+    const royal = await royalResponse.json();
+    assert.equal(royal.snapshot.boardType, 'ROYAL');
     assert.equal(hex.snapshot.maxPlayers, 6);
     assert.equal(hex.snapshot.players.length, 1);
   });
