@@ -8,6 +8,8 @@ const gameView = $('#gameView');
 const connectionPill = $('#connectionPill');
 const connectionText = $('#connectionText');
 const createRoomBtn = $('#createRoomBtn');
+const createInviteRoomBtn = $('#createInviteRoomBtn');
+const gameControls = document.querySelector('.game-controls');
 const joinRoomForm = $('#joinRoomForm');
 const roomCodeInput = $('#roomCodeInput');
 const roomList = $('#roomList');
@@ -120,16 +122,67 @@ function switchView(view) {
   if (showGame) window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-function selectCount(count, boardType = count === 5 ? 'PENTA' : count === 6 ? 'HEX' : 'CLASSIC') {
-  selectedPlayerCount = count;
-  selectedBoardType = boardType;
-  document.querySelectorAll('[data-count]').forEach((button) => {
-    button.classList.toggle('active', Number(button.dataset.count) === count && (button.dataset.boardType || 'CLASSIC') === boardType);
-  });
+function boardAssetUrl(boardType, theme = selectedBoardTheme) {
+  const normalized = String(boardType || 'CLASSIC').toUpperCase();
+  const file = normalized === 'CLASSIC'
+    ? `optimist-ludo-${theme}.svg`
+    : `optimist-ludo-${normalized.toLowerCase()}-${theme}.svg`;
+  return new URL(`../assets/boards/${file}`, import.meta.url).href;
 }
 
-document.querySelectorAll('[data-count]').forEach((button) => {
-  button.addEventListener('click', () => selectCount(Number(button.dataset.count), button.dataset.boardType || 'CLASSIC'));
+function updateLobbySelection() {
+  document.querySelectorAll('[data-board-choice]').forEach((button) => {
+    const active = button.dataset.boardChoice === selectedBoardType;
+    button.classList.toggle('selected', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  document.querySelectorAll('[data-theme-choice]').forEach((button) => {
+    const active = button.dataset.themeChoice === selectedBoardTheme;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  document.querySelectorAll('[data-classic-count]').forEach((button) => {
+    const active = Number(button.dataset.classicCount) === selectedPlayerCount;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  const classicPicker = $('#classicCountPicker');
+  if (classicPicker) classicPicker.hidden = selectedBoardType !== 'CLASSIC';
+  const boardChip = $('#selectedBoardChip');
+  if (boardChip) boardChip.textContent = selectedBoardType;
+  const count = selectedBoardType === 'CLASSIC' ? selectedPlayerCount :
+    selectedBoardType === 'DIAMOND' ? 4 : selectedBoardType === 'PENTA' ? 5 : 6;
+  const title = $('#startSummaryTitle');
+  const summary = $('#startSummaryText');
+  if (title) title.textContent = `${selectedBoardType} · ${selectedBoardTheme.toUpperCase()}`;
+  if (summary) summary.textContent = `${count} участника · 1 человек + ${count - 1} бота(ов)`;
+}
+
+function selectBoardType(boardType) {
+  const normalized = String(boardType || '').toUpperCase();
+  if (!['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(normalized)) return;
+  selectedBoardType = normalized;
+  selectedPlayerCount = normalized === 'CLASSIC' ? 4 : normalized === 'DIAMOND' ? 4 : normalized === 'PENTA' ? 5 : 6;
+  applyBoardTheme(selectedBoardTheme, selectedBoardType);
+  updateLobbySelection();
+}
+
+document.querySelectorAll('[data-board-choice]').forEach((button) => {
+  button.addEventListener('click', () => selectBoardType(button.dataset.boardChoice));
+});
+document.querySelectorAll('[data-classic-count]').forEach((button) => {
+  button.addEventListener('click', () => {
+    selectedPlayerCount = Number(button.dataset.classicCount);
+    updateLobbySelection();
+  });
+});
+document.querySelectorAll('[data-theme-choice]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const theme = button.dataset.themeChoice;
+    if (!BOARD_THEMES.includes(theme)) return;
+    applyBoardTheme(theme, selectedBoardType);
+    updateLobbySelection();
+  });
 });
 
 function renderCharacterGrid() {
@@ -140,7 +193,9 @@ function renderCharacterGrid() {
     const button = document.createElement('button');
     button.type = 'button'; button.className = `character-option${character.id === selectedCharacterId ? ' selected' : ''}`;
     button.setAttribute('aria-pressed', String(character.id === selectedCharacterId));
-    const image = document.createElement('img'); image.src = character.src; image.alt = character.name; image.loading = 'lazy'; image.draggable = false;
+    button.dataset.fallback = character.name.slice(0, 1).toUpperCase();
+    const image = document.createElement('img'); image.src = character.src; image.alt = character.name; image.loading = 'eager'; image.decoding = 'async'; image.draggable = false;
+    image.onerror = () => { image.hidden = true; button.classList.add('image-fallback'); };
     const name = document.createElement('b'); name.textContent = character.name;
     const subtitle = document.createElement('small'); subtitle.textContent = character.subtitle;
     button.append(image, name, subtitle);
@@ -168,11 +223,15 @@ function applyBoardTheme(theme, boardType = selectedBoardType) {
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
   if (boardArt) {
     const boardFile = selectedBoardType === 'CLASSIC' ? `optimist-ludo-${selectedBoardTheme}.svg` : `optimist-ludo-${selectedBoardType.toLowerCase()}-${selectedBoardTheme}.svg`;
-    const nextSrc = `/assets/boards/${boardFile}`;
+    const nextSrc = boardAssetUrl(selectedBoardType, selectedBoardTheme);
     if (!boardArt.getAttribute('src')?.endsWith(nextSrc)) boardArt.setAttribute('src', nextSrc);
     boardArt.alt = `Игровое поле OPTIMIST LUDO ${selectedBoardType} — ${selectedBoardTheme.toUpperCase()}`;
   }
   if (boardThemeSelect) boardThemeSelect.value = selectedBoardTheme;
+  document.querySelectorAll('[data-board-preview]').forEach((image) => {
+    image.src = boardAssetUrl(image.dataset.boardPreview, selectedBoardTheme);
+  });
+  updateLobbySelection();
   try { localStorage.setItem('optimist-ludo-board-theme', selectedBoardTheme); } catch { /* Optional preference. */ }
 }
 
@@ -462,7 +521,8 @@ function renderTokens(snapshot) {
 }
 
 function renderPlayers(snapshot) {
-  const players = snapshot?.state?.players || snapshot?.players || [];
+  const statePlayers = new Map((snapshot?.state?.players || []).map((player) => [player.id, player]));
+  const players = (snapshot?.players || snapshot?.state?.players || []).map((player) => ({ ...statePlayers.get(player.id), ...player }));
   const byColor = new Map(players.map((player) => [player.color, player]));
   playersStrip.replaceChildren();
   const boardType = String(snapshot?.boardType || snapshot?.state?.mode || 'CLASSIC').toUpperCase();
@@ -471,7 +531,7 @@ function renderPlayers(snapshot) {
   colorOrder.forEach((color) => {
     const player = byColor.get(color);
     const card = document.createElement('div');
-    card.className = `player-card${player && player.id === snapshot?.state?.currentPlayer ? ' current' : ''}${player ? '' : ' empty'}`;
+    card.className = `player-card${player && player.id === snapshot?.state?.currentPlayer ? ' current' : ''}${player ? '' : ' empty'}${player?.isBot ? ' bot' : ''}`;
     card.style.setProperty('--player-color', `var(--${color})`);
     const avatar = document.createElement('img');
     avatar.className = 'player-character-avatar';
@@ -484,6 +544,7 @@ function renderPlayers(snapshot) {
     state.className = 'player-state';
     if (!player) state.textContent = 'СВОБОДНО';
     else if (player.status === 'finished') state.textContent = 'ФИНИШ';
+    else if (player.isBot) state.textContent = player.id === snapshot?.state?.currentPlayer ? 'БОТ · ХОДИТ' : 'БОТ';
     else if (player.id === snapshot?.state?.currentPlayer) state.textContent = 'ХОДИТ';
     else state.textContent = 'В ИГРЕ';
     const dots = document.createElement('span');
@@ -498,8 +559,9 @@ function renderPlayers(snapshot) {
 }
 
 function currentPlayerInfo(snapshot) {
-  const roster = snapshot?.state?.players || snapshot?.players || [];
-  return roster.find((player) => player.id === snapshot?.state?.currentPlayer) || null;
+  const statePlayer = snapshot?.state?.players?.find((player) => player.id === snapshot?.state?.currentPlayer) || null;
+  const roomPlayer = snapshot?.players?.find((player) => player.id === snapshot?.state?.currentPlayer) || null;
+  return statePlayer || roomPlayer ? { ...statePlayer, ...roomPlayer } : null;
 }
 
 function setDiceFace(value = 5) {
@@ -511,6 +573,7 @@ function setDiceFace(value = 5) {
 
 function renderTurn(snapshot) {
   const state = snapshot?.state;
+  gameControls?.classList.toggle('awaiting-start', !state);
   const roster = snapshot?.players || [];
   const me = roster.find((player) => player.id === activeClient?.currentUserId);
   const myColor = me?.color || state?.players?.find((player) => player.id === activeClient?.currentUserId)?.color || 'yellow';
@@ -519,17 +582,17 @@ function renderTurn(snapshot) {
   turnMeta.textContent = `${roster.length} / ${snapshot?.maxPlayers || 4}`;
 
   if (!state) {
-    turnTitle.textContent = snapshot?.hostId === activeClient?.currentUserId ? 'Ты создал этот стол' : 'Стол открыт';
-    turnSub.textContent = roster.length < 2 ? 'Пригласи друга по коду комнаты — вдвоём веселее.' : 'Все готовы? Хозяин стола может начинать.';
+    turnTitle.textContent = snapshot?.hostId === activeClient?.currentUserId ? 'Готовы начать?' : 'Ожидание хозяина игры';
+    const missingSeats = Math.max(0, (snapshot?.maxPlayers || 4) - roster.length);
+    turnSub.textContent = missingSeats ? `${missingSeats} свободных мест займут боты.` : 'Все места заняты. Можно начинать.';
     diceStatus.textContent = 'ЖДЁМ ИГРОКОВ';
     diceLabel.textContent = 'ОЖИДАНИЕ';
     setDiceFace(5);
     rollDiceBtn.disabled = true;
     startGameBtn.hidden = snapshot?.hostId !== activeClient?.currentUserId;
-    const needsFullRoster = snapshot?.boardType === 'DIAMOND' || snapshot?.boardType === 'PENTA' || snapshot?.boardType === 'HEX';
-    const readyToStart = roster.length >= 2 && (!needsFullRoster || roster.length === snapshot.maxPlayers);
+    const readyToStart = roster.some((player) => player.id === activeClient?.currentUserId);
     startGameBtn.disabled = !readyToStart;
-    moveHint.textContent = roster.length < 2 ? 'Отправь другу ссылку или код комнаты.' : needsFullRoster && !readyToStart ? 'Для ' + snapshot.boardType + ' нужно пригласить всех ' + snapshot.maxPlayers + ' игроков.' : 'Все фишки появятся на поле после старта партии.';
+    moveHint.textContent = 'Нажми «Начать партию» — пустые места займут боты.';
     return;
   }
 
@@ -564,10 +627,10 @@ function renderTurn(snapshot) {
     moveHint.textContent = 'Кубик бросается на сервере. Клиент не может подменить результат.';
   } else {
     turnTitle.textContent = `Ход: ${current?.username || 'игрок'}`;
-    turnSub.textContent = 'Следим за партией. Твой ход скоро.';
+    turnSub.textContent = current?.isBot ? 'Соперник делает ход.' : 'Сейчас ход другого игрока.';
     diceStatus.textContent = state.dice ? `ВЫПАЛО ${state.dice}` : 'ХОД СОПЕРНИКА';
     diceLabel.textContent = 'ЖДЁМ';
-    moveHint.textContent = 'Фишки соперника двигаются синхронно со всеми игроками.';
+    moveHint.textContent = current?.isBot ? 'Бот выбирает лучший доступный ход.' : 'Твой ход скоро.';
   }
   setDiceFace(state.dice || state.lastAction?.dice || 5);
   rollDiceBtn.disabled = !canRoll;
@@ -693,9 +756,11 @@ async function enterRoom(roomId) {
   }
 }
 
-async function createRoom() {
-  createRoomBtn.disabled = true;
-  createRoomBtn.querySelector('span').textContent = 'СОЗДАЁМ СТОЛ…';
+async function createRoom({ autoStart = true, trigger = createRoomBtn } = {}) {
+  trigger.disabled = true;
+  const label = trigger.querySelector('span') || trigger;
+  const originalLabel = label.textContent;
+  label.textContent = autoStart ? 'ЗАПУСКАЕМ…' : 'СОЗДАЁМ…';
   try {
     const result = await LudoRoomClient.createRoom({
       ...authOptions(),
@@ -705,11 +770,12 @@ async function createRoom() {
       characterId: selectedCharacterId,
     });
     await enterRoom(result.roomId);
+    if (autoStart && activeClient) activeClient.startGame();
   } catch (error) {
     showToast(error.message || 'Не удалось создать комнату.');
   } finally {
-    createRoomBtn.disabled = false;
-    createRoomBtn.querySelector('span').textContent = 'СОЗДАТЬ ИГРУ';
+    trigger.disabled = false;
+    label.textContent = originalLabel;
   }
 }
 
@@ -723,7 +789,8 @@ async function copyText(text) {
 }
 
 renderCharacterGrid();
-applyBoardTheme(selectedBoardTheme);
+applyBoardTheme(selectedBoardTheme, selectedBoardType);
+updateLobbySelection();
 if (tokenLayer) tokenLayer.addEventListener('pointerup', handleBoardPointerUp);
 if (tokenChooserClose) tokenChooserClose.addEventListener('click', closeTokenChooser);
 if (tokenChooser) tokenChooser.addEventListener('click', (event) => { if (event.target === tokenChooser) closeTokenChooser(); });
@@ -735,7 +802,8 @@ if (soundToggleBtn) {
   soundToggleBtn.addEventListener('click', () => { soundEnabled = !soundEnabled; try { localStorage.setItem('optimist-ludo-sound', soundEnabled ? 'on' : 'off'); } catch { /* Optional preference. */ } updateSoundButton(); if (soundEnabled) playGameSound('tap'); });
 }
 
-createRoomBtn.addEventListener('click', () => void createRoom());
+createRoomBtn.addEventListener('click', () => void createRoom({ autoStart: true }));
+if (createInviteRoomBtn) createInviteRoomBtn.addEventListener('click', () => void createRoom({ autoStart: false, trigger: createInviteRoomBtn }));
 joinRoomForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const roomId = roomCodeInput.value.trim().toLowerCase();

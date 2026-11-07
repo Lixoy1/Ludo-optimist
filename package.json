@@ -10,7 +10,8 @@
     "dev": "node --env-file-if-exists=.env --watch apps/backend/server.js",
     "smoke": "node --env-file-if-exists=.env scripts/server-smoke.mjs",
     "build:boards": "node scripts/build-board-assets.mjs",
-    "build:extended-boards": "node scripts/build-extended-boards.js"
+    "build:extended-boards": "node scripts/build-extended-boards.js",
+    "start:local": "node --env-file-if-exists=.env.local apps/backend/server.js"
   },
   "engines": {
     "node": ">=22.9.0"

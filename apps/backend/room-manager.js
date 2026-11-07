@@ -1,12 +1,73 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import { rollUniversalDice, applyUniversalMove, assertUniversalState, createUniversalState } from './universal-engine.js';
-import { COLORS } from '../../src/geometry.js';
+import { COLORS, PLAYER_CONFIG, SAFE_TRACK_INDICES, CELL_COUNT } from '../../src/geometry.js';
 import { getPlayableGeometry } from '../../src/game-geometries.js';
 import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
 
 const ROOM_TTL_MS = 6 * 60 * 60 * 1000;
 const CHAT_LIMIT = 50;
 const CHAT_MAX_LENGTH = 200;
+
+const BOT_CHARACTER_IDS = ['cat', 'owl', 'husky', 'raccoon', 'poison', 'nikita', 'lilya-detective', 'optimist'];
+
+function botDestination(state, token, dice) {
+  const trackLength = state.mode === 'CLASSIC' ? CELL_COUNT : state.trackLength;
+  const finishStep = state.mode === 'CLASSIC' ? 57 : state.finishStep;
+  if (token.position.zone === 'base') return dice === 6 ? { zone: 'track', step: 0 } : null;
+  if (token.position.zone === 'finished') return null;
+  const next = token.position.step + dice;
+  if (next < trackLength) return { zone: 'track', step: next };
+  if (next < finishStep) return { zone: 'home', step: next };
+  if (next === finishStep) return { zone: 'finished', step: finishStep };
+  return null;
+}
+
+function botGlobalTrackIndex(state, player, step) {
+  return state.mode === 'CLASSIC'
+    ? (PLAYER_CONFIG[player.color].start + step) % CELL_COUNT
+    : (player.startIndex + step) % state.trackLength;
+}
+
+function chooseBotMove(state, playerId, legalTokenIds, dice) {
+  const player = state.players.find((item) => item.id === playerId);
+  if (!player) throw new Error('Bot player is missing from the current state.');
+  const trackLength = state.mode === 'CLASSIC' ? CELL_COUNT : state.trackLength;
+  const safe = new Set(state.mode === 'CLASSIC' ? SAFE_TRACK_INDICES : state.safeTrackIndices);
+  const opponents = state.players.filter((item) => item.id !== playerId);
+  const tokens = Object.values(state.tokens);
+  let best = null;
+  for (const tokenId of legalTokenIds) {
+    const token = state.tokens[tokenId];
+    const destination = botDestination(state, token, dice);
+    if (!destination) continue;
+    let score = 0;
+    if (destination.zone === 'finished') score += 100_000;
+    else if (destination.zone === 'home') score += 2_500 + destination.step;
+    else if (destination.zone === 'track') {
+      const target = botGlobalTrackIndex(state, player, destination.step);
+      score += 300 + destination.step * 12;
+      if (token.position.zone === 'base') score += 450;
+      if (!safe.has(target)) {
+        const captures = tokens.filter((enemy) => {
+          if (enemy.owner === playerId || enemy.position.zone !== 'track') return false;
+          const owner = state.players.find((item) => item.id === enemy.owner);
+          return owner && botGlobalTrackIndex(state, owner, enemy.position.step) === target;
+        });
+        score += captures.length * 12_000;
+      } else score += 80;
+    }
+    if (token.position.zone === 'track' && destination.zone === 'track') {
+      score += (destination.step - token.position.step) * 4;
+    }
+    if (token.position.zone === 'home' && destination.zone === 'home') {
+      score += (destination.step - token.position.step) * 8;
+    }
+    score += (3 - token.index) * 0.01;
+    if (!best || score > best.score) best = { tokenId, score };
+  }
+  if (!best) throw new Error('Bot received a legal move list with no destination.');
+  return best.tokenId;
+}
 
 export class RoomError extends Error {
   constructor(code, message, status = 400) { super(message); this.name = 'RoomError'; this.code = code; this.status = status; }
@@ -67,12 +128,13 @@ export class RoomManager {
 
   isMember(roomId, userId) {
     const room = this.rooms.get(roomId);
-    return Boolean(room?.players.some((player) => player.id === userId));
+    return Boolean(room?.players.some((player) => player.id === userId && !player.isBot));
   }
 
   joinRoom(roomId, user) {
     const room = this.getRoom(roomId);
     const existing = room.players.find((player) => player.id === user.id);
+    if (existing?.isBot) throw new RoomError('BOT_ID_RESERVED', 'Этот идентификатор принадлежит игровому боту.', 403);
     if (existing) return this.getSnapshot(roomId, user.id);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
     if (room.players.length >= room.maxPlayers) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
@@ -99,15 +161,65 @@ export class RoomManager {
     const room = this.getRoom(roomId);
     if (room.hostId !== userId) throw new RoomError('HOST_ONLY', 'Начать партию может создатель стола.', 403);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
-    if (room.boardType !== 'CLASSIC' && room.players.length !== room.maxPlayers) {
-      throw new RoomError('NOT_ENOUGH_PLAYERS', `Для ${room.boardType} нужны все ${room.maxPlayers} игроков.`);
-    }
-    if (room.players.length < 2) throw new RoomError('NOT_ENOUGH_PLAYERS', 'Нужен хотя бы ещё один игрок.');
+    this.fillBotSeats(room);
     room.state = createUniversalState(room.boardType, room.players);
     room.legalTokenIds = [];
     room.status = 'playing';
     room.updatedAt = this.now();
+    this.runBotTurns(room);
     return this.getSnapshot(roomId, userId);
+  }
+
+
+  fillBotSeats(room) {
+    const colors = room.boardType === 'CLASSIC'
+      ? COLORS
+      : getPlayableGeometry(room.boardType).arms.map((arm) => arm.player.id);
+    while (room.players.length < room.maxPlayers) {
+      const seat = room.players.length;
+      room.players.push({
+        id: `bot_${room.id}_${seat}`,
+        username: `БОТ ${seat}`,
+        color: colors[seat],
+        characterId: BOT_CHARACTER_IDS[(seat - 1) % BOT_CHARACTER_IDS.length],
+        isBot: true,
+        botLevel: 'normal',
+      });
+    }
+  }
+
+  runBotTurns(room) {
+    let actions = 0;
+    while (room.status === 'playing' && actions < 80) {
+      const player = room.players.find((item) => item.id === room.state?.currentPlayer);
+      if (!player?.isBot) break;
+
+      const rolled = rollUniversalDice(room.state, player.id, this.dice());
+      room.state = rolled.state;
+      room.legalTokenIds = [...rolled.legalTokenIds];
+      actions += 1;
+
+      if (room.state.phase === 'finished') {
+        room.status = 'finished';
+        room.legalTokenIds = [];
+        break;
+      }
+      if (rolled.legalTokenIds.length === 0) {
+        // A six with no legal move still grants a bonus roll; all other
+        // no-move and three-sixes cases advance the turn in the engine.
+        continue;
+      }
+
+      const tokenId = chooseBotMove(room.state, player.id, rolled.legalTokenIds, room.state.dice);
+      const moved = applyUniversalMove(room.state, player.id, tokenId);
+      assertUniversalState(moved.state);
+      room.state = moved.state;
+      room.legalTokenIds = [];
+      actions += 1;
+      if (moved.state.phase === 'finished') room.status = 'finished';
+    }
+
+    room.updatedAt = this.now();
   }
 
   roll(roomId, userId) {
@@ -117,6 +229,7 @@ export class RoomManager {
     const result = rollUniversalDice(room.state, userId, this.dice());
     room.state = result.state;
     room.legalTokenIds = [...result.legalTokenIds];
+    this.runBotTurns(room);
     room.updatedAt = this.now();
     return { ...result, snapshot: this.getSnapshot(roomId, userId) };
   }
@@ -130,6 +243,7 @@ export class RoomManager {
     room.state = result.state;
     room.legalTokenIds = [];
     if (result.state.phase === 'finished') room.status = 'finished';
+    else this.runBotTurns(room);
     room.updatedAt = this.now();
     return { ...result, snapshot: this.getSnapshot(roomId, userId) };
   }
@@ -186,7 +300,7 @@ export class RoomManager {
   }
 
   assertMember(room, userId) {
-    const player = room.players.find((entry) => entry.id === userId);
+    const player = room.players.find((entry) => entry.id === userId && !entry.isBot);
     if (!player) throw new RoomError('NOT_A_MEMBER', 'Ты не участник этого стола.', 403);
     return player;
   }

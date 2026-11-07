@@ -21,3 +21,13 @@ jobs:
           find src apps scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
       - name: Run test suite
         run: npm test
+      - name: Package local preview ZIP
+        run: |
+          zip -qr /tmp/OPTIMIST-LUDO-local.zip . -x ".git/*" "node_modules/*" ".env"
+      - name: Upload local preview ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: optimist-ludo-local-preview
+          path: /tmp/OPTIMIST-LUDO-local.zip
+          if-no-files-found: error
+          retention-days: 7
