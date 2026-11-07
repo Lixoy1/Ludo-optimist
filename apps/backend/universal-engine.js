@@ -69,7 +69,8 @@ export function createExtendedState(boardType, roster) {
     revision: 0,
     trackLength: geometry.trackLength,
     homeCellCount: geometry.homeCells,
-    maxOuterSteps: geometry.maxOuterSteps,\n    finishStep: geometry.finishStep,
+    maxOuterSteps: geometry.maxOuterSteps,
+    finishStep: geometry.finishStep,
     safeTrackIndices: [...geometry.safeIndices],
     lastAction: null,
   };
