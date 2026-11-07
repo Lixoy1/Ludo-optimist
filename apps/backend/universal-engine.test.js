@@ -19,7 +19,7 @@ function setTrack(state, playerId, index, step) {
 }
 
 for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
-  const geometry = getExtendedGeometry(mode.toLowerCase());
+  const geometry = getPlayableGeometry(mode);
   test(`${mode} has one four-token seat per arm and geometry-aligned route metadata`, () => {
     const state = stateFor(mode);
     assert.equal(state.players.length, geometry.sides);
