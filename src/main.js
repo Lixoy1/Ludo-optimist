@@ -519,7 +519,8 @@ function renderTokens(snapshot) {
 }
 
 function renderPlayers(snapshot) {
-  const players = snapshot?.players || snapshot?.state?.players || [];
+  const statePlayers = new Map((snapshot?.state?.players || []).map((player) => [player.id, player]));
+  const players = (snapshot?.players || snapshot?.state?.players || []).map((player) => ({ ...statePlayers.get(player.id), ...player }));
   const byColor = new Map(players.map((player) => [player.color, player]));
   playersStrip.replaceChildren();
   const boardType = String(snapshot?.boardType || snapshot?.state?.mode || 'CLASSIC').toUpperCase();
@@ -555,8 +556,9 @@ function renderPlayers(snapshot) {
 }
 
 function currentPlayerInfo(snapshot) {
-  const roster = snapshot?.state?.players || snapshot?.players || [];
-  return roster.find((player) => player.id === snapshot?.state?.currentPlayer) || null;
+  const statePlayer = snapshot?.state?.players?.find((player) => player.id === snapshot?.state?.currentPlayer) || null;
+  const roomPlayer = snapshot?.players?.find((player) => player.id === snapshot?.state?.currentPlayer) || null;
+  return statePlayer || roomPlayer ? { ...statePlayer, ...roomPlayer } : null;
 }
 
 function setDiceFace(value = 5) {
