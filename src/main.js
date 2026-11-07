@@ -1,5 +1,5 @@
 import { LudoRoomClient } from './client/room-client.js';
-import { tokenBoardPositions } from './board-render.js';
+import { tokenBoardPositions, tokenMovementPath } from './board-render.js';
 import { CHARACTERS, DEFAULT_CHARACTER_ID, getCharacter } from './characters.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -358,11 +358,33 @@ function colorHex(color) {
   return ({ blue: '#26baff', red: '#ff334f', green: '#55ed39', yellow: '#ffbd24', purple: '#b77aff', orange: '#ff9d38' })[color] || '#e5c06b';
 }
 
-function animateToken(element, kind) {
+function animateToken(element, kind, route = []) {
   if (!kind) return;
   element.classList.remove('moving', 'captured', 'finished-pop');
   void element.offsetWidth;
   element.classList.add(kind);
+  if (kind === 'moving' && route.length > 1 && typeof element.animate === 'function') {
+    const previousTransition = element.style.transition;
+    const finalLeft = element.style.left, finalTop = element.style.top;
+    const frames = route.map((point, index) => ({
+      left: `${point.x / 720 * 100}%`,
+      top: `${point.y / 720 * 100}%`,
+      offset: index / (route.length - 1),
+    }));
+    element.style.transition = 'none';
+    const animation = element.animate(frames, {
+      duration: Math.max(300, Math.min(1200, (route.length - 1) * 105)),
+      easing: 'linear',
+      fill: 'none',
+    });
+    animation.finished.then(() => {
+      element.style.transition = previousTransition;
+      element.style.left = finalLeft;
+      element.style.top = finalTop;
+    }).catch(() => {
+      element.style.transition = previousTransition;
+    });
+  }
   setTimeout(() => element.classList.remove(kind), 780);
 }
 
@@ -403,10 +425,19 @@ function renderTokens(snapshot) {
     const character = getCharacter(position.characterId), image = element.querySelector('.pawn-character');
     if (image.dataset.character !== character.id) { image.src = character.src; image.dataset.character = character.id; }
     element.style.setProperty('--token-color', colorHex(position.color));
+    element.style.setProperty('--pawn-diameter', `${(position.diameter || 44.64) / 720 * 100}%`);
     element.style.left = `${position.left}%`; element.style.top = `${position.top}%`;
     element.style.setProperty('--pawn-scale', String(position.scale));
     element.style.zIndex = String(4 + index);
-    if (motion) animateToken(element, motion.trim());
+    let movementRoute = [];
+    const action = state.lastAction;
+    if (motion.trim() === 'moving' && action?.type === 'MOVE' && action.tokenId === position.tokenId) {
+      const path = tokenMovementPath(state, position.owner, action.from, state.tokens[position.tokenId].position, position.index);
+      if (path.length) {
+        movementRoute = [{ x: old.left * 7.2, y: old.top * 7.2 }, ...path.slice(0, -1), { x: position.x, y: position.y }];
+      }
+    }
+    if (motion) animateToken(element, motion.trim(), movementRoute);
     previousTokenPositions.set(position.tokenId, { zone: position.zone, left: position.left, top: position.top });
   });
 
