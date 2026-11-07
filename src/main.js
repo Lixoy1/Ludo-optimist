@@ -191,6 +191,7 @@ function renderCharacterGrid() {
     const button = document.createElement('button');
     button.type = 'button'; button.className = `character-option${character.id === selectedCharacterId ? ' selected' : ''}`;
     button.setAttribute('aria-pressed', String(character.id === selectedCharacterId));
+    button.dataset.fallback = character.name.slice(0, 1).toUpperCase();
     const image = document.createElement('img'); image.src = character.src; image.alt = character.name; image.loading = 'eager'; image.decoding = 'async'; image.draggable = false;
     image.onerror = () => { image.hidden = true; button.classList.add('image-fallback'); };
     const name = document.createElement('b'); name.textContent = character.name;
