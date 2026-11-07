@@ -87,3 +87,39 @@ test('players can change character during the room and game without changing the
   assert.equal(changed.state.players[0].characterId, 'poison');
   assert.throws(() => manager.setCharacter(created.roomId, red.id, 'not-a-character'), /Неизвестный персонаж/);
 });
+
+for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
+  test(boardType + ' rooms assign geometry colors, require a full roster and start the matching engine', () => {
+    const manager = new RoomManager({ dice: () => 6 });
+    const host = { id: boardType.toLowerCase() + '-0', username: 'Host' };
+    const created = manager.createRoom(host, { boardType, maxPlayers });
+    assert.equal(created.boardType, boardType);
+    assert.equal(created.maxPlayers, maxPlayers);
+    assert.equal(created.players.length, 1);
+    assert.throws(() => manager.startGame(created.roomId, host.id), /нужны все/);
+    for (let index = 1; index < maxPlayers; index += 1) {
+      manager.joinRoom(created.roomId, { id: boardType.toLowerCase() + '-' + index, username: 'Player ' + index });
+    }
+    const full = manager.getSnapshot(created.roomId, host.id);
+    assert.equal(full.players.length, maxPlayers);
+    assert.equal(new Set(full.players.map((player) => player.color)).size, maxPlayers);
+    const started = manager.startGame(created.roomId, host.id);
+    assert.equal(started.state.mode, boardType);
+    assert.equal(started.state.trackLength, boardType === 'PENTA' ? 65 : 78);
+    assert.equal(started.state.players.length, maxPlayers);
+    const roll = manager.roll(created.roomId, host.id);
+    assert.equal(roll.state.lastAction.dice, 6);
+    assert.equal(roll.legalTokenIds.length, 4);
+    assert.equal(manager.getSnapshot(created.roomId, host.id).boardType, boardType);
+  });
+}
+
+test('extended room types reject invalid capacities and public room list identifies their board', () => {
+  const manager = new RoomManager();
+  assert.throws(() => manager.createRoom({ id:'bad-penta', username:'Bad' }, { boardType:'PENTA', maxPlayers:4 }), /PENTA/);
+  assert.throws(() => manager.createRoom({ id:'bad-hex', username:'Bad' }, { boardType:'HEX', maxPlayers:5 }), /HEX/);
+  const created = manager.createRoom({ id:'penta-list', username:'Penta' }, { maxPlayers:5 });
+  assert.equal(created.boardType, 'PENTA');
+  const room = manager.listPublicRooms().find((item) => item.roomId === created.roomId);
+  assert.equal(room.boardType, 'PENTA');
+});
