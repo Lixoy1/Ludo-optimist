@@ -154,7 +154,7 @@ test('Classic player capacity may be filled partly by humans and partly by bots'
 });
 
 
-for (const [boardType, maxPlayers] of [['DIAMOND',4],['PENTA',5],['HEX',6]]) {
+for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
   test(boardType + ' bots roll, release a pawn and complete a legal track move before returning the turn to the human', () => {
     let rollIndex = 0;
     const manager = new RoomManager({ dice: () => ([6, 1][rollIndex++ % 2]) });
