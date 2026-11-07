@@ -1,6 +1,7 @@
 import { randomBytes, randomInt } from 'node:crypto';
-import { createClassicState, rollClassicDice, applyClassicMove, assertClassicState } from './classic-engine.js';
+import { rollUniversalDice, applyUniversalMove, assertUniversalState, createUniversalState } from './universal-engine.js';
 import { COLORS } from '../../src/geometry.js';
+import { getPlayableGeometry } from '../../src/game-geometries.js';
 import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
 
 const ROOM_TTL_MS = 6 * 60 * 60 * 1000;
@@ -24,19 +25,29 @@ export class RoomManager {
     this.rooms = new Map();
   }
 
-  createRoom(user, { maxPlayers = 4, isPublic = true } = {}) {
+  createRoom(user, options = {}) {
+    const requestedPlayers = options.maxPlayers;
+    const requestedType = String(options.boardType || (requestedPlayers === 5 ? 'PENTA' : requestedPlayers === 6 ? 'HEX' : 'CLASSIC')).toUpperCase();
+    if (!['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
+    const maxPlayers = requestedPlayers ?? (requestedType === 'PENTA' ? 5 : requestedType === 'HEX' ? 6 : 4);
+    const validCapacity = requestedType === 'CLASSIC'
+      ? Number.isInteger(maxPlayers) && maxPlayers >= 2 && maxPlayers <= 4
+      : requestedType === 'DIAMOND' ? maxPlayers === 4
+        : maxPlayers === (requestedType === 'PENTA' ? 5 : 6);
+    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, DIAMOND: ровно 4, PENTA: ровно 5, HEX: ровно 6.');
     this.pruneIdleRooms();
     if (this.rooms.size >= this.maxRooms) throw new RoomError('ROOM_LIMIT', 'Сейчас все игровые столы заняты. Попробуй позже.', 503);
     if (!user?.id || !user?.username) throw new RoomError('INVALID_USER', 'Не удалось определить игрока.');
-    if (!Number.isInteger(maxPlayers) || maxPlayers < 2 || maxPlayers > 4) throw new RoomError('INVALID_ROOM_CONFIG', 'В Classic можно играть от двух до четырёх игроков.');
+    const colors = requestedType === 'CLASSIC' ? COLORS : getPlayableGeometry(requestedType).arms.map((arm) => arm.player.id);
     const roomId = randomBytes(8).toString('hex');
     const room = {
       id: roomId,
       hostId: user.id,
       status: 'lobby',
-      isPublic: Boolean(isPublic),
+      boardType: requestedType,
+      isPublic: Boolean(options.isPublic ?? true),
       maxPlayers,
-      players: [{ id: user.id, username: user.username.slice(0, 40), color: COLORS[0], characterId: isCharacterId(user.characterId) ? user.characterId : DEFAULT_CHARACTER_ID }],
+      players: [{ id: user.id, username: user.username.slice(0, 40), color: colors[0], characterId: isCharacterId(user.characterId) ? user.characterId : DEFAULT_CHARACTER_ID }],
       state: null,
       legalTokenIds: [],
       chat: [],
@@ -65,7 +76,8 @@ export class RoomManager {
     if (existing) return this.getSnapshot(roomId, user.id);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
     if (room.players.length >= room.maxPlayers) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
-    const color = COLORS.find((candidate) => !room.players.some((player) => player.color === candidate));
+    const colors = room.boardType === 'CLASSIC' ? COLORS : getPlayableGeometry(room.boardType).arms.map((arm) => arm.player.id);
+    const color = colors.find((candidate) => !room.players.some((player) => player.color === candidate));
     if (!color) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
     room.players.push({ id: user.id, username: String(user.username || user.id).slice(0, 40), color, characterId: isCharacterId(user.characterId) ? user.characterId : DEFAULT_CHARACTER_ID });
     room.updatedAt = this.now();
@@ -87,8 +99,11 @@ export class RoomManager {
     const room = this.getRoom(roomId);
     if (room.hostId !== userId) throw new RoomError('HOST_ONLY', 'Начать партию может создатель стола.', 403);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
+    if (room.boardType !== 'CLASSIC' && room.players.length !== room.maxPlayers) {
+      throw new RoomError('NOT_ENOUGH_PLAYERS', `Для ${room.boardType} нужны все ${room.maxPlayers} игроков.`);
+    }
     if (room.players.length < 2) throw new RoomError('NOT_ENOUGH_PLAYERS', 'Нужен хотя бы ещё один игрок.');
-    room.state = createClassicState(room.players);
+    room.state = createUniversalState(room.boardType, room.players);
     room.legalTokenIds = [];
     room.status = 'playing';
     room.updatedAt = this.now();
@@ -99,7 +114,7 @@ export class RoomManager {
     const room = this.getRoom(roomId);
     this.assertMember(room, userId);
     if (!room.state) throw new RoomError('GAME_NOT_STARTED', 'Сначала начни партию.');
-    const result = rollClassicDice(room.state, userId, this.dice());
+    const result = rollUniversalDice(room.state, userId, this.dice());
     room.state = result.state;
     room.legalTokenIds = [...result.legalTokenIds];
     room.updatedAt = this.now();
@@ -110,8 +125,8 @@ export class RoomManager {
     const room = this.getRoom(roomId);
     this.assertMember(room, userId);
     if (!room.state) throw new RoomError('GAME_NOT_STARTED', 'Сначала начни партию.');
-    const result = applyClassicMove(room.state, userId, tokenId);
-    assertClassicState(result.state);
+    const result = applyUniversalMove(room.state, userId, tokenId);
+    assertUniversalState(result.state);
     room.state = result.state;
     room.legalTokenIds = [];
     if (result.state.phase === 'finished') room.status = 'finished';
@@ -181,7 +196,7 @@ export class RoomManager {
     this.assertMember(room, viewerId);
     return {
       roomId: room.id, hostId: room.hostId, status: room.status,
-      isPublic: room.isPublic, maxPlayers: room.maxPlayers,
+      boardType: room.boardType, isPublic: room.isPublic, maxPlayers: room.maxPlayers,
       players: room.players.map((player) => ({ ...player })),
       state: room.state ? structuredClone(room.state) : null,
       legalTokenIds: [...room.legalTokenIds],
@@ -193,7 +208,7 @@ export class RoomManager {
   listPublicRooms() {
     this.pruneIdleRooms();
     return [...this.rooms.values()].filter((room) => room.isPublic && room.status === 'lobby').map((room) => ({
-      roomId: room.id, players: room.players.length, maxPlayers: room.maxPlayers, createdAt: room.createdAt,
+      roomId: room.id, boardType: room.boardType, players: room.players.length, maxPlayers: room.maxPlayers, createdAt: room.createdAt,
     }));
   }
 

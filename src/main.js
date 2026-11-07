@@ -1,5 +1,5 @@
 import { LudoRoomClient } from './client/room-client.js';
-import { tokenBoardPositions } from './board-render.js';
+import { tokenBoardPositions, tokenMovementPath } from './board-render.js';
 import { CHARACTERS, DEFAULT_CHARACTER_ID, getCharacter } from './characters.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -46,8 +46,9 @@ const tokenChooserOptions = $('#tokenChooserOptions');
 const tokenChooserClose = $('#tokenChooserClose');
 const boardEffectOverlay = $('#boardEffectOverlay');
 
-const COLOR_ORDER = ['blue', 'red', 'green', 'yellow'];
-const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЗОЛОТОЙ' };
+const CLASSIC_COLOR_ORDER = ['blue', 'red', 'green', 'yellow'];
+const PLAYER_COLOR_ORDERS = { DIAMOND: ['green', 'red', 'blue', 'yellow'], PENTA: ['blue', 'red', 'yellow', 'green', 'purple'], HEX: ['blue', 'red', 'yellow', 'green', 'purple', 'orange'] };
+const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЗОЛОТОЙ', purple: 'ФИОЛЕТОВЫЙ', orange: 'ОРАНЖЕВЫЙ' };
 const query = new URLSearchParams(location.search);
 const telegram = window.Telegram?.WebApp ?? null;
 let selectedPlayerCount = 4;
@@ -64,6 +65,7 @@ const previousTokenPositions = new Map();
 const BOARD_THEMES = ['neon', 'classic', 'elite', 'marble'];
 let selectedCharacterId = (() => { try { const saved = localStorage.getItem('optimist-ludo-character'); return CHARACTERS.some((item) => item.id === saved) ? saved : DEFAULT_CHARACTER_ID; } catch { return DEFAULT_CHARACTER_ID; } })();
 let selectedBoardTheme = (() => { try { return localStorage.getItem('optimist-ludo-board-theme') || 'neon'; } catch { return 'neon'; } })();
+let selectedBoardType = 'CLASSIC';
 let soundEnabled = (() => { try { return localStorage.getItem('optimist-ludo-sound') !== 'off'; } catch { return true; } })();
 let audioContext = null;
 let effectTimer = null;
@@ -118,15 +120,16 @@ function switchView(view) {
   if (showGame) window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-function selectCount(count) {
+function selectCount(count, boardType = count === 5 ? 'PENTA' : count === 6 ? 'HEX' : 'CLASSIC') {
   selectedPlayerCount = count;
+  selectedBoardType = boardType;
   document.querySelectorAll('[data-count]').forEach((button) => {
-    button.classList.toggle('active', Number(button.dataset.count) === count);
+    button.classList.toggle('active', Number(button.dataset.count) === count && (button.dataset.boardType || 'CLASSIC') === boardType);
   });
 }
 
 document.querySelectorAll('[data-count]').forEach((button) => {
-  button.addEventListener('click', () => selectCount(Number(button.dataset.count)));
+  button.addEventListener('click', () => selectCount(Number(button.dataset.count), button.dataset.boardType || 'CLASSIC'));
 });
 
 function renderCharacterGrid() {
@@ -158,14 +161,16 @@ function chooseCharacter(characterId) {
   }
 }
 
-function applyBoardTheme(theme) {
+function applyBoardTheme(theme, boardType = selectedBoardType) {
   selectedBoardTheme = BOARD_THEMES.includes(theme) ? theme : 'neon';
+  selectedBoardType = ['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
   if (boardStage) boardStage.dataset.theme = selectedBoardTheme;
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
   if (boardArt) {
-    const nextSrc = `/assets/boards/optimist-ludo-${selectedBoardTheme}.svg`;
+    const boardFile = selectedBoardType === 'CLASSIC' ? `optimist-ludo-${selectedBoardTheme}.svg` : `optimist-ludo-${selectedBoardType.toLowerCase()}-${selectedBoardTheme}.svg`;
+    const nextSrc = `/assets/boards/${boardFile}`;
     if (!boardArt.getAttribute('src')?.endsWith(nextSrc)) boardArt.setAttribute('src', nextSrc);
-    boardArt.alt = `Игровое поле OPTIMIST LUDO — ${selectedBoardTheme.toUpperCase()}`;
+    boardArt.alt = `Игровое поле OPTIMIST LUDO ${selectedBoardType} — ${selectedBoardTheme.toUpperCase()}`;
   }
   if (boardThemeSelect) boardThemeSelect.value = selectedBoardTheme;
   try { localStorage.setItem('optimist-ludo-board-theme', selectedBoardTheme); } catch { /* Optional preference. */ }
@@ -232,7 +237,7 @@ function roomCard(room) {
   const title = document.createElement('b');
   title.textContent = `СТОЛ ${room.roomId.slice(0, 4).toUpperCase()} · ${room.players}/${room.maxPlayers}`;
   const sub = document.createElement('small');
-  sub.textContent = 'CLASSIC · ОТКРЫТЫЙ СТОЛ';
+  sub.textContent = (room.boardType || 'CLASSIC') + ' · ОТКРЫТЫЙ СТОЛ';
   info.append(title, sub);
   const join = document.createElement('button');
   join.type = 'button';
@@ -351,14 +356,36 @@ function handleBoardPointerUp(event) {
 }
 
 function colorHex(color) {
-  return ({ blue: '#26baff', red: '#ff334f', green: '#55ed39', yellow: '#ffbd24' })[color] || '#e5c06b';
+  return ({ blue: '#26baff', red: '#ff334f', green: '#55ed39', yellow: '#ffbd24', purple: '#b77aff', orange: '#ff9d38' })[color] || '#e5c06b';
 }
 
-function animateToken(element, kind) {
+function animateToken(element, kind, route = []) {
   if (!kind) return;
   element.classList.remove('moving', 'captured', 'finished-pop');
   void element.offsetWidth;
   element.classList.add(kind);
+  if (kind === 'moving' && route.length > 1 && typeof element.animate === 'function') {
+    const previousTransition = element.style.transition;
+    const finalLeft = element.style.left, finalTop = element.style.top;
+    const frames = route.map((point, index) => ({
+      left: `${point.x / 720 * 100}%`,
+      top: `${point.y / 720 * 100}%`,
+      offset: index / (route.length - 1),
+    }));
+    element.style.transition = 'none';
+    const animation = element.animate(frames, {
+      duration: Math.max(300, Math.min(1200, (route.length - 1) * 105)),
+      easing: 'linear',
+      fill: 'none',
+    });
+    animation.finished.then(() => {
+      element.style.transition = previousTransition;
+      element.style.left = finalLeft;
+      element.style.top = finalTop;
+    }).catch(() => {
+      element.style.transition = previousTransition;
+    });
+  }
   setTimeout(() => element.classList.remove(kind), 780);
 }
 
@@ -399,10 +426,19 @@ function renderTokens(snapshot) {
     const character = getCharacter(position.characterId), image = element.querySelector('.pawn-character');
     if (image.dataset.character !== character.id) { image.src = character.src; image.dataset.character = character.id; }
     element.style.setProperty('--token-color', colorHex(position.color));
+    element.style.setProperty('--pawn-diameter', `${(position.diameter || 44.64) / 720 * 100}%`);
     element.style.left = `${position.left}%`; element.style.top = `${position.top}%`;
     element.style.setProperty('--pawn-scale', String(position.scale));
     element.style.zIndex = String(4 + index);
-    if (motion) animateToken(element, motion.trim());
+    let movementRoute = [];
+    const action = state.lastAction;
+    if (motion.trim() === 'moving' && action?.type === 'MOVE' && action.tokenId === position.tokenId) {
+      const path = tokenMovementPath(state, position.owner, action.from, state.tokens[position.tokenId].position, position.index);
+      if (path.length) {
+        movementRoute = [{ x: old.left * 7.2, y: old.top * 7.2 }, ...path.slice(0, -1), { x: position.x, y: position.y }];
+      }
+    }
+    if (motion) animateToken(element, motion.trim(), movementRoute);
     previousTokenPositions.set(position.tokenId, { zone: position.zone, left: position.left, top: position.top });
   });
 
@@ -429,7 +465,10 @@ function renderPlayers(snapshot) {
   const players = snapshot?.state?.players || snapshot?.players || [];
   const byColor = new Map(players.map((player) => [player.color, player]));
   playersStrip.replaceChildren();
-  COLOR_ORDER.forEach((color) => {
+  const boardType = String(snapshot?.boardType || snapshot?.state?.mode || 'CLASSIC').toUpperCase();
+  const colorOrder = PLAYER_COLOR_ORDERS[boardType] || CLASSIC_COLOR_ORDER;
+  playersStrip.dataset.playerCount = String(colorOrder.length);
+  colorOrder.forEach((color) => {
     const player = byColor.get(color);
     const card = document.createElement('div');
     card.className = `player-card${player && player.id === snapshot?.state?.currentPlayer ? ' current' : ''}${player ? '' : ' empty'}`;
@@ -487,8 +526,10 @@ function renderTurn(snapshot) {
     setDiceFace(5);
     rollDiceBtn.disabled = true;
     startGameBtn.hidden = snapshot?.hostId !== activeClient?.currentUserId;
-    startGameBtn.disabled = roster.length < 2;
-    moveHint.textContent = roster.length < 2 ? 'Отправь другу ссылку или код комнаты.' : 'Все фишки появятся на поле после старта партии.';
+    const needsFullRoster = snapshot?.boardType === 'DIAMOND' || snapshot?.boardType === 'PENTA' || snapshot?.boardType === 'HEX';
+    const readyToStart = roster.length >= 2 && (!needsFullRoster || roster.length === snapshot.maxPlayers);
+    startGameBtn.disabled = !readyToStart;
+    moveHint.textContent = roster.length < 2 ? 'Отправь другу ссылку или код комнаты.' : needsFullRoster && !readyToStart ? 'Для ' + snapshot.boardType + ' нужно пригласить всех ' + snapshot.maxPlayers + ' игроков.' : 'Все фишки появятся на поле после старта партии.';
     return;
   }
 
@@ -540,6 +581,8 @@ function diceButtonReset() {
 }
 
 function renderSnapshot(snapshot) {
+  const boardType = String(snapshot?.boardType || snapshot?.state?.mode || 'CLASSIC').toUpperCase();
+  if (boardType !== selectedBoardType) applyBoardTheme(selectedBoardTheme, boardType);
   const previous = currentSnapshot;
   playActionFeedback(snapshot, previous);
   currentSnapshot = snapshot;
@@ -657,6 +700,7 @@ async function createRoom() {
     const result = await LudoRoomClient.createRoom({
       ...authOptions(),
       maxPlayers: selectedPlayerCount,
+      boardType: selectedBoardType,
       isPublic: publicRoomToggle.checked,
       characterId: selectedCharacterId,
     });

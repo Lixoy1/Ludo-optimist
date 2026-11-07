@@ -36,12 +36,12 @@ export class LudoRoomClient {
     return data.rooms || [];
   }
 
-  static async createRoom({ initData = '', getInitData = null, devUserId = '', devUsername = '', characterId = 'optimist', maxPlayers = 4, isPublic = true, fetchImpl = globalThis.fetch } = {}) {
+  static async createRoom({ initData = '', getInitData = null, devUserId = '', devUsername = '', characterId = 'optimist', maxPlayers = 4, boardType = 'CLASSIC', isPublic = true, fetchImpl = globalThis.fetch } = {}) {
     const latestInitData = typeof getInitData === 'function' ? getInitData() : initData;
     const headers = { 'content-type': 'application/json' };
     if (latestInitData) headers['x-telegram-init-data'] = latestInitData;
     if (devUserId) { headers['x-dev-user'] = devUserId; headers['x-dev-name'] = devUsername || devUserId; }
-    const response = await fetchImpl('/api/rooms', { method: 'POST', headers, body: JSON.stringify({ maxPlayers, isPublic, characterId }) });
+    const response = await fetchImpl('/api/rooms', { method: 'POST', headers, body: JSON.stringify({ maxPlayers, boardType, isPublic, characterId }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.message || data.error || 'Не удалось создать игровой стол.');
     return data;

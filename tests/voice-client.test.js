@@ -40,9 +40,24 @@ test('room client createRoom sends Telegram initData and room limits', async () 
   assert.equal(request.url, '/api/rooms');
   assert.equal(request.options.method, 'POST');
   assert.equal(request.options.headers['x-telegram-init-data'], 'signed-init-data');
-  assert.deepEqual(JSON.parse(request.options.body), { maxPlayers: 3, isPublic: false, characterId: 'poison' });
+  assert.deepEqual(JSON.parse(request.options.body), { maxPlayers: 3, boardType: 'CLASSIC', isPublic: false, characterId: 'poison' });
 });
 
+
+test('room client can create a PENTA table through an explicit board mode', async () => {
+  const { LudoRoomClient } = await import('../src/client/room-client.js');
+  let payload;
+  await LudoRoomClient.createRoom({ maxPlayers: 5, boardType: 'PENTA', fetchImpl: async (_url, options) => { payload = JSON.parse(options.body); return { ok: true, json: async () => ({ roomId: 'penta-room' }) }; } });
+  assert.deepEqual(payload, { maxPlayers: 5, boardType: 'PENTA', isPublic: true, characterId: 'optimist' });
+});
+
+
+test('room client sends the DIAMOND board mode without changing four-player capacity', async () => {
+  const { LudoRoomClient } = await import('../src/client/room-client.js');
+  let payload;
+  await LudoRoomClient.createRoom({ maxPlayers: 4, boardType: 'DIAMOND', fetchImpl: async (_url, options) => { payload = JSON.parse(options.body); return { ok: true, json: async () => ({ roomId: 'diamond-room' }) }; } });
+  assert.deepEqual(payload, { maxPlayers: 4, boardType: 'DIAMOND', isPublic: true, characterId: 'optimist' });
+});
 
 test('room client listRooms reads the public lobby using Telegram initData', async () => {
   const { LudoRoomClient } = await import('../src/client/room-client.js');

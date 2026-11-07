@@ -202,13 +202,12 @@ export function getExtendedStackLayout(geometryId,count) {
   const config=geometry.stackLayout[visible];
   return {
     hiddenCount:Math.max(0,count-visible),
-    tokens:config.offsets.map((offset,index)=>({
-      index,
-      x:offset[0]*geometry.cellPitch,
-      y:offset[1]*geometry.cellPitch,
-      scale:config.scale,
-      diameter:geometry.pawnDiameter*config.scale,
-    })),
+    tokens:Array.from({length:count},(_,index)=>{
+      if(index>=visible) return {index,x:0,y:0,scale:0,diameter:0,visible:false};
+      const offset=config.offsets[index];
+      return {index,x:offset[0]*geometry.cellPitch,y:offset[1]*geometry.cellPitch,scale:config.scale,
+        diameter:geometry.pawnDiameter*config.scale,visible:true};
+    }),
   };
 }
 export function assertExtendedGeometry(geometry) {

@@ -14,5 +14,8 @@
 ## Chosen ruleset
 Some commercial Ludo variants use shorter 55/66-cell laps and four-cell home lanes. OPTIMIST LUDO intentionally chooses the 65/78-cell, five-home-cell ruleset above. These variants are not mixed.
 
+## Implementation status
+The chosen 65/78 route model is implemented in the PENTA and HEX server-authoritative modes and is connected to the room API, lobby capacity selection, SVG theme switching, and pawn rendering. The exact house rules are documented in `RULES.md`. DIAMOND is implemented as a distinct four-seat, 52-node route extracted from its own authored SVG. It reuses the published house rules but retains its original artwork-defined start/star safe positions; this SVG geometry is project-authored, not sourced from the external PENTA/HEX references.
+
 ## Original work
 All coordinates, SVG illustrations, materials, colours, cell bevels, triangular yards, pawn wells, and finish sockets in this repository are newly authored for OPTIMIST LUDO. Third-party references are used only for general board topology and public rule descriptions.
