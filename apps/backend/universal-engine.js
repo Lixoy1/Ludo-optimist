@@ -9,7 +9,7 @@ export const EXTENDED_HOME_CELLS = 5;
 
 function normalizeBoardType(boardType) {
   const value = String(boardType || 'CLASSIC').toUpperCase();
-  if (!['CLASSIC', 'PENTA', 'HEX'].includes(value)) {
+  if (!['CLASSIC', 'HEXA', 'ROYAL'].includes(value)) {
     throw new RangeError('Board type must be CLASSIC, PENTA or HEX.');
   }
   return value;
@@ -70,7 +70,7 @@ export function createExtendedState(boardType, roster) {
     revision: 0,
     trackLength: geometry.trackLength,
     homeCellCount: geometry.homeCells,
-    finishStep: geometry.trackLength + geometry.homeCells,
+    maxOuterSteps: geometry.maxOuterSteps,\n    finishStep: geometry.finishStep,
     safeTrackIndices: [...geometry.safeIndices],
     lastAction: null,
   };
@@ -78,7 +78,7 @@ export function createExtendedState(boardType, roster) {
 
 export function extendedGlobalTrackIndex(state, player, step) {
   const geometry = extendedGeometry(state);
-  if (!player || !Number.isInteger(step) || step < 0 || step >= geometry.trackLength) {
+  if (!player || !Number.isInteger(step) || step < 0 || step > geometry.maxOuterSteps) {
     throw new RangeError('Invalid extended outer-track position.');
   }
   return (player.startIndex + step) % geometry.trackLength;
@@ -96,7 +96,7 @@ function tokenDestination(state, token, dice) {
   }
   if (token.position.zone === 'finished') return null;
   const nextStep = token.position.step + dice;
-  if (nextStep < trackLength) return { zone: 'track', step: nextStep };
+  if (nextStep <= maxOuterSteps) return { zone: 'track', step: nextStep };
   if (nextStep <= homeEnd) return { zone: 'home', step: nextStep };
   if (nextStep === state.finishStep) return { zone: 'finished', step: state.finishStep };
   return null;
@@ -121,7 +121,7 @@ function isBlockedAt(state, globalIndex, exceptTokenId = null) {
 function pathIsClear(state, token, destination) {
   if (token.position.zone !== 'track') return true;
   const owner = playerById(state, token.owner);
-  const lastOuterStep = Math.min(destination.step, state.trackLength - 1);
+  const lastOuterStep = Math.min(destination.step, state.maxOuterSteps);
   for (let step = token.position.step + 1; step <= lastOuterStep; step += 1) {
     if (isBlockedAt(state, extendedGlobalTrackIndex(state, owner, step), token.id)) return false;
   }
@@ -137,7 +137,7 @@ function canLand(state, token, destination) {
 
 export function universalLegalMoves(state, playerId, dice = state?.dice) {
   if (state?.mode === 'CLASSIC') return classicLegalMoves(state, playerId, dice);
-  if (!state || !['PENTA', 'HEX'].includes(state.mode)) return [];
+  if (!state || !['HEXA', 'ROYAL'].includes(state.mode)) return [];
   if (state.phase !== 'playing' || state.currentPlayer !== playerId ||
       !playerById(state, playerId) || !Number.isInteger(dice) || dice < 1 || dice > 6) return [];
   return Object.values(state.tokens)
@@ -261,7 +261,7 @@ export function assertUniversalState(state) {
     throw new RangeError(`${state.mode} requires exactly ${geometry.maxPlayers} players.`);
   }
   if (state.trackLength !== geometry.trackLength || state.homeCellCount !== geometry.homeCells ||
-      state.finishStep !== geometry.trackLength + geometry.homeCells) {
+      state.maxOuterSteps !== geometry.maxOuterSteps || state.finishStep !== geometry.finishStep) {
     throw new Error('Extended board route metadata does not match its geometry.');
   }
   if (!state.players.some((player) => player.id === state.currentPlayer)) {
