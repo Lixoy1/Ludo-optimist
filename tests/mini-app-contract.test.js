@@ -25,13 +25,19 @@ test('board image and client modules are present in the integrated page', async 
   assert.match(main, /from '\.\/board-render\.js'/);
   assert.match(main, /const boardFile = selectedBoardType === 'CLASSIC'/);
   assert.match(main, /optimist-ludo-\$\{selectedBoardType\.toLowerCase\(\)\}-\$\{selectedBoardTheme\}\.svg/);
-  assert.match(main, /\/assets\/boards\/\$\{boardFile\}/);
+  assert.match(main, /new URL\(`\.\.\/assets\/boards\/\$\{file\}`, import\.meta\.url\)/);
+  assert.match(main, /data-board-preview/);
+  assert.match(main, /boardAssetUrl\(image\.dataset\.boardPreview, selectedBoardTheme\)/);
   const board = await readFile(new URL('../assets/boards/optimist-ludo-neon.svg', import.meta.url), 'utf8');
   const penta = await readFile(new URL('../assets/boards/optimist-ludo-penta-neon.svg', import.meta.url), 'utf8');
   const hex = await readFile(new URL('../assets/boards/optimist-ludo-hex-neon.svg', import.meta.url), 'utf8');
   const diamond = await readFile(new URL('../assets/boards/optimist-ludo-diamond-neon.svg', import.meta.url), 'utf8');
   assert.match(main, /\['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'\]/);
-  assert.match(html, /data-count="4" data-board-type="DIAMOND"/);
+  assert.match(html, /data-board-choice="DIAMOND"/);
+  assert.match(html, /data-board-choice="PENTA"/);
+  assert.match(html, /data-board-choice="HEX"/);
+  assert.match(html, /data-theme-choice="neon"/);
+  assert.match(html, /id="startSummaryText"/);
   for (const svg of [board, diamond, penta, hex]) assert.match(svg, /viewBox="0 0 720 720"/);
 });
 
@@ -92,4 +98,29 @@ test('vector board themes and mobile stack selection are wired', async () => {
 test('mobile secondary controls and chooser close have accessible touch dimensions', () => {
   assert.match(css, /@media\(max-width:680px\)\{\.game-actions \.secondary-button\{width:42px;min-width:42px;min-height:44px/);
   assert.match(css, /\.token-chooser-close\{width:48px;height:48px\}/);
+});
+
+
+test('lobby previews all four real SVG board types and four material themes before starting', () => {
+  for (const mode of ['CLASSIC','DIAMOND','PENTA','HEX']) {
+    assert.match(html, new RegExp(`data-board-preview="${mode}"`));
+    assert.match(html, new RegExp(`data-board-choice="${mode}"`));
+  }
+  for (const theme of ['neon','classic','elite','marble']) {
+    assert.match(html, new RegExp(`data-theme-choice="${theme}"`));
+  }
+  assert.match(main, /function boardAssetUrl\(boardType, theme = selectedBoardTheme\)/);
+  assert.match(main, /image\.src = boardAssetUrl\(image\.dataset\.boardPreview, selectedBoardTheme\)/);
+});
+
+test('bottom dice dock centers one compact die and hides decorative labels without removing accessible text', () => {
+  assert.match(css, /\.dice-module \{ position:absolute; left:50%; top:50%; transform:translate\(-50%,-50%\)/);
+  assert.match(css, /\.dice-copy,.dice-arrow \{ position:absolute!important/);
+  assert.match(css, /#startGameBtn:not\(\[hidden\]\) \{ position:absolute; left:50%; top:50%/);
+});
+
+test('start action explains that vacant seats are filled by bots', () => {
+  assert.match(html, /Недостающие места займут боты/);
+  assert.match(main, /this\.fillBotSeats\(room\)/);
+  assert.match(main, /this\.runBotTurns\(room\)/);
 });
