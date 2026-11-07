@@ -29,45 +29,80 @@
   <main class="app-shell">
     <section class="view lobby-view" id="lobbyView">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="spark"></span> THREE BOARDS · ONLINE</div>
-        <h1>Твоя партия.<br><em>Твои правила.</em></h1>
-        <p>Собери друзей за столом, бросай кубик и веди четыре фишки к победе.</p>
+        <div class="eyebrow"><span class="spark"></span> OPTIMIST LUDO</div>
+        <h1>Выбирай доску.<br><em>Начинай играть.</em></h1>
+        <p>Один игрок — остальные места займут боты. Друзья могут присоединиться по приглашению.</p>
       </div>
 
-      <div class="lobby-layout">
-        <section class="lobby-panel character-panel">
-          <div class="character-panel-head"><div><div class="panel-kicker">00 / ТВОЙ ПЕРСОНАЖ</div><h2>Выбери свою фишку</h2><p class="panel-note">Персонаж будет виден всем игрокам за столом. Цвет дорожки останется цветом твоей команды.</p></div><span class="selected-character-chip" id="selectedCharacterChip">OPTIMIST</span></div>
-          <div class="character-grid" id="characterGrid" aria-label="Персонажи OPTIMIST LUDO"></div>
-        </section>
-        <section class="lobby-panel create-panel">
-          <div class="panel-kicker">01 / НОВАЯ ПАРТИЯ</div>
-          <h2>Создать стол</h2>
-          <p class="panel-note">Classic · 2–4 / DIAMOND · 4 / PENTA · 5 / HEX · 6</p>
-          <div class="player-count" role="group" aria-label="Количество игроков">
-            <button type="button" class="count-option" data-count="2" data-board-type="CLASSIC">2 <small>ИГРОКА</small></button>
-            <button type="button" class="count-option" data-count="3" data-board-type="CLASSIC">3 <small>ИГРОКА</small></button>
-            <button type="button" class="count-option active" data-count="4" data-board-type="CLASSIC">4 <small>CLASSIC</small></button>
-            <button type="button" class="count-option" data-count="4" data-board-type="DIAMOND">4 <small>DIAMOND</small></button>
-            <button type="button" class="count-option" data-count="5" data-board-type="PENTA">5 <small>PENTA</small></button>
-            <button type="button" class="count-option" data-count="6" data-board-type="HEX">6 <small>HEX</small></button>
+      <div class="lobby-layout lobby-layout-simple">
+        <section class="lobby-panel board-choice-panel">
+          <div class="section-heading">
+            <div><div class="panel-kicker">01 / ИГРОВОЕ ПОЛЕ</div><h2>Выбери доску</h2></div>
+            <span class="selected-character-chip" id="selectedBoardChip">CLASSIC</span>
           </div>
-          <label class="switch-row"><span><b>Открытый стол</b><small>Видно в общем списке комнат</small></span><input type="checkbox" id="publicRoom" checked /><i class="switch"></i></label>
-          <button type="button" class="primary-button wide" id="createRoomBtn"><span>СОЗДАТЬ ИГРУ</span><b>↗</b></button>
-          <div class="fine-print">Создатель становится хозяином стола и запускает партию.</div>
+          <div class="board-mode-grid" id="boardModeGrid" aria-label="Тип игровой доски">
+            <button type="button" class="board-mode-card selected" data-board-choice="CLASSIC" aria-pressed="true">
+              <img data-board-preview="CLASSIC" src="assets/boards/optimist-ludo-neon.svg" alt="Доска Classic" loading="eager" />
+              <span><b>CLASSIC</b><small>2–4 игрока</small></span>
+            </button>
+            <button type="button" class="board-mode-card" data-board-choice="DIAMOND" aria-pressed="false">
+              <img data-board-preview="DIAMOND" src="assets/boards/optimist-ludo-diamond-neon.svg" alt="Доска Diamond" loading="lazy" />
+              <span><b>DIAMOND</b><small>4 игрока</small></span>
+            </button>
+            <button type="button" class="board-mode-card" data-board-choice="PENTA" aria-pressed="false">
+              <img data-board-preview="PENTA" src="assets/boards/optimist-ludo-penta-neon.svg" alt="Доска Penta" loading="lazy" />
+              <span><b>PENTA</b><small>5 игроков</small></span>
+            </button>
+            <button type="button" class="board-mode-card" data-board-choice="HEX" aria-pressed="false">
+              <img data-board-preview="HEX" src="assets/boards/optimist-ludo-hex-neon.svg" alt="Доска Hex" loading="lazy" />
+              <span><b>HEX</b><small>6 игроков</small></span>
+            </button>
+          </div>
+          <div class="theme-picker-wrap">
+            <div class="theme-picker-title">ОФОРМЛЕНИЕ</div>
+            <div class="theme-picker" id="themePicker" role="group" aria-label="Оформление доски">
+              <button type="button" class="theme-chip active" data-theme-choice="neon" aria-pressed="true"><i class="theme-dot theme-neon"></i>NEON</button>
+              <button type="button" class="theme-chip" data-theme-choice="classic" aria-pressed="false"><i class="theme-dot theme-classic"></i>CLASSIC</button>
+              <button type="button" class="theme-chip" data-theme-choice="elite" aria-pressed="false"><i class="theme-dot theme-elite"></i>ELITE</button>
+              <button type="button" class="theme-chip" data-theme-choice="marble" aria-pressed="false"><i class="theme-dot theme-marble"></i>MARBLE</button>
+            </div>
+          </div>
+          <div class="classic-count-picker" id="classicCountPicker">
+            <span>Игроков в Classic</span>
+            <div role="group" aria-label="Количество игроков Classic">
+              <button type="button" data-classic-count="2" aria-pressed="false">2</button>
+              <button type="button" data-classic-count="3" aria-pressed="false">3</button>
+              <button type="button" data-classic-count="4" class="active" aria-pressed="true">4</button>
+            </div>
+          </div>
         </section>
 
-        <section class="lobby-panel join-panel">
-          <div class="panel-kicker">02 / ПРИСОЕДИНИТЬСЯ</div>
-          <h2>Есть код комнаты?</h2>
-          <p class="panel-note">Вставь код, который прислал друг.</p>
-          <form id="joinRoomForm" class="join-form">
-            <input id="roomCodeInput" type="text" maxlength="16" minlength="16" placeholder="16-значный код стола" autocomplete="off" spellcheck="false" />
-            <button type="submit" class="icon-button" aria-label="Войти в комнату">➜</button>
-          </form>
-          <div class="divider-label"><span></span> ИЛИ ВЫБЕРИ ОТКРЫТЫЙ СТОЛ <span></span></div>
-          <div class="room-list" id="roomList"><div class="empty-rooms">Пока нет открытых столов.<br />Создай свой и пригласи друзей.</div></div>
-          <button type="button" class="text-button" id="refreshRoomsBtn">↻ Обновить список</button>
+        <section class="lobby-panel character-panel character-panel-simple">
+          <div class="character-panel-head">
+            <div><div class="panel-kicker">02 / ТВОЙ ПЕРСОНАЖ</div><h2>Выбери фишку</h2><p class="panel-note">Её увидят все участники партии.</p></div>
+            <span class="selected-character-chip" id="selectedCharacterChip">OPTIMIST</span>
+          </div>
+          <div class="character-grid" id="characterGrid" aria-label="Персонажи OPTIMIST LUDO"></div>
         </section>
+
+        <section class="lobby-panel create-panel create-panel-simple">
+          <div class="start-summary"><div><div class="panel-kicker">03 / ГОТОВ К ИГРЕ</div><h2 id="startSummaryTitle">CLASSIC · NEON</h2><p class="panel-note" id="startSummaryText">4 участника · 1 человек + 3 бота</p></div><span class="summary-die">⚄</span></div>
+          <input type="checkbox" id="publicRoom" checked hidden />
+          <button type="button" class="primary-button wide" id="createRoomBtn"><span>ИГРАТЬ</span><b>↗</b></button>
+          <p class="bot-note"><icon aria-hidden="true">♟</icon> Недостающие места займут боты. Начинать можно одному.</p>
+        </section>
+
+        <details class="lobby-panel join-panel join-panel-collapsed">
+          <summary>Пригласить друзей или войти по коду</summary>
+          <p class="panel-note">Создай игру и отправь приглашение. Уже есть код — введи его здесь.</p>
+          <form id="joinRoomForm" class="join-form">
+            <input id="roomCodeInput" type="text" maxlength="16" minlength="16" placeholder="Код игры из 16 символов" autocomplete="off" spellcheck="false" />
+            <button type="submit" class="icon-button" aria-label="Войти в игру">➜</button>
+          </form>
+          <div class="divider-label"><span></span> ОТКРЫТЫЕ ИГРЫ <span></span></div>
+          <div class="room-list" id="roomList"><div class="empty-rooms">Пока нет открытых игр.</div></div>
+          <button type="button" class="text-button" id="refreshRoomsBtn">↻ Обновить список</button>
+        </details>
       </div>
       <div class="lobby-foot"><span>♛</span> FOUR COLORS. ONE WINNER. <span>♛</span></div>
     </section>
