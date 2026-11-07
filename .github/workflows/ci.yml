@@ -19,10 +19,10 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           find src apps scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
-      - name: Build board SVG assets
-        run: npm run build
       - name: Run test suite
         run: npm test
+      - name: Build board SVG assets
+        run: npm run build
       - name: Package local preview ZIP
         run: |
           zip -qr /tmp/OPTIMIST-LUDO-local.zip . -x ".git/*" "node_modules/*" ".env"
