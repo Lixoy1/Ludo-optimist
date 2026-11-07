@@ -5,7 +5,6 @@ import {
 import { getPlayableGeometry } from '../../src/game-geometries.js';
 
 export const TOKENS_PER_PLAYER = 4;
-export const EXTENDED_HOME_CELLS = 5;
 
 function normalizeBoardType(boardType) {
   const value = String(boardType || 'CLASSIC').toUpperCase();
@@ -253,7 +252,7 @@ export function applyUniversalMove(state, playerId, tokenId) {
 
 export function assertUniversalState(state) {
   if (state?.mode === 'CLASSIC') return assertClassicState(state);
-  if (!state || !['PENTA', 'HEX'].includes(state.mode) || !Array.isArray(state.players) || !state.tokens) {
+  if (!state || !['HEXA', 'ROYAL'].includes(state.mode) || !Array.isArray(state.players) || !state.tokens) {
     throw new TypeError('Malformed extended Ludo state.');
   }
   const geometry = extendedGeometry(state);
