@@ -46,8 +46,9 @@ const tokenChooserOptions = $('#tokenChooserOptions');
 const tokenChooserClose = $('#tokenChooserClose');
 const boardEffectOverlay = $('#boardEffectOverlay');
 
-const COLOR_ORDER = ['blue', 'red', 'green', 'yellow'];
-const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЗОЛОТОЙ' };
+const CLASSIC_COLOR_ORDER = ['blue', 'red', 'green', 'yellow'];
+const PLAYER_COLOR_ORDERS = { PENTA: ['blue', 'red', 'yellow', 'green', 'purple'], HEX: ['blue', 'red', 'yellow', 'green', 'purple', 'orange'] };
+const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЗОЛОТОЙ', purple: 'ФИОЛЕТОВЫЙ', orange: 'ОРАНЖЕВЫЙ' };
 const query = new URLSearchParams(location.search);
 const telegram = window.Telegram?.WebApp ?? null;
 let selectedPlayerCount = 4;
@@ -64,6 +65,7 @@ const previousTokenPositions = new Map();
 const BOARD_THEMES = ['neon', 'classic', 'elite', 'marble'];
 let selectedCharacterId = (() => { try { const saved = localStorage.getItem('optimist-ludo-character'); return CHARACTERS.some((item) => item.id === saved) ? saved : DEFAULT_CHARACTER_ID; } catch { return DEFAULT_CHARACTER_ID; } })();
 let selectedBoardTheme = (() => { try { return localStorage.getItem('optimist-ludo-board-theme') || 'neon'; } catch { return 'neon'; } })();
+let selectedBoardType = 'CLASSIC';
 let soundEnabled = (() => { try { return localStorage.getItem('optimist-ludo-sound') !== 'off'; } catch { return true; } })();
 let audioContext = null;
 let effectTimer = null;
@@ -158,14 +160,16 @@ function chooseCharacter(characterId) {
   }
 }
 
-function applyBoardTheme(theme) {
+function applyBoardTheme(theme, boardType = selectedBoardType) {
   selectedBoardTheme = BOARD_THEMES.includes(theme) ? theme : 'neon';
+  selectedBoardType = ['CLASSIC', 'PENTA', 'HEX'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
   if (boardStage) boardStage.dataset.theme = selectedBoardTheme;
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
   if (boardArt) {
-    const nextSrc = `/assets/boards/optimist-ludo-${selectedBoardTheme}.svg`;
+    const boardFile = selectedBoardType === 'CLASSIC' ? `optimist-ludo-${selectedBoardTheme}.svg` : `optimist-ludo-${selectedBoardType.toLowerCase()}-${selectedBoardTheme}.svg`;
+    const nextSrc = `/assets/boards/${boardFile}`;
     if (!boardArt.getAttribute('src')?.endsWith(nextSrc)) boardArt.setAttribute('src', nextSrc);
-    boardArt.alt = `Игровое поле OPTIMIST LUDO — ${selectedBoardTheme.toUpperCase()}`;
+    boardArt.alt = `Игровое поле OPTIMIST LUDO ${selectedBoardType} — ${selectedBoardTheme.toUpperCase()}`;
   }
   if (boardThemeSelect) boardThemeSelect.value = selectedBoardTheme;
   try { localStorage.setItem('optimist-ludo-board-theme', selectedBoardTheme); } catch { /* Optional preference. */ }
@@ -232,7 +236,7 @@ function roomCard(room) {
   const title = document.createElement('b');
   title.textContent = `СТОЛ ${room.roomId.slice(0, 4).toUpperCase()} · ${room.players}/${room.maxPlayers}`;
   const sub = document.createElement('small');
-  sub.textContent = 'CLASSIC · ОТКРЫТЫЙ СТОЛ';
+  sub.textContent = (room.boardType || 'CLASSIC') + ' · ОТКРЫТЫЙ СТОЛ';
   info.append(title, sub);
   const join = document.createElement('button');
   join.type = 'button';
@@ -351,7 +355,7 @@ function handleBoardPointerUp(event) {
 }
 
 function colorHex(color) {
-  return ({ blue: '#26baff', red: '#ff334f', green: '#55ed39', yellow: '#ffbd24' })[color] || '#e5c06b';
+  return ({ blue: '#26baff', red: '#ff334f', green: '#55ed39', yellow: '#ffbd24', purple: '#b77aff', orange: '#ff9d38' })[color] || '#e5c06b';
 }
 
 function animateToken(element, kind) {
@@ -429,7 +433,10 @@ function renderPlayers(snapshot) {
   const players = snapshot?.state?.players || snapshot?.players || [];
   const byColor = new Map(players.map((player) => [player.color, player]));
   playersStrip.replaceChildren();
-  COLOR_ORDER.forEach((color) => {
+  const boardType = String(snapshot?.boardType || snapshot?.state?.mode || 'CLASSIC').toUpperCase();
+  const colorOrder = PLAYER_COLOR_ORDERS[boardType] || CLASSIC_COLOR_ORDER;
+  playersStrip.dataset.playerCount = String(colorOrder.length);
+  colorOrder.forEach((color) => {
     const player = byColor.get(color);
     const card = document.createElement('div');
     card.className = `player-card${player && player.id === snapshot?.state?.currentPlayer ? ' current' : ''}${player ? '' : ' empty'}`;
@@ -487,8 +494,10 @@ function renderTurn(snapshot) {
     setDiceFace(5);
     rollDiceBtn.disabled = true;
     startGameBtn.hidden = snapshot?.hostId !== activeClient?.currentUserId;
-    startGameBtn.disabled = roster.length < 2;
-    moveHint.textContent = roster.length < 2 ? 'Отправь другу ссылку или код комнаты.' : 'Все фишки появятся на поле после старта партии.';
+    const needsFullRoster = snapshot?.boardType === 'PENTA' || snapshot?.boardType === 'HEX';
+    const readyToStart = roster.length >= 2 && (!needsFullRoster || roster.length === snapshot.maxPlayers);
+    startGameBtn.disabled = !readyToStart;
+    moveHint.textContent = roster.length < 2 ? 'Отправь другу ссылку или код комнаты.' : needsFullRoster && !readyToStart ? 'Для ' + snapshot.boardType + ' нужно пригласить всех ' + snapshot.maxPlayers + ' игроков.' : 'Все фишки появятся на поле после старта партии.';
     return;
   }
 
@@ -540,6 +549,8 @@ function diceButtonReset() {
 }
 
 function renderSnapshot(snapshot) {
+  const boardType = String(snapshot?.boardType || snapshot?.state?.mode || 'CLASSIC').toUpperCase();
+  if (boardType !== selectedBoardType) applyBoardTheme(selectedBoardTheme, boardType);
   const previous = currentSnapshot;
   playActionFeedback(snapshot, previous);
   currentSnapshot = snapshot;
@@ -657,6 +668,7 @@ async function createRoom() {
     const result = await LudoRoomClient.createRoom({
       ...authOptions(),
       maxPlayers: selectedPlayerCount,
+      boardType: selectedPlayerCount === 5 ? 'PENTA' : selectedPlayerCount === 6 ? 'HEX' : 'CLASSIC',
       isPublic: publicRoomToggle.checked,
       characterId: selectedCharacterId,
     });
