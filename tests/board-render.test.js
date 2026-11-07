@@ -125,7 +125,7 @@ test('all track and home-lane centers stay inside the 720px artwork', () => {
 });
 
 
-for (const mode of ['PENTA', 'HEX']) {
+for (const mode of ['HEXA', 'ROYAL']) {
   test(mode + ' board renderer maps base, track, home and finish tokens to its own SVG geometry', () => {
     const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-render-' + index, username: 'Player ' + index, color: arm.player.id }));
@@ -133,8 +133,8 @@ for (const mode of ['PENTA', 'HEX']) {
     const first = state.players[0];
     const ids = index => first.id + ':' + index;
     state.tokens[ids(0)].position = { zone: 'track', step: 0 };
-    state.tokens[ids(1)].position = { zone: 'home', step: geometry.trackLength + 2 };
-    state.tokens[ids(2)].position = { zone: 'finished', step: geometry.trackLength + 5 };
+    state.tokens[ids(1)].position = { zone: 'home', step: geometry.maxOuterSteps + 1 + 2 };
+    state.tokens[ids(2)].position = { zone: 'finished', step: geometry.finishStep };
     const positions = tokenBoardPositions(state);
     const start = positions.find(item => item.tokenId === ids(0));
     const home = positions.find(item => item.tokenId === ids(1));
@@ -198,7 +198,7 @@ test('Classic movement path follows the five-cell home lane and maps its finish 
   assert.deepEqual(finish[0], { x: FINISH_POINTS[2][0], y: FINISH_POINTS[2][1] });
 });
 
-for (const mode of ['PENTA', 'HEX']) {
+for (const mode of ['HEXA', 'ROYAL']) {
   test(mode + ' movement path follows every extended outer-track step and the player home lane', () => {
     const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-path-' + index, username: 'Player ' + index, color: arm.player.id }));
@@ -211,8 +211,8 @@ for (const mode of ['PENTA', 'HEX']) {
       assert.deepEqual(path[index], { x: point.x, y: point.y });
     }
     const home = tokenMovementPath(state, player.id,
-      { zone: 'track', step: geometry.trackLength - 1 },
-      { zone: 'home', step: geometry.trackLength + 2 }, 1);
+      { zone: 'track', step: geometry.maxOuterSteps },
+      { zone: 'home', step: geometry.maxOuterSteps + 1 + 2 }, 1);
     assert.equal(home.length, 3);
     assert.deepEqual(home[2], { x: geometry.arms[0].homeLane[2].x, y: geometry.arms[0].homeLane[2].y });
   });
