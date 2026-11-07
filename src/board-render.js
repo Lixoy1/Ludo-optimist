@@ -13,7 +13,7 @@ export function tokenBoardPositions(state){
  for(const token of tokens){
   const{zone,step}=token.position;
   if(zone==='base'){const[x,y]=BASE_SLOT_POINTS[token.color]?.[token.index]??BASE_SLOT_POINTS.blue[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:1,diameter:BOARD_IMAGE_SIZE*PAWN_DIAMETER_RATIO,slot:token.index,stackKey:`base:${token.id}`,stackCount:1,visible:true,overflowCount:0});continue;}
-  if(zone==='finished'){const[x,y]=FINISH_POINTS[token.index]??FINISH_POINTS[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:.8,diameter:BOARD_IMAGE_SIZE*PAWN_DIAMETER_RATIO*.8,slot:token.index,stackKey:`finished:${token.id}`,stackCount:1,visible:true,overflowCount:0});continue;}
+  if(zone==='finished'){const[x,y]=FINISH_POINTS[token.index]??FINISH_POINTS[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:.8,diameter:BOARD_IMAGE_SIZE*PAWN_DIAMETER_RATIO,slot:token.index,stackKey:`finished:${token.id}`,stackCount:1,visible:true,overflowCount:0});continue;}
   let key,point;
   if(zone==='track'){const config=PLAYER_CONFIG[token.color],i=(config.start+step)%MAIN_TRACK.length,cell=MAIN_TRACK[i];key=`track:${i}`;point=gridToImage(cell.col,cell.row);}
   else if(zone==='home'){const i=step-52,cell=PLAYER_CONFIG[token.color]?.lane[i];if(!cell)throw new RangeError(`Invalid home lane step ${step} for ${token.color}.`);key=`home:${token.color}:${i}`;point=gridToImage(cell[0],cell[1]);}
@@ -23,7 +23,7 @@ export function tokenBoardPositions(state){
  const positions=new Map(base);
  for(const[stackKey,{point,tokens:stack}]of grouped){
   const layout=getStackLayout(stack.length,GRID_CELL);
-  stack.forEach((token,index)=>{const offset=layout.positions[index];positions.set(token.id,{x:point.x+offset.x,y:point.y+offset.y,centerX:point.x,centerY:point.y,scale:offset.scale,diameter:BOARD_IMAGE_SIZE*PAWN_DIAMETER_RATIO*offset.scale,slot:index,stackKey,stackCount:stack.length,visible:offset.visible!==false,overflowCount:layout.hiddenCount});});
+  stack.forEach((token,index)=>{const offset=layout.positions[index];positions.set(token.id,{x:point.x+offset.x,y:point.y+offset.y,centerX:point.x,centerY:point.y,scale:offset.scale,diameter:BOARD_IMAGE_SIZE*PAWN_DIAMETER_RATIO,slot:index,stackKey,stackCount:stack.length,visible:offset.visible!==false,overflowCount:layout.hiddenCount});});
  }
  return tokens.map(token=>{const p=positions.get(token.id);return{tokenId:token.id,owner:token.owner,characterId:characters.get(token.owner)||'optimist',color:token.color,index:token.index,zone:token.position.zone,x:p.x,y:p.y,left:p.x/720*100,top:p.y/720*100,centerX:p.centerX,centerY:p.centerY,centerLeft:p.centerX/720*100,centerTop:p.centerY/720*100,scale:p.scale,diameter:p.diameter,slot:p.slot,stackKey:p.stackKey,stackCount:p.stackCount,visible:p.visible!==false,overflowCount:p.overflowCount||0};});
 }
@@ -39,7 +39,7 @@ export function extendedTokenBoardPositions(state) {
   if(zone==='base'||zone==='finished') {
    const point=zone==='base'?arm.baseSlots[token.index]:arm.finishSlots[token.index];
    if(!point)throw new RangeError(`Invalid ${zone} slot for token ${token.id}.`);
-   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:.55,diameter:geometry.pawnDiameter*(zone==='base'?1:.55),slot:token.index,
+   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:.55,diameter:geometry.pawnDiameter,slot:token.index,
     stackKey:`${zone}:${token.id}`,stackCount:1,visible:true,overflowCount:0});
    continue;
   }
@@ -62,7 +62,7 @@ export function extendedTokenBoardPositions(state) {
   stack.forEach((token,index)=>{
    const offset=layout.tokens[index];
    positions.set(token.id,{x:point.x+offset.x,y:point.y+offset.y,centerX:point.x,centerY:point.y,
-    scale:offset.scale,diameter:offset.diameter,slot:index,stackKey,stackCount:stack.length,visible:offset.visible!==false,
+    scale:offset.scale,diameter:geometry.pawnDiameter,slot:index,stackKey,stackCount:stack.length,visible:offset.visible!==false,
     overflowCount:layout.hiddenCount});
   });
  }
