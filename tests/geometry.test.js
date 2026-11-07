@@ -6,10 +6,21 @@ import {
 } from '../src/geometry.js';
 import { getStackLayout } from '../src/stack-layout.js';
 import {
-  BOARD_IMAGE_SIZE, GRID_ORIGIN_X, GRID_ORIGIN_Y, GRID_CELL,
-  PAWN_DIAMETER_RATIO, BASE_SLOT_POINTS, FINISH_POINTS, gridToImage,
+  BOARD_IMAGE_SIZE, PAWN_DIAMETER_RATIO, BASE_SLOT_POINTS, FINISH_POINTS, gridToImage,
 } from '../src/board-render.js';
 
+
+const CLASSIC_TILE_SIZE = 38; // scripts/build-board-assets.mjs
+const CLASSIC_PAWN_RADIUS = BOARD_IMAGE_SIZE * PAWN_DIAMETER_RATIO / 2;
+function circleOverlapsClassicTile(circle, cell, size = CLASSIC_TILE_SIZE) {
+  const center = gridToImage(cell.col, cell.row);
+  const nearestX = Math.max(center.x-size/2, Math.min(center.x+size/2, circle.x));
+  const nearestY = Math.max(center.y-size/2, Math.min(center.y+size/2, circle.y));
+  return Math.hypot(circle.x-nearestX, circle.y-nearestY) < circle.radius - 1e-6;
+}
+function circlesOverlap(a,b) {
+  return Math.hypot(a.x-b.x,a.y-b.y) < a.radius+b.radius-1e-6;
+}
 
 test('classic outer route has 52 unique in-bounds cells', () => {
   assert.equal(assertBoardGeometry(), true);
