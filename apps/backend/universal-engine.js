@@ -2,27 +2,27 @@ import {
   createClassicState, legalMoves as classicLegalMoves, rollClassicDice,
   applyClassicMove, assertClassicState,
 } from './classic-engine.js';
-import { getExtendedGeometry } from '../../src/extended-geometries.js';
+import { getPlayableGeometry } from '../../src/game-geometries.js';
 
 export const TOKENS_PER_PLAYER = 4;
 export const EXTENDED_HOME_CELLS = 5;
 
 function normalizeBoardType(boardType) {
   const value = String(boardType || 'CLASSIC').toUpperCase();
-  if (!['CLASSIC', 'PENTA', 'HEX'].includes(value)) {
-    throw new RangeError('Board type must be CLASSIC, PENTA or HEX.');
+  if (!['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(value)) {
+    throw new RangeError('Board type must be CLASSIC, DIAMOND, PENTA or HEX.');
   }
   return value;
 }
 
 function extendedGeometry(state) {
-  return getExtendedGeometry(state.mode.toLowerCase());
+  return getPlayableGeometry(state.mode);
 }
 
 export function createExtendedState(boardType, roster) {
   const mode = normalizeBoardType(boardType);
   if (mode === 'CLASSIC') throw new RangeError('Use createClassicState for Classic.');
-  const geometry = getExtendedGeometry(mode.toLowerCase());
+  const geometry = getPlayableGeometry(mode);
   if (!Array.isArray(roster) || roster.length !== geometry.maxPlayers) {
     throw new RangeError(`${mode} requires exactly ${geometry.maxPlayers} players.`);
   }
@@ -137,7 +137,7 @@ function canLand(state, token, destination) {
 
 export function universalLegalMoves(state, playerId, dice = state?.dice) {
   if (state?.mode === 'CLASSIC') return classicLegalMoves(state, playerId, dice);
-  if (!state || !['PENTA', 'HEX'].includes(state.mode)) return [];
+  if (!state || !['DIAMOND', 'PENTA', 'HEX'].includes(state.mode)) return [];
   if (state.phase !== 'playing' || state.currentPlayer !== playerId ||
       !playerById(state, playerId) || !Number.isInteger(dice) || dice < 1 || dice > 6) return [];
   return Object.values(state.tokens)
@@ -164,7 +164,7 @@ function copyState(state) {
 
 export function rollUniversalDice(state, playerId, dice) {
   if (state?.mode === 'CLASSIC') return rollClassicDice(state, playerId, dice);
-  if (!state || !['PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
+  if (!state || !['DIAMOND', 'PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
   if (state.phase !== 'playing' || state.currentPlayer !== playerId || state.dice !== null) {
     throw new Error('Dice cannot be rolled now.');
   }
@@ -253,7 +253,7 @@ export function applyUniversalMove(state, playerId, tokenId) {
 
 export function assertUniversalState(state) {
   if (state?.mode === 'CLASSIC') return assertClassicState(state);
-  if (!state || !['PENTA', 'HEX'].includes(state.mode) || !Array.isArray(state.players) || !state.tokens) {
+  if (!state || !['DIAMOND', 'PENTA', 'HEX'].includes(state.mode) || !Array.isArray(state.players) || !state.tokens) {
     throw new TypeError('Malformed extended Ludo state.');
   }
   const geometry = extendedGeometry(state);
