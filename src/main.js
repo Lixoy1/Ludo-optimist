@@ -47,7 +47,7 @@ const tokenChooserClose = $('#tokenChooserClose');
 const boardEffectOverlay = $('#boardEffectOverlay');
 
 const CLASSIC_COLOR_ORDER = ['blue', 'red', 'green', 'yellow'];
-const PLAYER_COLOR_ORDERS = { PENTA: ['blue', 'red', 'yellow', 'green', 'purple'], HEX: ['blue', 'red', 'yellow', 'green', 'purple', 'orange'] };
+const PLAYER_COLOR_ORDERS = { DIAMOND: ['green', 'red', 'blue', 'yellow'], PENTA: ['blue', 'red', 'yellow', 'green', 'purple'], HEX: ['blue', 'red', 'yellow', 'green', 'purple', 'orange'] };
 const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЗОЛОТОЙ', purple: 'ФИОЛЕТОВЫЙ', orange: 'ОРАНЖЕВЫЙ' };
 const query = new URLSearchParams(location.search);
 const telegram = window.Telegram?.WebApp ?? null;
@@ -120,15 +120,16 @@ function switchView(view) {
   if (showGame) window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-function selectCount(count) {
+function selectCount(count, boardType = count === 5 ? 'PENTA' : count === 6 ? 'HEX' : 'CLASSIC') {
   selectedPlayerCount = count;
+  selectedBoardType = boardType;
   document.querySelectorAll('[data-count]').forEach((button) => {
-    button.classList.toggle('active', Number(button.dataset.count) === count);
+    button.classList.toggle('active', Number(button.dataset.count) === count && (button.dataset.boardType || 'CLASSIC') === boardType);
   });
 }
 
 document.querySelectorAll('[data-count]').forEach((button) => {
-  button.addEventListener('click', () => selectCount(Number(button.dataset.count)));
+  button.addEventListener('click', () => selectCount(Number(button.dataset.count), button.dataset.boardType || 'CLASSIC'));
 });
 
 function renderCharacterGrid() {
@@ -162,7 +163,7 @@ function chooseCharacter(characterId) {
 
 function applyBoardTheme(theme, boardType = selectedBoardType) {
   selectedBoardTheme = BOARD_THEMES.includes(theme) ? theme : 'neon';
-  selectedBoardType = ['CLASSIC', 'PENTA', 'HEX'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
+  selectedBoardType = ['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
   if (boardStage) boardStage.dataset.theme = selectedBoardTheme;
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
   if (boardArt) {
@@ -525,7 +526,7 @@ function renderTurn(snapshot) {
     setDiceFace(5);
     rollDiceBtn.disabled = true;
     startGameBtn.hidden = snapshot?.hostId !== activeClient?.currentUserId;
-    const needsFullRoster = snapshot?.boardType === 'PENTA' || snapshot?.boardType === 'HEX';
+    const needsFullRoster = snapshot?.boardType === 'DIAMOND' || snapshot?.boardType === 'PENTA' || snapshot?.boardType === 'HEX';
     const readyToStart = roster.length >= 2 && (!needsFullRoster || roster.length === snapshot.maxPlayers);
     startGameBtn.disabled = !readyToStart;
     moveHint.textContent = roster.length < 2 ? 'Отправь другу ссылку или код комнаты.' : needsFullRoster && !readyToStart ? 'Для ' + snapshot.boardType + ' нужно пригласить всех ' + snapshot.maxPlayers + ' игроков.' : 'Все фишки появятся на поле после старта партии.';
@@ -699,7 +700,7 @@ async function createRoom() {
     const result = await LudoRoomClient.createRoom({
       ...authOptions(),
       maxPlayers: selectedPlayerCount,
-      boardType: selectedPlayerCount === 5 ? 'PENTA' : selectedPlayerCount === 6 ? 'HEX' : 'CLASSIC',
+      boardType: selectedBoardType,
       isPublic: publicRoomToggle.checked,
       characterId: selectedCharacterId,
     });
