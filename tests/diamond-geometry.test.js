@@ -42,7 +42,7 @@ test('DIAMOND coordinates exactly match indexed route, base, home and finish cir
 
 test('DIAMOND safe cells match the four star markers and four coloured start cells', () => {
   const svg = asset('neon');
-  for (const index of [0, 13, 26, 39]) assert.match(svg, new RegExp(`<polygon id="s${index}"\\b`));
+  for (const index of [0, 13, 26, 39]) assert.match(svg, new RegExp(`<polygon id="s${index}"`));
   const expectedStarts = { red: 6, blue: 19, yellow: 32, green: 45 };
   for (const arm of DIAMOND_GEOMETRY.arms) {
     assert.equal(arm.startIndex, expectedStarts[arm.player.id]);
@@ -84,11 +84,11 @@ test('all four DIAMOND surface themes retain the same complete geometry markers'
   for (const theme of themes) {
     const svg = asset(theme);
     assert.match(svg, /width="720" height="720" viewBox="0 0 720 720"/);
-    for (let index = 0; index < 52; index += 1) assert.match(svg, new RegExp(`<circle id="t${index}"\\b`));
+    for (let index = 0; index < 52; index += 1) assert.match(svg, new RegExp(`<circle id="t${index}"`));
     for (const color of COLORS) {
-      for (let index = 0; index < 4; index += 1) assert.match(svg, new RegExp(`<circle id="b${color}${index}"\\b`));
-      for (let index = 0; index < 5; index += 1) assert.match(svg, new RegExp(`<circle id="h${color}${index}"\\b`));
-      for (let index = 0; index < 4; index += 1) assert.match(svg, new RegExp(`<circle id="f${color}${index}"\\b`));
+      for (let index = 0; index < 4; index += 1) assert.match(svg, new RegExp(`<circle id="b${color}${index}"`));
+      for (let index = 0; index < 5; index += 1) assert.match(svg, new RegExp(`<circle id="h${color}${index}"`));
+      for (let index = 0; index < 4; index += 1) assert.match(svg, new RegExp(`<circle id="f${color}${index}"`));
     }
   }
 });
