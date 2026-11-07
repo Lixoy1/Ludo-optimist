@@ -204,8 +204,14 @@ export function createLudoServer({
         if (req.method === 'POST' && url.pathname === '/api/rooms') {
           const body = await readJson(req);
           if (!body || typeof body !== 'object' || Array.isArray(body)) throw new RoomError('INVALID_ROOM_CONFIG', 'Тело запроса должно быть JSON-объектом.');
-          if (body.maxPlayers !== undefined && (!Number.isInteger(body.maxPlayers) || body.maxPlayers < 2 || body.maxPlayers > 4)) {
-            throw new RoomError('INVALID_ROOM_CONFIG', 'В Classic можно играть от двух до четырёх игроков.');
+          const requestedType = String(body.boardType || (body.maxPlayers === 5 ? 'PENTA' : body.maxPlayers === 6 ? 'HEX' : 'CLASSIC')).toUpperCase();
+          const requestedPlayers = body.maxPlayers ?? (requestedType === 'PENTA' ? 5 : requestedType === 'HEX' ? 6 : 4);
+          const validBoardCapacity = requestedType === 'CLASSIC'
+            ? Number.isInteger(requestedPlayers) && requestedPlayers >= 2 && requestedPlayers <= 4
+            : requestedType === 'PENTA' ? requestedPlayers === 5
+              : requestedType === 'HEX' ? requestedPlayers === 6 : false;
+          if (!validBoardCapacity) {
+            throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4 игрока, PENTA: ровно 5, HEX: ровно 6.');
           }
           if (body.isPublic !== undefined && typeof body.isPublic !== 'boolean') {
             throw new RoomError('INVALID_ROOM_CONFIG', 'isPublic должен быть логическим значением.');
@@ -213,7 +219,8 @@ export function createLudoServer({
           const characterId = body.characterId ?? DEFAULT_CHARACTER_ID;
           if (!isCharacterId(characterId)) throw new RoomError('INVALID_CHARACTER', 'Неизвестный персонаж OPTIMIST.');
           const snapshot = rooms.createRoom({ ...user, characterId }, {
-            maxPlayers: body.maxPlayers ?? 4,
+            boardType: requestedType,
+            maxPlayers: requestedPlayers,
             isPublic: body.isPublic ?? true,
           });
           writeJson(res, 201, { roomId: snapshot.roomId, snapshot });
