@@ -235,19 +235,33 @@ function makeRoyal() {
     const startIndex=starts[player.id];
     const homeEntryIndex=entries[player.id];
     const entry=track[homeEntryIndex];
-    const direction=unitTowardCenter({x:entry.nativeX,y:entry.nativeY},cx,cy);
-    const homeLane=Array.from({length:7},(_,homeIndex)=>{
+    // First step leaves the perimeter at a right angle; the remaining six
+    // steps turn gradually toward the central finish without touching the
+    // neighbouring perimeter tile.
+    const inwardNormal=rotateVector({x:1,y:0},index*90);
+    const firstNative={
+      x:entry.nativeX+inwardNormal.x*C,
+      y:entry.nativeY+inwardNormal.y*C
+    };
+    const direction=unitTowardCenter(firstNative,cx,cy);
+    const homeLane=[{
+      ...scaled(firstNative,scale),
+      nativeX:fmt(firstNative.x),nativeY:fmt(firstNative.y),
+      homeIndex:1,
+      rotation:Math.atan2(inwardNormal.y,inwardNormal.x)*180/Math.PI
+    }];
+    for(let homeIndex=1;homeIndex<7;homeIndex++) {
       const native={
-        x:entry.nativeX+direction.x*C*(homeIndex+1),
-        y:entry.nativeY+direction.y*C*(homeIndex+1)
+        x:firstNative.x+direction.x*C*homeIndex,
+        y:firstNative.y+direction.y*C*homeIndex
       };
-      return {
+      homeLane.push({
         ...scaled(native,scale),
         nativeX:fmt(native.x),nativeY:fmt(native.y),
         homeIndex:homeIndex+1,
         rotation:Math.atan2(direction.y,direction.x)*180/Math.PI
-      };
-    });
+      });
+    }
     const baseNative=rotate(cx-6*C,cy-1.5*C,cx,cy,index*90);
     return {
       index,player,angle:index*90,startIndex,homeEntryIndex,
@@ -264,7 +278,7 @@ function makeRoyal() {
   });
 
   const outline=polygon(8,10.35*C,cx,cy, -67.5);
-  const finishVertices=polygon(4,3.25*C,cx,cy,-45);
+  const finishVertices=polygon(4,3.5*C,cx,cy,-45);
   const routeLinkDistances=track.map((cell,index)=>fmt(distance(cell,track[(index+1)%68])/(C*scale)));
   return {
     id:'royal',boardId:'royal',shape:'royal-square-loop',sides:4,maxPlayers:4,tokensPerPlayer:4,
