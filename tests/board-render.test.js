@@ -165,6 +165,7 @@ for (const mode of ['PENTA', 'HEX']) {
     assert.equal(positions.length, 4);
     assert.equal(new Set(positions.map(item => item.left.toFixed(4) + ':' + item.top.toFixed(4))).size, 4);
     assert.ok(positions.every(item => item.scale === geometry.stackLayout[4].scale && item.visible));
+    assert.ok(positions.every(item => Math.abs(item.diameter - geometry.pawnDiameter) < .001));
     assert.equal(positions[0].overflowCount, 0);
   });
 }
