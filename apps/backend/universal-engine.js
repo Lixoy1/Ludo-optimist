@@ -10,7 +10,7 @@ export const EXTENDED_HOME_CELLS = 5;
 function normalizeBoardType(boardType) {
   const value = String(boardType || 'CLASSIC').toUpperCase();
   if (!['CLASSIC', 'HEXA', 'ROYAL'].includes(value)) {
-    throw new RangeError('Board type must be CLASSIC, PENTA or HEX.');
+    throw new RangeError('Board type must be CLASSIC, HEXA or ROYAL.');
   }
   return value;
 }
@@ -164,7 +164,7 @@ function copyState(state) {
 
 export function rollUniversalDice(state, playerId, dice) {
   if (state?.mode === 'CLASSIC') return rollClassicDice(state, playerId, dice);
-  if (!state || !['PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
+  if (!state || !['HEXA', 'ROYAL'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
   if (state.phase !== 'playing' || state.currentPlayer !== playerId || state.dice !== null) {
     throw new Error('Dice cannot be rolled now.');
   }
@@ -279,7 +279,7 @@ export function assertUniversalState(state) {
       const { zone, step } = token.position;
       if (token.color !== player.color) throw new Error('Token color must match its owner.');
       if (zone === 'base' && step !== -1) throw new Error('Base token must have step -1.');
-      if (zone === 'track' && (!Number.isInteger(step) || step < 0 || step >= geometry.trackLength)) {
+      if (zone === 'track' && (!Number.isInteger(step) || step < 0 || step > geometry.maxOuterSteps)) {
         throw new Error('Invalid extended track step.');
       }
       if (zone === 'home' && (!Number.isInteger(step) || step < geometry.trackLength ||
