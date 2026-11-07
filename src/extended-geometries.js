@@ -177,7 +177,7 @@ function makeHexa() {
       starIndex:(startIndex+6)%72,
       homeLane, baseCenter:scaled(baseCenter,scale),
       baseSlots:pawnSlots(baseCenter,baseAngle,scale),
-      baseRadius:2.1*C*scale,
+      baseRadius:1.9*C*scale,
       baseRotation:baseAngle,
       finishSlots:makeFinishSlots({x:cx,y:cy},direction,scale,'hexa'),
       homeDirection:direction
@@ -270,7 +270,7 @@ function makeRoyal() {
       starIndex:startIndex+6,royalSafeIndex:startIndex+12,
       homeLane,baseCenter:scaled(baseNative,scale),
       baseSlots:pawnSlots(baseNative,index*90,scale),
-      baseRadius:2.5*C*scale,baseRotation:index*90,
+      baseRadius:1.9*C*scale,baseRotation:index*90,
       finishSlots:makeFinishSlots(homeLane[homeLane.length-1] && {
         x:homeLane[homeLane.length-1].nativeX,
         y:homeLane[homeLane.length-1].nativeY
