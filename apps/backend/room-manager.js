@@ -128,12 +128,13 @@ export class RoomManager {
 
   isMember(roomId, userId) {
     const room = this.rooms.get(roomId);
-    return Boolean(room?.players.some((player) => player.id === userId));
+    return Boolean(room?.players.some((player) => player.id === userId && !player.isBot));
   }
 
   joinRoom(roomId, user) {
     const room = this.getRoom(roomId);
     const existing = room.players.find((player) => player.id === user.id);
+    if (existing?.isBot) throw new RoomError('BOT_ID_RESERVED', 'Этот идентификатор принадлежит игровому боту.', 403);
     if (existing) return this.getSnapshot(roomId, user.id);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
     if (room.players.length >= room.maxPlayers) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
@@ -302,7 +303,7 @@ export class RoomManager {
   }
 
   assertMember(room, userId) {
-    const player = room.players.find((entry) => entry.id === userId);
+    const player = room.players.find((entry) => entry.id === userId && !entry.isBot);
     if (!player) throw new RoomError('NOT_A_MEMBER', 'Ты не участник этого стола.', 403);
     return player;
   }
