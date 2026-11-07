@@ -82,8 +82,9 @@ test('players can change character during the room and game without changing the
   const created = manager.createRoom({ ...red, characterId: 'optimist' });
   manager.joinRoom(created.roomId, { ...green, characterId: 'lena' });
   manager.startGame(created.roomId, red.id);
+  const originalColor = created.players[0].color;
   const changed = manager.setCharacter(created.roomId, red.id, 'poison');
-  assert.equal(changed.players[0].color, 'red');
+  assert.equal(changed.players[0].color, originalColor);
   assert.equal(changed.players[0].characterId, 'poison');
   assert.equal(changed.state.players[0].characterId, 'poison');
   assert.throws(() => manager.setCharacter(created.roomId, red.id, 'not-a-character'), /Неизвестный персонаж/);
