@@ -303,7 +303,7 @@
 #soundToggleBtn .action-label,#copyCodeBtn .action-label,#chatToggleBtn .action-label { display:none; }
 #soundToggleBtn .action-glyph,#copyCodeBtn .action-glyph,#chatToggleBtn .action-glyph { font-size:18px; }
 #startGameBtn:not([hidden]) { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(220px,66vw); min-height:52px; z-index:4; border-radius:15px; }
-.game-controls:has(#startGameBtn:not([hidden])) .dice-button { opacity:.08; pointer-events:none; }
+
 .move-hint { max-width:480px; margin:8px auto 105px; padding:0 12px; font-size:9px; line-height:1.4; }
 .chat-panel { bottom:104px; }
 
@@ -357,3 +357,8 @@
   .board-mode-card img { width:62px; height:62px; }
   .theme-chip { font-size:6px; }
 }
+
+/* Secondary invite flow stays quiet beneath the quick bot-start action. */
+.invite-create-button { width:100%; min-height:42px; margin:4px 0 12px; border-color:#e7c47c55; background:#171e2d; color:#e8d2a5; font-size:9px; letter-spacing:.1em; }
+.game-controls.awaiting-start .dice-button { opacity:.08; pointer-events:none; }
+.game-controls.awaiting-start #startGameBtn:not([hidden]) { display:flex; }
