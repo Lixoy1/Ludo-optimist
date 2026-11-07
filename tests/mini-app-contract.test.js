@@ -23,9 +23,13 @@ test('board image and client modules are present in the integrated page', async 
   assert.match(html, /src="\/src\/main\.js"/);
   assert.match(main, /from '\.\/client\/room-client\.js'/);
   assert.match(main, /from '\.\/board-render\.js'/);
-  assert.match(main, /\/assets\/boards\/optimist-ludo-\$\{selectedBoardTheme\}\.svg/);
+  assert.match(main, /const boardFile = selectedBoardType === 'CLASSIC'/);
+  assert.match(main, /optimist-ludo-\$\{selectedBoardType\.toLowerCase\(\)\}-\$\{selectedBoardTheme\}\.svg/);
+  assert.match(main, /\/assets\/boards\/\$\{boardFile\}/);
   const board = await readFile(new URL('../assets/boards/optimist-ludo-neon.svg', import.meta.url), 'utf8');
-  assert.match(board, /viewBox="0 0 720 720"/);
+  const penta = await readFile(new URL('../assets/boards/optimist-ludo-penta-neon.svg', import.meta.url), 'utf8');
+  const hex = await readFile(new URL('../assets/boards/optimist-ludo-hex-neon.svg', import.meta.url), 'utf8');
+  for (const svg of [board, penta, hex]) assert.match(svg, /viewBox="0 0 720 720"/);
 });
 
 test('interactive pawn and voice-message states have visible styles', () => {
