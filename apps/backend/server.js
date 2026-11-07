@@ -204,14 +204,14 @@ export function createLudoServer({
         if (req.method === 'POST' && url.pathname === '/api/rooms') {
           const body = await readJson(req);
           if (!body || typeof body !== 'object' || Array.isArray(body)) throw new RoomError('INVALID_ROOM_CONFIG', 'Тело запроса должно быть JSON-объектом.');
-          const requestedType = String(body.boardType || (body.maxPlayers === 5 ? 'PENTA' : body.maxPlayers === 6 ? 'HEX' : 'CLASSIC')).toUpperCase();
-          const requestedPlayers = body.maxPlayers ?? (requestedType === 'PENTA' ? 5 : requestedType === 'HEX' ? 6 : 4);
+          const requestedType = String(body.boardType || (body.maxPlayers === 6 ? 'HEXA' : 'CLASSIC')).toUpperCase();
+          const requestedPlayers = body.maxPlayers ?? (requestedType === 'HEXA' ? 6 : 4);
           const validBoardCapacity = requestedType === 'CLASSIC'
             ? Number.isInteger(requestedPlayers) && requestedPlayers >= 2 && requestedPlayers <= 4
-            : requestedType === 'PENTA' ? requestedPlayers === 5
-              : requestedType === 'HEX' ? requestedPlayers === 6 : false;
+            : requestedType === 'HEXA' ? requestedPlayers === 6
+              : requestedType === 'ROYAL' ? requestedPlayers === 4 : false;
           if (!validBoardCapacity) {
-            throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, PENTA: ровно 5, HEX: ровно 6.');
+            throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, HEXA: ровно 6, ROYAL: ровно 4.');
           }
           if (body.isPublic !== undefined && typeof body.isPublic !== 'boolean') {
             throw new RoomError('INVALID_ROOM_CONFIG', 'isPublic должен быть логическим значением.');
