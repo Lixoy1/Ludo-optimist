@@ -39,7 +39,7 @@ export function extendedTokenBoardPositions(state) {
   if(zone==='base'||zone==='finished') {
    const point=zone==='base'?arm.baseSlots[token.index]:arm.finishSlots[token.index];
    if(!point)throw new RangeError(`Invalid ${zone} slot for token ${token.id}.`);
-   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:.55,diameter:geometry.pawnDiameter,slot:token.index,
+   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:geometry.finishPawnScale,diameter:geometry.pawnDiameter,slot:token.index,
     stackKey:`${zone}:${token.id}`,stackCount:1,visible:true,overflowCount:0});
    continue;
   }
@@ -50,7 +50,7 @@ export function extendedTokenBoardPositions(state) {
    if(!cell)throw new RangeError(`Invalid outer track cell ${global}.`);
    key=`track:${global}`;point={x:cell.x,y:cell.y};
   } else if(zone==='home') {
-   const index=step-geometry.trackLength,cell=arm.homeLane[index];
+   const index=step-(geometry.maxOuterSteps+1),cell=arm.homeLane[index];
    if(!cell)throw new RangeError(`Invalid home lane step ${step} for ${token.color}.`);
    key=`home:${player.id}:${index}`;point={x:cell.x,y:cell.y};
   } else throw new Error(`Unknown token zone: ${zone}`);
