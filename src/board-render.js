@@ -1,11 +1,13 @@
 import { MAIN_TRACK, PLAYER_CONFIG } from './geometry.js';
 import { getStackLayout } from './stack-layout.js';
+import { getExtendedGeometry, getExtendedStackLayout } from './extended-geometries.js';
 export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=55, GRID_ORIGIN_Y=55, GRID_CELL=43.57, PAWN_DIAMETER_RATIO=.053;
 export const BASE_SLOT_POINTS=Object.freeze({blue:[[132,132],[182,132],[132,182],[182,182]],red:[[538,132],[588,132],[538,182],[588,182]],green:[[132,538],[182,538],[132,588],[182,588]],yellow:[[538,538],[588,538],[538,588],[588,588]]});
 export const FINISH_POINTS=Object.freeze([[336,336],[384,336],[336,384],[384,384]]);
 export function gridToImage(col,row){if(!Number.isFinite(col)||!Number.isFinite(row))throw new TypeError('Grid coordinates must be finite numbers.');return{x:GRID_ORIGIN_X+col*GRID_CELL,y:GRID_ORIGIN_Y+row*GRID_CELL};}
 export function tokenBoardPositions(state){
  if(!state?.tokens||!state?.players)return[];
+ if(state.mode==='PENTA'||state.mode==='HEX')return extendedTokenBoardPositions(state);
  const tokens=Object.values(state.tokens),grouped=new Map(),base=new Map();
  const characters=new Map((state.players||[]).map(p=>[p.id,p.characterId||'optimist']));
  for(const token of tokens){
@@ -24,4 +26,52 @@ export function tokenBoardPositions(state){
   stack.forEach((token,index)=>{const offset=layout.positions[index];positions.set(token.id,{x:point.x+offset.x,y:point.y+offset.y,centerX:point.x,centerY:point.y,scale:offset.scale,slot:index,stackKey,stackCount:stack.length,visible:offset.visible!==false,overflowCount:layout.hiddenCount});});
  }
  return tokens.map(token=>{const p=positions.get(token.id);return{tokenId:token.id,owner:token.owner,characterId:characters.get(token.owner)||'optimist',color:token.color,index:token.index,zone:token.position.zone,x:p.x,y:p.y,left:p.x/720*100,top:p.y/720*100,centerX:p.centerX,centerY:p.centerY,centerLeft:p.centerX/720*100,centerTop:p.centerY/720*100,scale:p.scale,slot:p.slot,stackKey:p.stackKey,stackCount:p.stackCount,visible:p.visible!==false,overflowCount:p.overflowCount||0};});
+}
+export function extendedTokenBoardPositions(state) {
+ const geometry=getExtendedGeometry(state.mode.toLowerCase());
+ const tokens=Object.values(state.tokens),grouped=new Map(),fixed=new Map();
+ const players=new Map(state.players.map(player=>[player.id,player]));
+ const characters=new Map(state.players.map(player=>[player.id,player.characterId||'optimist']));
+ for(const token of tokens) {
+  const player=players.get(token.owner),arm=geometry.arms[player?.armIndex];
+  if(!player||!arm)throw new Error(`Missing extended board seat for token ${token.id}.`);
+  const {zone,step}=token.position;
+  if(zone==='base'||zone==='finished') {
+   const point=zone==='base'?arm.baseSlots[token.index]:arm.finishSlots[token.index];
+   if(!point)throw new RangeError(`Invalid ${zone} slot for token ${token.id}.`);
+   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:.8,slot:token.index,
+    stackKey:`${zone}:${token.id}`,stackCount:1,visible:true,overflowCount:0});
+   continue;
+  }
+  let key,point;
+  if(zone==='track') {
+   const global=(player.startIndex+step)%geometry.trackLength;
+   const cell=geometry.track[global];
+   if(!cell)throw new RangeError(`Invalid outer track cell ${global}.`);
+   key=`track:${global}`;point={x:cell.x,y:cell.y};
+  } else if(zone==='home') {
+   const index=step-geometry.trackLength,cell=arm.homeLane[index];
+   if(!cell)throw new RangeError(`Invalid home lane step ${step} for ${token.color}.`);
+   key=`home:${player.id}:${index}`;point={x:cell.x,y:cell.y};
+  } else throw new Error(`Unknown token zone: ${zone}`);
+  const bucket=grouped.get(key)??{point,tokens:[]};bucket.tokens.push(token);grouped.set(key,bucket);
+ }
+ const positions=new Map(fixed);
+ for(const [stackKey,{point,tokens:stack}] of grouped) {
+  const layout=getExtendedStackLayout(state.mode.toLowerCase(),stack.length);
+  stack.forEach((token,index)=>{
+   const offset=layout.tokens[index];
+   positions.set(token.id,{x:point.x+offset.x,y:point.y+offset.y,centerX:point.x,centerY:point.y,
+    scale:offset.scale,slot:index,stackKey,stackCount:stack.length,visible:offset.visible!==false,
+    overflowCount:layout.hiddenCount});
+  });
+ }
+ return tokens.map(token=>{
+  const p=positions.get(token.id);
+  if(!p)throw new Error(`Missing board coordinates for token ${token.id}.`);
+  return{tokenId:token.id,owner:token.owner,characterId:characters.get(token.owner)||'optimist',color:token.color,index:token.index,
+   zone:token.position.zone,x:p.x,y:p.y,left:p.x/720*100,top:p.y/720*100,
+   centerX:p.centerX,centerY:p.centerY,centerLeft:p.centerX/720*100,centerTop:p.centerY/720*100,
+   scale:p.scale,slot:p.slot,stackKey:p.stackKey,stackCount:p.stackCount,visible:p.visible!==false,overflowCount:p.overflowCount||0};
+ });
 }
