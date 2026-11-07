@@ -139,7 +139,7 @@ function makeHexa() {
   for (let sector=0; sector<6; sector++) {
     const angle = sector*60;
     for (let row=5; row>=1; row--) push(1, -(innerRadius+row), angle, sector, 'right-rail', row);
-    push(innerBridge.x, innerBridge.y, angle, sector, 'inner-bridge', 0);
+    push(innerBridge.x, innerBridge.y, angle+30, sector, 'inner-bridge', 0);
     for (let row=1; row<=5; row++) push(-1, -(innerRadius+row), angle+60, sector, 'left-rail', row);
     push(0, -(innerRadius+5), angle+60, sector, 'outer-bridge', 6);
   }
@@ -192,7 +192,7 @@ function makeHexa() {
     canvasSize:nativeSize, cellSize:C, artScale:scale,
     trackLength:72, maxOuterSteps:71, homeCells:6, finishStep:78,
     startIndices:starts, homeEntryIndices:entries, safeIndices:safe,
-    cellPitch:C*scale, tileSize:.9*C*scale, safeAreaSize:.72*C*scale,
+    cellPitch:C*scale, tileSize:.82*C*scale, safeAreaSize:.72*C*scale,
     pawnDiameter:.64*C*scale, pawnMaxWidth:.82*C*scale, pawnDiameterRatio:.64,
     finishPawnScale:.24, touchTargetCssPx:48,
     center:scaled({x:cx,y:cy},scale), track, arms, outline, finishVertices,
@@ -250,7 +250,7 @@ function makeRoyal() {
       ...scaled(firstNative,scale),
       nativeX:fmt(firstNative.x),nativeY:fmt(firstNative.y),
       homeIndex:1,
-      rotation:Math.atan2(direction.y,direction.x)*180/Math.PI
+      rotation:Math.atan2(inwardNormal.y,inwardNormal.x)*180/Math.PI
     }];
     for(let homeIndex=1;homeIndex<7;homeIndex++) {
       const native={
@@ -287,7 +287,7 @@ function makeRoyal() {
     canvasSize:nativeSize,cellSize:C,artScale:scale,
     trackLength:68,maxOuterSteps:66,homeCells:7,finishStep:74,
     startIndices:starts,homeEntryIndices:entries,safeIndices:safe,
-    cellPitch:C*scale,tileSize:.96*C*scale,safeAreaSize:.8*C*scale,
+    cellPitch:C*scale,tileSize:.82*C*scale,safeAreaSize:.8*C*scale,
     pawnDiameter:.68*C*scale,pawnMaxWidth:.82*C*scale,pawnDiameterRatio:.68,
     finishPawnScale:.68,touchTargetCssPx:48,
     center:scaled({x:cx,y:cy},scale),track,arms,outline,finishVertices,
@@ -486,8 +486,8 @@ export function getExtendedStackLayout(id,count) {
 
   // A four-token stack is laid out as a compact 2x2 group. This keeps all
   // four character portraits visible without letting them cross the tile.
-  const diameter=.42*C*geometry.artScale;
-  const offset=.23*C*geometry.artScale;
+  const diameter=.35*C*geometry.artScale;
+  const offset=.22*C*geometry.artScale;
   const slots=[[-offset,-offset],[offset,-offset],[-offset,offset],[offset,offset]];
   const visibleCount=Math.min(count,4);
   const tokens=Array.from({length:count},(_,index)=>{
