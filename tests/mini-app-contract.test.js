@@ -57,7 +57,7 @@ test('all selected playable characters have optimized transparent assets', async
   const { CHARACTERS } = await import('../src/characters.js');
   assert.equal(CHARACTERS.length, 12);
   for (const character of CHARACTERS) {
-    const file = new URL(`..${character.src}`, import.meta.url);
+    const file = new URL(character.src);
     assert.ok((await stat(file)).size > 8_000, `${character.id} asset missing`);
   }
 });
