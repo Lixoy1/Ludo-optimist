@@ -52,6 +52,13 @@ test('room client can create a PENTA table through an explicit board mode', asyn
 });
 
 
+test('room client sends the DIAMOND board mode without changing four-player capacity', async () => {
+  const { LudoRoomClient } = await import('../src/client/room-client.js');
+  let payload;
+  await LudoRoomClient.createRoom({ maxPlayers: 4, boardType: 'DIAMOND', fetchImpl: async (_url, options) => { payload = JSON.parse(options.body); return { ok: true, json: async () => ({ roomId: 'diamond-room' }) }; } });
+  assert.deepEqual(payload, { maxPlayers: 4, boardType: 'DIAMOND', isPublic: true, characterId: 'optimist' });
+});
+
 test('room client listRooms reads the public lobby using Telegram initData', async () => {
   const { LudoRoomClient } = await import('../src/client/room-client.js');
   let request;
