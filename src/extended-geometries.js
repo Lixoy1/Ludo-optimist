@@ -147,6 +147,7 @@ function makeGeometry(id,sides) {
     frameRadius,
     cellPitch,
     tileSize:cellPitch*.87,
+    pawnDiameter:cellPitch*.82,
     innerRadius,
     hubRadius,
     center:CENTER,
@@ -294,9 +295,9 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
     const mid={x:(left.x+right.x)/2,y:(left.y+right.y)/2};
     parts.push('<text x="'+fmt(mid.x)+'" y="'+fmt(mid.y-5)+'" text-anchor="middle" fill="#fff4d8" font-family="Arial,sans-serif" font-size="10" font-weight="900" letter-spacing="1.5">'+arm.player.label+'</text>');
     arm.baseSlots.forEach((q,i)=>{
-      parts.push('<circle data-base-slot="'+arm.index+':'+i+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(p*.48)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.2"/>');
-      parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(p*.43)+'" fill="url(#well)" stroke="'+color+'" stroke-width="1.8"/>');
-      parts.push('<circle cx="'+fmt(q.x-p*.07)+'" cy="'+fmt(q.y-p*.07)+'" r="'+fmt(p*.045)+'" fill="#fff" fill-opacity=".35"/>');
+      parts.push('<circle data-base-slot="'+arm.index+':'+i+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.48)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.2"/>');
+      parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.43)+'" fill="url(#well)" stroke="'+color+'" stroke-width="1.8"/>');
+      parts.push('<circle cx="'+fmt(q.x-geometry.cellPitch*.07)+'" cy="'+fmt(q.y-geometry.cellPitch*.07)+'" r="'+fmt(p*.045)+'" fill="#fff" fill-opacity=".35"/>');
     });
   }
 
