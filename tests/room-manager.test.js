@@ -89,27 +89,21 @@ test('players can change character during the room and game without changing the
 });
 
 for (const [boardType, maxPlayers] of [['DIAMOND',4],['PENTA',5],['HEX',6]]) {
-  test(boardType + ' rooms assign geometry colors, require a full roster and start the matching engine', () => {
-    const manager = new RoomManager({ dice: () => 6 });
+  test(boardType + ' starts with one human and fills every missing seat with a bot', () => {
+    const manager = new RoomManager({ dice: () => 1 });
     const host = { id: boardType.toLowerCase() + '-0', username: 'Host' };
     const created = manager.createRoom(host, { boardType, maxPlayers });
     assert.equal(created.boardType, boardType);
     assert.equal(created.maxPlayers, maxPlayers);
     assert.equal(created.players.length, 1);
-    assert.throws(() => manager.startGame(created.roomId, host.id), /нужны все/);
-    for (let index = 1; index < maxPlayers; index += 1) {
-      manager.joinRoom(created.roomId, { id: boardType.toLowerCase() + '-' + index, username: 'Player ' + index });
-    }
-    const full = manager.getSnapshot(created.roomId, host.id);
-    assert.equal(full.players.length, maxPlayers);
-    assert.equal(new Set(full.players.map((player) => player.color)).size, maxPlayers);
     const started = manager.startGame(created.roomId, host.id);
+    assert.equal(started.status, 'playing');
     assert.equal(started.state.mode, boardType);
     assert.equal(started.state.trackLength, ({ DIAMOND: 52, PENTA: 65, HEX: 78 })[boardType]);
     assert.equal(started.state.players.length, maxPlayers);
-    const roll = manager.roll(created.roomId, host.id);
-    assert.equal(roll.state.lastAction.dice, 6);
-    assert.equal(roll.legalTokenIds.length, 4);
+    assert.equal(started.players.filter((player) => player.isBot).length, maxPlayers - 1);
+    assert.equal(new Set(started.players.map((player) => player.color)).size, maxPlayers);
+    assert.equal(started.state.currentPlayer, host.id);
     assert.equal(manager.getSnapshot(created.roomId, host.id).boardType, boardType);
   });
 }
@@ -123,4 +117,38 @@ test('extended room types reject invalid capacities and public room list identif
   assert.equal(created.boardType, 'PENTA');
   const room = manager.listPublicRooms().find((item) => item.roomId === created.roomId);
   assert.equal(room.boardType, 'PENTA');
+});
+
+
+test('a one-human Classic game starts immediately with three bots that take complete legal turns', () => {
+  const dice = [6, 1, 6, 1, 6, 1, 6, 1];
+  let cursor = 0;
+  const manager = new RoomManager({ dice: () => dice[cursor++ % dice.length] });
+  const created = manager.createRoom(red, { maxPlayers: 4 });
+  const started = manager.startGame(created.roomId, red.id);
+  assert.equal(started.status, 'playing');
+  assert.equal(started.players.filter((player) => player.isBot).length, 3);
+
+  const firstRoll = manager.roll(created.roomId, red.id);
+  assert.equal(firstRoll.state.dice, 6);
+  manager.move(created.roomId, red.id, 'u-red:0');
+  const secondRoll = manager.roll(created.roomId, red.id);
+  assert.equal(secondRoll.state.dice, 1);
+  manager.move(created.roomId, red.id, 'u-red:0');
+
+  const snapshot = manager.getSnapshot(created.roomId, red.id);
+  assert.equal(snapshot.state.currentPlayer, red.id);
+  for (const bot of snapshot.players.filter((player) => player.isBot)) {
+    const movedToken = Object.values(snapshot.state.tokens).find((token) => token.owner === bot.id && token.position.zone === 'track' && token.position.step === 1);
+    assert.ok(movedToken, `${bot.username} should release a pawn and move it one legal cell`);
+  }
+});
+
+test('Classic player capacity may be filled partly by humans and partly by bots', () => {
+  const manager = new RoomManager({ dice: () => 1 });
+  const created = manager.createRoom(red, { maxPlayers: 4 });
+  manager.joinRoom(created.roomId, green);
+  const started = manager.startGame(created.roomId, red.id);
+  assert.equal(started.players.filter((player) => player.isBot).length, 2);
+  assert.deepEqual(started.players.slice(0,2).map((player) => player.id), [red.id, green.id]);
 });
