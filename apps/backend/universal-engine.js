@@ -197,7 +197,7 @@ export function rollUniversalDice(state, playerId, dice) {
 
 export function applyUniversalMove(state, playerId, tokenId) {
   if (state?.mode === 'CLASSIC') return applyClassicMove(state, playerId, tokenId);
-  if (!state || !['PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
+  if (!state || !['DIAMOND', 'PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
   if (state.phase !== 'playing' || state.currentPlayer !== playerId || state.dice === null) {
     throw new Error('There is no pending move for this player.');
   }
