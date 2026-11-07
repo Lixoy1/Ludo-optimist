@@ -166,6 +166,9 @@ for (const [boardType, maxPlayers] of [['DIAMOND',4],['PENTA',5],['HEX',6]]) {
     const humanRoll = manager.roll(created.roomId, human.id);
     assert.equal(humanRoll.state.dice, 6);
     manager.move(created.roomId, human.id, human.id + ':0');
+    const bonusRoll = manager.roll(created.roomId, human.id);
+    assert.equal(bonusRoll.state.dice, 1);
+    manager.move(created.roomId, human.id, human.id + ':0');
 
     const snapshot = manager.getSnapshot(created.roomId, human.id);
     assert.equal(snapshot.state.currentPlayer, human.id);
