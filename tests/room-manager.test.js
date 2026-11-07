@@ -153,3 +153,39 @@ test('Classic player capacity may be filled partly by humans and partly by bots'
   assert.equal(started.players.filter((player) => player.isBot).length, 2);
   assert.deepEqual(started.players.slice(0,2).map((player) => player.id), [red.id, green.id]);
 });
+
+
+for (const [boardType, maxPlayers] of [['DIAMOND',4],['PENTA',5],['HEX',6]]) {
+  test(boardType + ' bots roll, release a pawn and complete a legal track move before returning the turn to the human', () => {
+    let rollIndex = 0;
+    const manager = new RoomManager({ dice: () => ([6, 1][rollIndex++ % 2]) });
+    const human = { id: boardType.toLowerCase() + '-human', username: 'Human' };
+    const created = manager.createRoom(human, { boardType, maxPlayers });
+    manager.startGame(created.roomId, human.id);
+
+    const humanRoll = manager.roll(created.roomId, human.id);
+    assert.equal(humanRoll.state.dice, 6);
+    manager.move(created.roomId, human.id, human.id + ':0');
+
+    const snapshot = manager.getSnapshot(created.roomId, human.id);
+    assert.equal(snapshot.state.currentPlayer, human.id);
+    const bots = snapshot.players.filter((player) => player.isBot);
+    assert.equal(bots.length, maxPlayers - 1);
+    for (const bot of bots) {
+      assert.ok(Object.values(snapshot.state.tokens).some((token) =>
+        token.owner === bot.id && token.position.zone === 'track' && token.position.step === 1
+      ), `${boardType} bot ${bot.username} should release and move a pawn`);
+    }
+  });
+}
+
+test('server-controlled bots cannot authenticate as real room members', () => {
+  const manager = new RoomManager({ dice: () => 1 });
+  const created = manager.createRoom(red, { maxPlayers: 4 });
+  const started = manager.startGame(created.roomId, red.id);
+  const bot = started.players.find((player) => player.isBot);
+  assert.ok(bot);
+  assert.equal(manager.isMember(created.roomId, bot.id), false);
+  assert.throws(() => manager.getSnapshot(created.roomId, bot.id), /не участник/);
+  assert.throws(() => manager.roll(created.roomId, bot.id), /не участник/);
+});
