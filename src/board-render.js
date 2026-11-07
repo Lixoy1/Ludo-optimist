@@ -1,13 +1,13 @@
-import { MAIN_TRACK, PLAYER_CONFIG } from './geometry.js';
+import { MAIN_TRACK, PLAYER_CONFIG, LAST_TRACK_STEP, FINISH_STEP } from './geometry.js';
 import { getStackLayout } from './stack-layout.js';
 import { getPlayableGeometry, getPlayableStackLayout } from './game-geometries.js';
-export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=55, GRID_ORIGIN_Y=55, GRID_CELL=43.57, PAWN_DIAMETER_RATIO=.053;
-export const BASE_SLOT_POINTS=Object.freeze({blue:[[132,132],[182,132],[132,182],[182,182]],red:[[538,132],[588,132],[538,182],[588,182]],green:[[132,538],[182,538],[132,588],[182,588]],yellow:[[538,538],[588,538],[538,588],[588,588]]});
-export const FINISH_POINTS=Object.freeze([[336,336],[384,336],[336,384],[384,384]]);
+export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=60, GRID_ORIGIN_Y=60, GRID_CELL=40, PAWN_DIAMETER_RATIO=.68*128/2304;
+export const BASE_SLOT_POINTS=Object.freeze({blue:[[148,148],[212,148],[148,212],[212,212]],red:[[508,148],[572,148],[508,212],[572,212]],yellow:[[508,508],[572,508],[508,572],[572,572]],green:[[148,508],[212,508],[148,572],[212,572]]});
+export const FINISH_POINTS=Object.freeze([[338,338],[382,338],[338,382],[382,382]]);
 export function gridToImage(col,row){if(!Number.isFinite(col)||!Number.isFinite(row))throw new TypeError('Grid coordinates must be finite numbers.');return{x:GRID_ORIGIN_X+col*GRID_CELL,y:GRID_ORIGIN_Y+row*GRID_CELL};}
 export function tokenBoardPositions(state){
  if(!state?.tokens||!state?.players)return[];
- if(state.mode==='PENTA'||state.mode==='HEX')return extendedTokenBoardPositions(state);
+ if(state.mode==='HEXA'||state.mode==='ROYAL')return extendedTokenBoardPositions(state);
  const tokens=Object.values(state.tokens),grouped=new Map(),base=new Map();
  const characters=new Map((state.players||[]).map(p=>[p.id,p.characterId||'optimist']));
  for(const token of tokens){
@@ -16,7 +16,7 @@ export function tokenBoardPositions(state){
   if(zone==='finished'){const[x,y]=FINISH_POINTS[token.index]??FINISH_POINTS[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:.8,diameter:BOARD_IMAGE_SIZE*PAWN_DIAMETER_RATIO,slot:token.index,stackKey:`finished:${token.id}`,stackCount:1,visible:true,overflowCount:0});continue;}
   let key,point;
   if(zone==='track'){const config=PLAYER_CONFIG[token.color],i=(config.start+step)%MAIN_TRACK.length,cell=MAIN_TRACK[i];key=`track:${i}`;point=gridToImage(cell.col,cell.row);}
-  else if(zone==='home'){const i=step-52,cell=PLAYER_CONFIG[token.color]?.lane[i];if(!cell)throw new RangeError(`Invalid home lane step ${step} for ${token.color}.`);key=`home:${token.color}:${i}`;point=gridToImage(cell[0],cell[1]);}
+  else if(zone==='home'){const i=step-(LAST_TRACK_STEP+1),cell=PLAYER_CONFIG[token.color]?.lane[i];if(!cell)throw new RangeError(`Invalid home lane step ${step} for ${token.color}.`);key=`home:${token.color}:${i}`;point=gridToImage(cell[0],cell[1]);}
   else throw new Error(`Unknown token zone: ${zone}`);
   const bucket=grouped.get(key)??{point,tokens:[]};bucket.tokens.push(token);grouped.set(key,bucket);
  }
@@ -81,14 +81,15 @@ export function tokenMovementPath(state, playerId, from, to, tokenIndex) {
  if(!state||!from||!to)return[];
  const player=state.players?.find(item=>item.id===playerId);
  if(!player)return[];
- const extended=state.mode==='PENTA'||state.mode==='HEX';
+ const extended=state.mode==='HEXA'||state.mode==='ROYAL';
  const geometry=extended?getPlayableGeometry(state.mode):null;
  const config=extended?null:PLAYER_CONFIG[player.color];
  const trackLength=extended?geometry.trackLength:MAIN_TRACK.length;
- const homeStart=trackLength;
- const finishStep=trackLength+5;
+ const maxOuterSteps=extended?geometry.maxOuterSteps:LAST_TRACK_STEP;
+ const homeStart=maxOuterSteps+1;
+ const finishStep=extended?geometry.finishStep:FINISH_STEP;
  const pointForStep=step=>{
-  if(step<trackLength){
+  if(step<=maxOuterSteps){
    const global=extended?(player.startIndex+step)%trackLength:(config.start+step)%trackLength;
    const cell=extended?geometry.track[global]:MAIN_TRACK[global];
    return extended?{x:cell.x,y:cell.y}:gridToImage(cell.col,cell.row);
