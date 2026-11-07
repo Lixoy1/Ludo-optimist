@@ -85,12 +85,22 @@ for (const [id,contract] of Object.entries(expected)) {
     assert.equal(getExtendedStackLayout(id,0).tokens.length,0);
     assert.equal(getExtendedStackLayout(id,1).tokens.length,1);
     assert.equal(getExtendedStackLayout(id,2).tokens.filter(token=>token.visible).length,2);
-    const crowded=getExtendedStackLayout(id,4);
-    assert.equal(crowded.tokens.length,4);
-    assert.equal(crowded.tokens.filter(token=>token.visible).length,1);
-    assert.equal(crowded.hiddenCount,3);
-    assert.equal(crowded.badge,'×4');
-    assert.ok(crowded.tokens[0].diameter<geometry.tileSize);
+    const four=getExtendedStackLayout(id,4);
+    assert.equal(four.tokens.length,4);
+    assert.equal(four.tokens.filter(token=>token.visible).length,4);
+    assert.equal(four.hiddenCount,0);
+    assert.equal(four.badge,null);
+    const five=getExtendedStackLayout(id,5);
+    assert.equal(five.tokens.length,5);
+    assert.equal(five.tokens.filter(token=>token.visible).length,4);
+    assert.equal(five.hiddenCount,1);
+    assert.equal(five.badge,'×5');
+    const visible=four.tokens;
+    const spanX=Math.max(...visible.map(token=>token.x+token.diameter/2))-Math.min(...visible.map(token=>token.x-token.diameter/2));
+    const spanY=Math.max(...visible.map(token=>token.y+token.diameter/2))-Math.min(...visible.map(token=>token.y-token.diameter/2));
+    assert.ok(spanX<geometry.tileSize&&spanY<geometry.tileSize);
+    for(let a=0;a<visible.length;a++)for(let b=a+1;b<visible.length;b++)
+      assert.ok(distance(visible[a],visible[b])>four.tokens[0].diameter);
   });
 }
 
