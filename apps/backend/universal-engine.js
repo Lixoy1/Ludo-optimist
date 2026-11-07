@@ -89,8 +89,8 @@ function playerById(state, playerId) {
 }
 
 function tokenDestination(state, token, dice) {
-  const trackLength = state.trackLength;
-  const homeEnd = trackLength + EXTENDED_HOME_CELLS - 1;
+  const maxOuterSteps = state.maxOuterSteps;
+  const homeEnd = maxOuterSteps + state.homeCellCount;
   if (token.position.zone === 'base') {
     return dice === 6 ? { zone: 'track', step: 0 } : null;
   }
@@ -197,7 +197,7 @@ export function rollUniversalDice(state, playerId, dice) {
 
 export function applyUniversalMove(state, playerId, tokenId) {
   if (state?.mode === 'CLASSIC') return applyClassicMove(state, playerId, tokenId);
-  if (!state || !['PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
+  if (!state || !['HEXA', 'ROYAL'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
   if (state.phase !== 'playing' || state.currentPlayer !== playerId || state.dice === null) {
     throw new Error('There is no pending move for this player.');
   }
@@ -282,8 +282,8 @@ export function assertUniversalState(state) {
       if (zone === 'track' && (!Number.isInteger(step) || step < 0 || step > geometry.maxOuterSteps)) {
         throw new Error('Invalid extended track step.');
       }
-      if (zone === 'home' && (!Number.isInteger(step) || step < geometry.trackLength ||
-          step >= geometry.trackLength + geometry.homeCells)) throw new Error('Invalid extended home step.');
+      if (zone === 'home' && (!Number.isInteger(step) || step < geometry.maxOuterSteps + 1 ||
+          step > geometry.maxOuterSteps + geometry.homeCells)) throw new Error('Invalid extended home step.');
       if (zone === 'finished' && step !== state.finishStep) throw new Error('Invalid extended finish position.');
       if (!['base', 'track', 'home', 'finished'].includes(zone)) throw new Error('Invalid token zone.');
     }
