@@ -18,17 +18,18 @@ function setTrack(state, playerId, index, step) {
   state.tokens[token(playerId, index)].position = { zone: 'track', step };
 }
 
-for (const mode of ['PENTA', 'HEX']) {
+for (const mode of ['HEXA', 'ROYAL']) {
   const geometry = getPlayableGeometry(mode);
   test(`${mode} has one four-token seat per arm and geometry-aligned route metadata`, () => {
     const state = stateFor(mode);
     assert.equal(state.players.length, geometry.sides);
     assert.equal(Object.keys(state.tokens).length, geometry.sides * 4);
     assert.equal(state.trackLength, geometry.trackLength);
-    assert.equal(state.trackLength, geometry.sides * 13);
-    assert.equal(state.homeCellCount, 5);
-    assert.equal(state.finishStep, geometry.trackLength + 5);
-    assert.equal(state.safeTrackIndices.length, geometry.sides * 2);
+    assert.equal(state.trackLength, mode === 'HEXA' ? 72 : 68);
+    assert.equal(state.maxOuterSteps, mode === 'HEXA' ? 71 : 66);
+    assert.equal(state.homeCellCount, mode === 'HEXA' ? 6 : 7);
+    assert.equal(state.finishStep, mode === 'HEXA' ? 78 : 74);
+    assert.equal(state.safeTrackIndices.length, 12);
     assert.equal(assertUniversalState(state), true);
   });
 
@@ -87,11 +88,11 @@ for (const mode of ['PENTA', 'HEX']) {
   test(`${mode} requires an exact roll to enter the center finish`, () => {
     const state = stateFor(mode);
     const id = token('player-0');
-    state.tokens[id].position = { zone: 'home', step: geometry.trackLength + 4 };
+    state.tokens[id].position = { zone: 'home', step: geometry.maxOuterSteps + geometry.homeCells };
     assert.deepEqual(universalLegalMoves(state, 'player-0', 2), []);
     const rolled = rollUniversalDice(state, 'player-0', 1);
     const moved = applyUniversalMove(rolled.state, 'player-0', id);
-    assert.deepEqual(moved.state.tokens[id].position, { zone: 'finished', step: geometry.trackLength + 5 });
+    assert.deepEqual(moved.state.tokens[id].position, { zone: 'finished', step: geometry.finishStep });
     assert.equal(moved.state.phase, 'playing');
     assert.equal(moved.bonusRoll, true);
   });
