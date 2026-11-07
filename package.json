@@ -3,7 +3,7 @@
   "version": "0.6.0",
   "private": true,
   "type": "module",
-  "description": "OPTIMIST LUDO integrated Classic Mini App, authoritative multiplayer backend and room voice chat",
+  "description": "OPTIMIST LUDO Classic, PENTA and HEX Mini App with authoritative multiplayer backend and room voice chat",
   "scripts": {
     "test": "node --test",
     "start": "node --env-file-if-exists=.env apps/backend/server.js",
