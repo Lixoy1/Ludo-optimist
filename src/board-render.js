@@ -1,4 +1,5 @@
-import { MAIN_TRACK, PLAYER_CONFIG, LAST_TRACK_STEP, FINISH_STEP } from './geometry.js';
+import { MAIN_TRACK, PLAYER_CONFIG } from './geometry.js';
+import { LAST_TRACK_STEP, FINISH_STEP } from '../apps/backend/classic-engine.js';
 import { getStackLayout } from './stack-layout.js';
 import { getPlayableGeometry, getPlayableStackLayout } from './game-geometries.js';
 export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=60, GRID_ORIGIN_Y=60, GRID_CELL=40, PAWN_DIAMETER_RATIO=.68*128/2304;
