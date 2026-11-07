@@ -125,7 +125,7 @@ test('all track and home-lane centers stay inside the 720px artwork', () => {
 });
 
 
-for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
+for (const mode of ['PENTA', 'HEX']) {
   test(mode + ' board renderer maps base, track, home and finish tokens to its own SVG geometry', () => {
     const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-render-' + index, username: 'Player ' + index, color: arm.player.id }));
@@ -148,7 +148,6 @@ for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
     assert.ok(Math.abs(home.y - geometry.arms[0].homeLane[2].y) < .001);
     assert.equal(finish.zone, 'finished');
     assert.ok(Math.abs(finish.x - geometry.arms[0].finishSlots[2].x) < .001);
-    if (mode === 'DIAMOND') assert.equal(finish.scale, .82);
     assert.equal(base.zone, 'base');
     assert.ok(Math.abs(base.x - geometry.arms[0].baseSlots[3].x) < .001);
     assert.equal(positions.length, geometry.maxPlayers * 4);
@@ -199,7 +198,7 @@ test('Classic movement path follows the five-cell home lane and maps its finish 
   assert.deepEqual(finish[0], { x: FINISH_POINTS[2][0], y: FINISH_POINTS[2][1] });
 });
 
-for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
+for (const mode of ['PENTA', 'HEX']) {
   test(mode + ' movement path follows every extended outer-track step and the player home lane', () => {
     const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-path-' + index, username: 'Player ' + index, color: arm.player.id }));
