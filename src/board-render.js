@@ -7,7 +7,7 @@ export const FINISH_POINTS=Object.freeze([[336,336],[384,336],[336,384],[384,384
 export function gridToImage(col,row){if(!Number.isFinite(col)||!Number.isFinite(row))throw new TypeError('Grid coordinates must be finite numbers.');return{x:GRID_ORIGIN_X+col*GRID_CELL,y:GRID_ORIGIN_Y+row*GRID_CELL};}
 export function tokenBoardPositions(state){
  if(!state?.tokens||!state?.players)return[];
- if(state.mode==='DIAMOND'||state.mode==='PENTA'||state.mode==='HEX')return extendedTokenBoardPositions(state);
+ if(state.mode==='PENTA'||state.mode==='HEX')return extendedTokenBoardPositions(state);
  const tokens=Object.values(state.tokens),grouped=new Map(),base=new Map();
  const characters=new Map((state.players||[]).map(p=>[p.id,p.characterId||'optimist']));
  for(const token of tokens){
@@ -39,7 +39,7 @@ export function extendedTokenBoardPositions(state) {
   if(zone==='base'||zone==='finished') {
    const point=zone==='base'?arm.baseSlots[token.index]:arm.finishSlots[token.index];
    if(!point)throw new RangeError(`Invalid ${zone} slot for token ${token.id}.`);
-   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:(state.mode==='DIAMOND'?.82:.55),diameter:geometry.pawnDiameter,slot:token.index,
+   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:.55,diameter:geometry.pawnDiameter,slot:token.index,
     stackKey:`${zone}:${token.id}`,stackCount:1,visible:true,overflowCount:0});
    continue;
   }
@@ -81,7 +81,7 @@ export function tokenMovementPath(state, playerId, from, to, tokenIndex) {
  if(!state||!from||!to)return[];
  const player=state.players?.find(item=>item.id===playerId);
  if(!player)return[];
- const extended=state.mode==='DIAMOND'||state.mode==='PENTA'||state.mode==='HEX';
+ const extended=state.mode==='PENTA'||state.mode==='HEX';
  const geometry=extended?getPlayableGeometry(state.mode):null;
  const config=extended?null:PLAYER_CONFIG[player.color];
  const trackLength=extended?geometry.trackLength:MAIN_TRACK.length;

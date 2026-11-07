@@ -49,7 +49,7 @@ const tokenChooserClose = $('#tokenChooserClose');
 const boardEffectOverlay = $('#boardEffectOverlay');
 
 const CLASSIC_COLOR_ORDER = ['blue', 'red', 'green', 'yellow'];
-const PLAYER_COLOR_ORDERS = { DIAMOND: ['green', 'red', 'blue', 'yellow'], PENTA: ['blue', 'red', 'yellow', 'green', 'purple'], HEX: ['blue', 'red', 'yellow', 'green', 'purple', 'orange'] };
+const PLAYER_COLOR_ORDERS = { PENTA: ['blue', 'red', 'yellow', 'green', 'purple'], HEX: ['blue', 'red', 'yellow', 'green', 'purple', 'orange'] };
 const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЗОЛОТОЙ', purple: 'ФИОЛЕТОВЫЙ', orange: 'ОРАНЖЕВЫЙ' };
 const query = new URLSearchParams(location.search);
 const telegram = window.Telegram?.WebApp ?? null;
@@ -151,7 +151,7 @@ function updateLobbySelection() {
   const boardChip = $('#selectedBoardChip');
   if (boardChip) boardChip.textContent = selectedBoardType;
   const count = selectedBoardType === 'CLASSIC' ? selectedPlayerCount :
-    selectedBoardType === 'DIAMOND' ? 4 : selectedBoardType === 'PENTA' ? 5 : 6;
+    selectedBoardType === 'PENTA' ? 5 : 6;
   const title = $('#startSummaryTitle');
   const summary = $('#startSummaryText');
   if (title) title.textContent = `${selectedBoardType} · ${selectedBoardTheme.toUpperCase()}`;
@@ -160,9 +160,9 @@ function updateLobbySelection() {
 
 function selectBoardType(boardType) {
   const normalized = String(boardType || '').toUpperCase();
-  if (!['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(normalized)) return;
+  if (!['CLASSIC', 'PENTA', 'HEX'].includes(normalized)) return;
   selectedBoardType = normalized;
-  selectedPlayerCount = normalized === 'CLASSIC' ? 4 : normalized === 'DIAMOND' ? 4 : normalized === 'PENTA' ? 5 : 6;
+  selectedPlayerCount = normalized === 'CLASSIC' ? 4 : normalized === 'PENTA' ? 5 : 6;
   applyBoardTheme(selectedBoardTheme, selectedBoardType);
   updateLobbySelection();
 }
@@ -218,7 +218,7 @@ function chooseCharacter(characterId) {
 
 function applyBoardTheme(theme, boardType = selectedBoardType) {
   selectedBoardTheme = BOARD_THEMES.includes(theme) ? theme : 'neon';
-  selectedBoardType = ['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
+  selectedBoardType = ['CLASSIC', 'PENTA', 'HEX'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
   if (boardStage) boardStage.dataset.theme = selectedBoardTheme;
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
   if (boardArt) {

@@ -89,7 +89,7 @@ test('players can change character during the room and game without changing the
   assert.throws(() => manager.setCharacter(created.roomId, red.id, 'not-a-character'), /Неизвестный персонаж/);
 });
 
-for (const [boardType, maxPlayers] of [['DIAMOND',4],['PENTA',5],['HEX',6]]) {
+for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
   test(boardType + ' starts with one human and fills every missing seat with a bot', () => {
     const manager = new RoomManager({ dice: () => 1 });
     const host = { id: boardType.toLowerCase() + '-0', username: 'Host' };
@@ -100,7 +100,7 @@ for (const [boardType, maxPlayers] of [['DIAMOND',4],['PENTA',5],['HEX',6]]) {
     const started = manager.startGame(created.roomId, host.id);
     assert.equal(started.status, 'playing');
     assert.equal(started.state.mode, boardType);
-    assert.equal(started.state.trackLength, ({ DIAMOND: 52, PENTA: 65, HEX: 78 })[boardType]);
+    assert.equal(started.state.trackLength, boardType === 'PENTA' ? 65 : 78);
     assert.equal(started.state.players.length, maxPlayers);
     assert.equal(started.players.filter((player) => player.isBot).length, maxPlayers - 1);
     assert.equal(new Set(started.players.map((player) => player.color)).size, maxPlayers);
@@ -112,7 +112,6 @@ for (const [boardType, maxPlayers] of [['DIAMOND',4],['PENTA',5],['HEX',6]]) {
 test('extended room types reject invalid capacities and public room list identifies their board', () => {
   const manager = new RoomManager();
   assert.throws(() => manager.createRoom({ id:'bad-penta', username:'Bad' }, { boardType:'PENTA', maxPlayers:4 }), /PENTA/);
-  assert.throws(() => manager.createRoom({ id:'bad-diamond', username:'Bad' }, { boardType:'DIAMOND', maxPlayers:5 }), /DIAMOND/);
   assert.throws(() => manager.createRoom({ id:'bad-hex', username:'Bad' }, { boardType:'HEX', maxPlayers:5 }), /HEX/);
   const created = manager.createRoom({ id:'penta-list', username:'Penta' }, { maxPlayers:5 });
   assert.equal(created.boardType, 'PENTA');
@@ -155,7 +154,7 @@ test('Classic player capacity may be filled partly by humans and partly by bots'
 });
 
 
-for (const [boardType, maxPlayers] of [['DIAMOND',4],['PENTA',5],['HEX',6]]) {
+for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
   test(boardType + ' bots roll, release a pawn and complete a legal track move before returning the turn to the human', () => {
     let rollIndex = 0;
     const manager = new RoomManager({ dice: () => ([6, 1][rollIndex++ % 2]) });

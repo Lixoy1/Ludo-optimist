@@ -240,7 +240,7 @@
 .lobby-layout-simple { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(290px,.9fr); gap:13px; align-items:start; }
 .board-choice-panel { grid-row:span 2; }
 .section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:13px; }
-.board-mode-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }
+.board-mode-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
 .board-mode-card { min-width:0; overflow:hidden; display:flex; flex-direction:column; gap:7px; padding:7px; text-align:left; border:1px solid #ffffff1b; border-radius:14px; background:linear-gradient(145deg,#20283a,#101522); color:#f9f7f2; transition:border-color .18s,box-shadow .18s,transform .18s; }
 .board-mode-card img { display:block; width:100%; aspect-ratio:1; object-fit:contain; border-radius:9px; background:#0b1019; }
 .board-mode-card span { display:flex; flex-direction:column; gap:2px; padding:0 3px 3px; }
