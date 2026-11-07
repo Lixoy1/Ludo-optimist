@@ -39,7 +39,7 @@ export function extendedTokenBoardPositions(state) {
   if(zone==='base'||zone==='finished') {
    const point=zone==='base'?arm.baseSlots[token.index]:arm.finishSlots[token.index];
    if(!point)throw new RangeError(`Invalid ${zone} slot for token ${token.id}.`);
-   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:(state.mode==='DIAMOND'?.42:.55),diameter:geometry.pawnDiameter,slot:token.index,
+   fixed.set(token.id,{x:point.x,y:point.y,centerX:point.x,centerY:point.y,scale:zone==='base'?1:(state.mode==='DIAMOND'?.82:.55),diameter:geometry.pawnDiameter,slot:token.index,
     stackKey:`${zone}:${token.id}`,stackCount:1,visible:true,overflowCount:0});
    continue;
   }
