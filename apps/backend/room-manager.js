@@ -1,5 +1,6 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import { rollUniversalDice, applyUniversalMove, assertUniversalState, createUniversalState } from './universal-engine.js';
+import { LAST_TRACK_STEP as CLASSIC_LAST_TRACK_STEP, FINISH_STEP as CLASSIC_FINISH_STEP } from './classic-engine.js';
 import { COLORS, PLAYER_CONFIG, SAFE_TRACK_INDICES, CELL_COUNT } from '../../src/geometry.js';
 import { getPlayableGeometry } from '../../src/game-geometries.js';
 import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
@@ -11,12 +12,12 @@ const CHAT_MAX_LENGTH = 200;
 const BOT_CHARACTER_IDS = ['cat', 'owl', 'husky', 'raccoon', 'poison', 'nikita', 'lilya-detective', 'optimist'];
 
 function botDestination(state, token, dice) {
-  const trackLength = state.mode === 'CLASSIC' ? CELL_COUNT : state.trackLength;
-  const finishStep = state.mode === 'CLASSIC' ? 57 : state.finishStep;
+  const maxOuterSteps = state.mode === 'CLASSIC' ? CLASSIC_LAST_TRACK_STEP : state.maxOuterSteps;
+  const finishStep = state.mode === 'CLASSIC' ? CLASSIC_FINISH_STEP : state.finishStep;
   if (token.position.zone === 'base') return dice === 6 ? { zone: 'track', step: 0 } : null;
   if (token.position.zone === 'finished') return null;
   const next = token.position.step + dice;
-  if (next < trackLength) return { zone: 'track', step: next };
+  if (next <= maxOuterSteps) return { zone: 'track', step: next };
   if (next < finishStep) return { zone: 'home', step: next };
   if (next === finishStep) return { zone: 'finished', step: finishStep };
   return null;
@@ -88,13 +89,13 @@ export class RoomManager {
 
   createRoom(user, options = {}) {
     const requestedPlayers = options.maxPlayers;
-    const requestedType = String(options.boardType || (requestedPlayers === 5 ? 'PENTA' : requestedPlayers === 6 ? 'HEX' : 'CLASSIC')).toUpperCase();
-    if (!['CLASSIC', 'PENTA', 'HEX'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
-    const maxPlayers = requestedPlayers ?? (requestedType === 'PENTA' ? 5 : requestedType === 'HEX' ? 6 : 4);
+    const requestedType = String(options.boardType || (requestedPlayers === 6 ? 'HEXA' : 'CLASSIC')).toUpperCase();
+    if (!['CLASSIC', 'HEXA', 'ROYAL'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
+    const maxPlayers = requestedPlayers ?? (requestedType === 'HEXA' ? 6 : 4);
     const validCapacity = requestedType === 'CLASSIC'
       ? Number.isInteger(maxPlayers) && maxPlayers >= 2 && maxPlayers <= 4
-      : requestedType === 'PENTA' ? maxPlayers === 5 : requestedType === 'HEX' ? maxPlayers === 6 : false;
-    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, PENTA: ровно 5, HEX: ровно 6.');
+      : requestedType === 'HEXA' ? maxPlayers === 6 : requestedType === 'ROYAL' ? maxPlayers === 4 : false;
+    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, HEXA: ровно 6, ROYAL: ровно 4.');
     this.pruneIdleRooms();
     if (this.rooms.size >= this.maxRooms) throw new RoomError('ROOM_LIMIT', 'Сейчас все игровые столы заняты. Попробуй позже.', 503);
     if (!user?.id || !user?.username) throw new RoomError('INVALID_USER', 'Не удалось определить игрока.');
