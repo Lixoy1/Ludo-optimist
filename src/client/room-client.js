@@ -19,6 +19,7 @@ export class LudoRoomClient {
     this.voiceClient = null;
     this.reconnectTimer = null;
     this.reconnectAttempt = 0;
+    this.heartbeatTimer = null;
     this.closedByUser = false;
     this.chatElements = null;
     this.seenMessageIds = new Set();
@@ -79,6 +80,7 @@ export class LudoRoomClient {
           this.voiceSessionToken = data.payload.voiceSessionToken;
           this.resumeToken = data.payload.resumeToken || this.resumeToken;
           this.currentUserId = data.payload.userId;
+          this.startHeartbeat();
           this.voiceClient?.destroy();
           this.voiceClient = new VoiceChatClient({
             roomId: this.roomId,
@@ -101,6 +103,7 @@ export class LudoRoomClient {
         if (!authenticated) reject(new Error('Не удалось подключиться к серверу комнаты.'));
       });
       socket.addEventListener('close', () => {
+        this.stopHeartbeat();
         this.voiceSessionToken = null;
         this.voiceClient?.destroy();
         this.voiceClient = null;
@@ -109,6 +112,20 @@ export class LudoRoomClient {
         this.onEvent({ event: 'CONNECTION_CLOSED' });
       });
     });
+  }
+
+  startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      if (this.socket?.readyState === WebSocket.OPEN) {
+        this.socket.send(JSON.stringify({ type: 'PING' }));
+      }
+    }, 60_000);
+  }
+
+  stopHeartbeat() {
+    clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = null;
   }
 
   scheduleReconnect() {
@@ -139,6 +156,7 @@ export class LudoRoomClient {
           this.voiceSessionToken = data.payload.voiceSessionToken;
           this.resumeToken = data.payload.resumeToken || this.resumeToken;
           this.currentUserId = data.payload.userId;
+          this.startHeartbeat();
           this.voiceClient?.destroy();
           this.voiceClient = new VoiceChatClient({ roomId: this.roomId, getSessionToken: () => this.voiceSessionToken, onMessage: (message) => this.renderChatMessage(message), onStatus: (status) => this.handleVoiceStatus(status) });
           if (this.chatElements?.button) this.bindVoiceButton(this.chatElements.button);
@@ -150,6 +168,7 @@ export class LudoRoomClient {
         this.onEvent(data);
       });
       socket.addEventListener('close', () => {
+        this.stopHeartbeat();
         this.voiceSessionToken = null;
         this.voiceClient?.destroy(); this.voiceClient = null;
         if (!this.closedByUser) this.scheduleReconnect();
@@ -230,6 +249,7 @@ export class LudoRoomClient {
 
   close() {
     this.closedByUser = true;
+    this.stopHeartbeat();
     this.resumeToken = null;
     clearTimeout(this.reconnectTimer);
     this.voiceButtonCleanup?.(); this.voiceButtonCleanup = null;

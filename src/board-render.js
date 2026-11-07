@@ -1,6 +1,6 @@
 import { MAIN_TRACK, PLAYER_CONFIG } from './geometry.js';
 import { getStackLayout } from './stack-layout.js';
-export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=55, GRID_ORIGIN_Y=55, GRID_CELL=43.57, PAWN_DIAMETER_RATIO=.062;
+export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=55, GRID_ORIGIN_Y=55, GRID_CELL=43.57, PAWN_DIAMETER_RATIO=.053;
 export const BASE_SLOT_POINTS=Object.freeze({blue:[[132,132],[182,132],[132,182],[182,182]],red:[[538,132],[588,132],[538,182],[588,182]],green:[[132,538],[182,538],[132,588],[182,588]],yellow:[[538,538],[588,538],[538,588],[588,588]]});
 export const FINISH_POINTS=Object.freeze([[336,336],[384,336],[336,384],[384,384]]);
 export function gridToImage(col,row){if(!Number.isFinite(col)||!Number.isFinite(row))throw new TypeError('Grid coordinates must be finite numbers.');return{x:GRID_ORIGIN_X+col*GRID_CELL,y:GRID_ORIGIN_Y+row*GRID_CELL};}

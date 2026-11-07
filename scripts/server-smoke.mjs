@@ -90,6 +90,9 @@ try {
 
   const host = await openRoomSocket(wsUrl, { roomId, devUserId: 'smoke-host', devUsername: 'Smoke Host', characterId: 'poison' });
   hostSocket = host.socket;
+  const pong = waitForEvent(hostSocket, 'PONG');
+  hostSocket.send(JSON.stringify({ type: 'PING' }));
+  assert.ok((await pong).at > 0, 'client heartbeat should be acknowledged');
   const player = await openRoomSocket(wsUrl, { roomId, devUserId: 'smoke-player', devUsername: 'Smoke Player', characterId: 'natalie' });
   playerSocket = player.socket;
   assert.equal(player.snapshot.players.length, 2);

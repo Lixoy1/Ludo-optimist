@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: optimist-ludo
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install --no-audit --no-fund
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: NODE_ENV
+        value: production
+      - key: ALLOW_DEV_AUTH
+        value: "0"
+      - key: BOT_TOKEN
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: MAX_ROOMS
+        value: "20"
