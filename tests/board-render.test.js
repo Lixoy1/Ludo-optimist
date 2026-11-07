@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createClassicState } from '../apps/backend/classic-engine.js';
-import { tokenBoardPositions, gridToImage, BOARD_IMAGE_SIZE, BASE_SLOT_POINTS, FINISH_POINTS, GRID_CELL, PAWN_DIAMETER_RATIO } from '../src/board-render.js';
+import { tokenBoardPositions, tokenMovementPath, gridToImage, BOARD_IMAGE_SIZE, BASE_SLOT_POINTS, FINISH_POINTS, GRID_CELL, PAWN_DIAMETER_RATIO } from '../src/board-render.js';
 import { PLAYER_CONFIG, MAIN_TRACK } from '../src/geometry.js';
 import { createExtendedState } from '../apps/backend/universal-engine.js';
 import { getExtendedGeometry } from '../src/extended-geometries.js';
@@ -166,5 +166,52 @@ for (const mode of ['PENTA', 'HEX']) {
     assert.equal(new Set(positions.map(item => item.left.toFixed(4) + ':' + item.top.toFixed(4))).size, 4);
     assert.ok(positions.every(item => item.scale === geometry.stackLayout[4].scale && item.visible));
     assert.equal(positions[0].overflowCount, 0);
+  });
+}
+
+
+test('Classic movement path visits every intervening route cell before entering home', () => {
+  const state = createClassicState(roster);
+  const player = state.players.find(item => item.id === 'render-green');
+  const from = { zone: 'track', step: 10 };
+  const to = { zone: 'track', step: 13 };
+  const path = tokenMovementPath(state, player.id, from, to, 0);
+  assert.equal(path.length, 3);
+  for (let index = 0; index < 3; index += 1) {
+    const cell = MAIN_TRACK[(PLAYER_CONFIG.green.start + 11 + index) % MAIN_TRACK.length];
+    const point = gridToImage(cell.col, cell.row);
+    assert.deepEqual(path[index], point);
+  }
+});
+
+test('Classic movement path follows the five-cell home lane and maps its finish socket', () => {
+  const state = createClassicState(roster);
+  const player = state.players.find(item => item.id === 'render-green');
+  const lanePath = tokenMovementPath(state, player.id, { zone: 'track', step: 51 }, { zone: 'home', step: 54 }, 2);
+  assert.equal(lanePath.length, 3);
+  assert.deepEqual(lanePath[0], gridToImage(PLAYER_CONFIG.green.lane[0][0], PLAYER_CONFIG.green.lane[0][1]));
+  assert.deepEqual(lanePath[2], gridToImage(PLAYER_CONFIG.green.lane[2][0], PLAYER_CONFIG.green.lane[2][1]));
+  const finish = tokenMovementPath(state, player.id, { zone: 'home', step: 56 }, { zone: 'finished', step: 57 }, 2);
+  assert.equal(finish.length, 1);
+  assert.deepEqual(finish[0], { x: FINISH_POINTS[2][0], y: FINISH_POINTS[2][1] });
+});
+
+for (const mode of ['PENTA', 'HEX']) {
+  test(mode + ' movement path follows every extended outer-track step and the player home lane', () => {
+    const geometry = getExtendedGeometry(mode.toLowerCase());
+    const roster = geometry.arms.map((arm, index) => ({ id: mode + '-path-' + index, username: 'Player ' + index, color: arm.player.id }));
+    const state = createExtendedState(mode, roster);
+    const player = state.players[0];
+    const path = tokenMovementPath(state, player.id, { zone: 'track', step: 11 }, { zone: 'track', step: 14 }, 0);
+    assert.equal(path.length, 3);
+    for (let index = 0; index < 3; index += 1) {
+      const point = geometry.track[(player.startIndex + 12 + index) % geometry.trackLength];
+      assert.deepEqual(path[index], { x: point.x, y: point.y });
+    }
+    const home = tokenMovementPath(state, player.id,
+      { zone: 'track', step: geometry.trackLength - 1 },
+      { zone: 'home', step: geometry.trackLength + 2 }, 1);
+    assert.equal(home.length, 3);
+    assert.deepEqual(home[2], { x: geometry.arms[0].homeLane[2].x, y: geometry.arms[0].homeLane[2].y });
   });
 }
