@@ -442,23 +442,20 @@ export function getExtendedStackLayout(id,count) {
     tokens:[{index:0,x:0,y:0,scale:1,diameter:geometry.pawnDiameter,visible:true}],
     hiddenCount:0,badge:null
   };
-  if(count===2) {
-    const diameter=.42*C*geometry.artScale;
-    const dx=.18*C*geometry.artScale;
-    const dy=.10*C*geometry.artScale;
-    return {
-      tokens:[
-        {index:0,x:-dx,y:-dy,scale:diameter/geometry.pawnDiameter,diameter,visible:true},
-        {index:1,x:dx,y:dy,scale:diameter/geometry.pawnDiameter,diameter,visible:true}
-      ],
-      hiddenCount:0,badge:null
-    };
-  }
-  return {
-    tokens:[{index:0,x:0,y:0,scale:1,diameter:geometry.pawnDiameter,visible:true},
-      ...Array.from({length:count-1},(_,index)=>({index:index+1,x:0,y:0,scale:0,diameter:0,visible:false}))],
-    hiddenCount:count-1,badge:'×'+count
-  };
+
+  // A four-token stack is laid out as a compact 2x2 group. This keeps all
+  // four character portraits visible without letting them cross the tile.
+  const diameter=.42*C*geometry.artScale;
+  const offset=.18*C*geometry.artScale;
+  const slots=[[-offset,-offset],[offset,-offset],[-offset,offset],[offset,offset]];
+  const visibleCount=Math.min(count,4);
+  const tokens=Array.from({length:count},(_,index)=>{
+    if(index>=visibleCount) return {index,x:0,y:0,scale:0,diameter:0,visible:false};
+    const [x,y]=slots[index];
+    return {index,x,y,scale:diameter/geometry.pawnDiameter,diameter,visible:true};
+  });
+  const hiddenCount=count-visibleCount;
+  return {tokens,hiddenCount,badge:hiddenCount? '×'+count:null};
 }
 
 const star=(x,y,r)=>Array.from({length:10},(_,index)=>{
