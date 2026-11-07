@@ -309,6 +309,50 @@ function tileCorners(cell,size) {
     x:cell.x+x*co-y*si,y:cell.y+x*si+y*co
   }));
 }
+function circleOverlapsTile(center,radius,cell,size) {
+  const angle=-(cell.rotation||0)*Math.PI/180;
+  const dx=center.x-cell.x,dy=center.y-cell.y;
+  const localX=dx*Math.cos(angle)-dy*Math.sin(angle);
+  const localY=dx*Math.sin(angle)+dy*Math.cos(angle);
+  const half=size/2;
+  const nearestX=Math.max(-half,Math.min(half,localX));
+  const nearestY=Math.max(-half,Math.min(half,localY));
+  return Math.hypot(localX-nearestX,localY-nearestY)<radius-1e-5;
+}
+function circlesOverlap(a,radiusA,b,radiusB) {
+  return distance(a,b)<radiusA+radiusB-1e-5;
+}
+function assertNoPolygonOverlaps(items,label) {
+  for(let i=0;i<items.length;i++) {
+    for(let j=i+1;j<items.length;j++) {
+      if(polygonsOverlap(items[i].polygon,items[j].polygon)) {
+        throw new Error(label+' overlap: '+items[i].id+' / '+items[j].id+'.');
+      }
+    }
+  }
+}
+function assertCirclesOutsidePolygons(circles,polygons,label) {
+  for(const circle of circles) for(const item of polygons) {
+    if(circleOverlapsTile(circle.center,circle.radius,item.cell,item.size)) {
+      throw new Error(label+' overlaps '+item.id+'.');
+    }
+  }
+}
+function assertCirclesDoNotOverlap(circles,label) {
+  for(let i=0;i<circles.length;i++) for(let j=i+1;j<circles.length;j++) {
+    if(circlesOverlap(circles[i].center,circles[i].radius,circles[j].center,circles[j].radius)) {
+      throw new Error(label+' overlap: '+circles[i].id+' / '+circles[j].id+'.');
+    }
+  }
+}
+function assertPolygonInsideCanvas(polygon,label) {
+  for(const p of polygon) {
+    if(p.x<0||p.x>VIEW||p.y<0||p.y>VIEW) {
+      throw new Error(label+' falls outside the 720x720 artwork.');
+    }
+  }
+}
+
 function polygonsOverlap(a,b) {
   for(const polygon of [a,b]) {
     for(let index=0;index<polygon.length;index++) {
@@ -372,64 +416,56 @@ export function assertExtendedGeometry(geometry) {
     allHome.push(...arm.homeLane.map((cell)=>({ ...cell, armIndex })));
     allBase.push(...arm.baseSlots.map((cell)=>({ ...cell, armIndex })));
     allFinish.push(...arm.finishSlots.map((cell)=>({ ...cell, armIndex })));
-
-    for(let a=0;a<arm.baseSlots.length;a++) for(let b=a+1;b<arm.baseSlots.length;b++) {
-      if(distance(arm.baseSlots[a],arm.baseSlots[b])<geometry.pawnDiameter*.98) {
-        throw new Error('Base wells overlap for '+arm.player.id+'.');
-      }
-    }
-    for(let a=0;a<arm.finishSlots.length;a++) for(let b=a+1;b<arm.finishSlots.length;b++) {
-      if(distance(arm.finishSlots[a],arm.finishSlots[b])<geometry.pawnDiameter*geometry.finishPawnScale*.98) {
-        throw new Error('Finish sockets overlap for '+arm.player.id+'.');
-      }
-    }
   }
 
-  for(let i=0;i<allHome.length;i++) {
-    for(let j=i+1;j<allHome.length;j++) {
-      if(distance(allHome[i],allHome[j])<geometry.tileSize*.98) {
-        throw new Error('Home lanes overlap between seats '+allHome[i].armIndex+' and '+allHome[j].armIndex+'.');
-      }
-    }
-    for(const cell of geometry.track) {
-      if(distance(allHome[i],cell)<geometry.tileSize*.98) {
-        throw new Error('Home lane overlaps outer route at track cell '+cell.index+'.');
-      }
-    }
-  }
-  for(const base of allBase) {
-    for(const cell of geometry.track) {
-      if(distance(base,cell)<(geometry.tileSize+geometry.pawnDiameter)*.48) {
-        throw new Error('Base pawn well overlaps outer route at track cell '+cell.index+'.');
-      }
-    }
-    for(const home of allHome) {
-      if(distance(base,home)<(geometry.tileSize+geometry.pawnDiameter)*.48) {
-        throw new Error('Base pawn well overlaps a home lane.');
-      }
-    }
-  }
-  for(let a=0;a<allFinish.length;a++) {
-    for(let b=a+1;b<allFinish.length;b++) {
-      if(distance(allFinish[a],allFinish[b])<geometry.pawnDiameter*geometry.finishPawnScale*.98) {
-        throw new Error('Finish sockets overlap between seats.');
-      }
+  // Check the actual rotated square footprints, not just distances between
+  // their centres. SAT detects overlap even when two rotated cells are
+  // diagonally offset and their centre distance exceeds one tile width.
+  const trackTiles=geometry.track.map((cell)=>({
+    id:'track '+cell.index,cell,size:geometry.tileSize,
+    polygon:tileCorners(cell,geometry.tileSize)
+  }));
+  const homeTiles=allHome.map((cell)=>({
+    id:'home '+cell.armIndex+':'+cell.homeIndex,cell,size:geometry.tileSize,
+    polygon:tileCorners(cell,geometry.tileSize)
+  }));
+  assertNoPolygonOverlaps(trackTiles,'Outer route tiles');
+  assertNoPolygonOverlaps(homeTiles,'Home-lane tiles');
+  // Check every outer-route tile against every home-lane tile.
+  for(const track of trackTiles) for(const home of homeTiles) {
+    if(polygonsOverlap(track.polygon,home.polygon)) {
+      throw new Error('Home-lane tile overlaps outer route: '+home.id+' / '+track.id+'.');
     }
   }
 
-  const tiles=geometry.track.map((cell)=>tileCorners(cell,geometry.tileSize));
-  for(let i=0;i<tiles.length;i++) {
-    for(let j=i+1;j<tiles.length;j++) {
-      if(distance(geometry.track[i],geometry.track[j])<geometry.tileSize*1.03 &&
-         polygonsOverlap(tiles[i],tiles[j])) {
-        throw new Error('Overlapping route tiles '+i+' / '+j+'.');
-      }
+  const baseCircles=allBase.map((slot)=>({
+    id:'base '+slot.armIndex+':'+slot.slotIndex,
+    center:slot,radius:geometry.pawnDiameter*.54
+  }));
+  const finishRadius=geometry.pawnDiameter*geometry.finishPawnScale*.48;
+  const finishCircles=allFinish.map((slot)=>({
+    id:'finish '+slot.armIndex+':'+slot.slotIndex,
+    center:slot,radius:finishRadius
+  }));
+  assertCirclesDoNotOverlap(baseCircles,'Base pawn wells');
+  assertCirclesDoNotOverlap(finishCircles,'Finish pawn sockets');
+  assertCirclesOutsidePolygons(baseCircles,[...trackTiles,...homeTiles],'Base pawn well');
+  assertCirclesOutsidePolygons(finishCircles,[...trackTiles,...homeTiles],'Finish pawn socket');
+  for(const base of baseCircles) for(const finish of finishCircles) {
+    if(circlesOverlap(base.center,base.radius,finish.center,finish.radius)) {
+      throw new Error('Base pawn well overlaps finish socket: '+base.id+' / '+finish.id+'.');
     }
   }
-  for(const item of [...geometry.track,...allHome,...allBase,...allFinish]) {
-    if(!(item.x>0 && item.x<VIEW && item.y>0 && item.y<VIEW)) {
-      throw new Error('Board coordinate falls outside the 720x720 artwork.');
+
+  for(const item of [...trackTiles,...homeTiles]) assertPolygonInsideCanvas(item.polygon,item.id);
+  for(const circle of [...baseCircles,...finishCircles]) {
+    if(circle.center.x-circle.radius<0||circle.center.x+circle.radius>VIEW||
+       circle.center.y-circle.radius<0||circle.center.y+circle.radius>VIEW) {
+      throw new Error(circle.id+' falls outside the 720x720 artwork.');
     }
+  }
+  for(const arm of geometry.arms) {
+    assertPolygonInsideCanvas(tileCorners(arm.baseCenter,arm.baseRadius*2), 'Base zone '+arm.player.id);
   }
   return true;
 }
