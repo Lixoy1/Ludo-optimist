@@ -225,6 +225,10 @@ function applyBoardTheme(theme, boardType = selectedBoardType) {
     boardArt.alt = `Игровое поле OPTIMIST LUDO ${selectedBoardType} — ${selectedBoardTheme.toUpperCase()}`;
   }
   if (boardThemeSelect) boardThemeSelect.value = selectedBoardTheme;
+  document.querySelectorAll('[data-board-preview]').forEach((image) => {
+    image.src = boardAssetUrl(image.dataset.boardPreview, selectedBoardTheme);
+  });
+  updateLobbySelection();
   try { localStorage.setItem('optimist-ludo-board-theme', selectedBoardTheme); } catch { /* Optional preference. */ }
 }
 
@@ -571,8 +575,9 @@ function renderTurn(snapshot) {
   turnMeta.textContent = `${roster.length} / ${snapshot?.maxPlayers || 4}`;
 
   if (!state) {
-    turnTitle.textContent = snapshot?.hostId === activeClient?.currentUserId ? 'Ты создал этот стол' : 'Стол открыт';
-    turnSub.textContent = roster.length < 2 ? 'Пригласи друга по коду комнаты — вдвоём веселее.' : 'Все готовы? Хозяин стола может начинать.';
+    turnTitle.textContent = snapshot?.hostId === activeClient?.currentUserId ? 'Готовы начать?' : 'Ожидание хозяина игры';
+    const missingSeats = Math.max(0, (snapshot?.maxPlayers || 4) - roster.length);
+    turnSub.textContent = missingSeats ? `${missingSeats} свободных мест займут боты.` : 'Все места заняты. Можно начинать.';
     diceStatus.textContent = 'ЖДЁМ ИГРОКОВ';
     diceLabel.textContent = 'ОЖИДАНИЕ';
     setDiceFace(5);
@@ -580,7 +585,7 @@ function renderTurn(snapshot) {
     startGameBtn.hidden = snapshot?.hostId !== activeClient?.currentUserId;
     const readyToStart = roster.some((player) => player.id === activeClient?.currentUserId);
     startGameBtn.disabled = !readyToStart;
-    moveHint.textContent = 'Недостающие места будут автоматически заняты ботами при старте.';
+    moveHint.textContent = 'Нажми «Начать партию» — пустые места займут боты.';
     return;
   }
 
@@ -615,10 +620,10 @@ function renderTurn(snapshot) {
     moveHint.textContent = 'Кубик бросается на сервере. Клиент не может подменить результат.';
   } else {
     turnTitle.textContent = `Ход: ${current?.username || 'игрок'}`;
-    turnSub.textContent = 'Следим за партией. Твой ход скоро.';
+    turnSub.textContent = current?.isBot ? 'Соперник делает ход.' : 'Сейчас ход другого игрока.';
     diceStatus.textContent = state.dice ? `ВЫПАЛО ${state.dice}` : 'ХОД СОПЕРНИКА';
     diceLabel.textContent = 'ЖДЁМ';
-    moveHint.textContent = 'Фишки соперника двигаются синхронно со всеми игроками.';
+    moveHint.textContent = current?.isBot ? 'Бот выбирает лучший доступный ход.' : 'Твой ход скоро.';
   }
   setDiceFace(state.dice || state.lastAction?.dice || 5);
   rollDiceBtn.disabled = !canRoll;
