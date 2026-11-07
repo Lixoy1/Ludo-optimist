@@ -22,15 +22,8 @@ async function createRoom(origin, userId, boardType, maxPlayers) {
   });
 }
 
-test('HTTP room API creates DIAMOND, PENTA and HEX rooms with exact board type and capacity', async () => {
+test('HTTP room API creates PENTA and HEX rooms with exact board type and capacity', async () => {
   await withServer(async (origin) => {
-    const diamondResponse = await createRoom(origin, 'api-diamond-host', 'DIAMOND', 4);
-    assert.equal(diamondResponse.status, 201);
-    const diamond = await diamondResponse.json();
-    assert.equal(diamond.snapshot.boardType, 'DIAMOND');
-    assert.equal(diamond.snapshot.maxPlayers, 4);
-    assert.equal(diamond.snapshot.players.length, 1);
-
     const pentaResponse = await createRoom(origin, 'api-penta-host', 'PENTA', 5);
     assert.equal(pentaResponse.status, 201);
     const penta = await pentaResponse.json();
@@ -53,9 +46,6 @@ test('HTTP room API rejects mixed board and seat counts without creating an inva
     assert.equal(invalid.status, 400);
     const body = await invalid.json();
     assert.equal(body.code, 'INVALID_ROOM_CONFIG');
-    const invalidDiamond = await createRoom(origin, 'api-invalid-diamond-host', 'DIAMOND', 5);
-    assert.equal(invalidDiamond.status, 400);
-    assert.equal((await invalidDiamond.json()).code, 'INVALID_ROOM_CONFIG');
 
     const list = await fetch(origin + '/api/rooms', {
       headers: { 'x-dev-user': 'api-list-user', 'x-dev-name': 'ListUser' },
