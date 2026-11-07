@@ -208,11 +208,10 @@ export function createLudoServer({
           const requestedPlayers = body.maxPlayers ?? (requestedType === 'PENTA' ? 5 : requestedType === 'HEX' ? 6 : 4);
           const validBoardCapacity = requestedType === 'CLASSIC'
             ? Number.isInteger(requestedPlayers) && requestedPlayers >= 2 && requestedPlayers <= 4
-            : requestedType === 'DIAMOND' ? requestedPlayers === 4
-              : requestedType === 'PENTA' ? requestedPlayers === 5
-                : requestedType === 'HEX' ? requestedPlayers === 6 : false;
+            : requestedType === 'PENTA' ? requestedPlayers === 5
+              : requestedType === 'HEX' ? requestedPlayers === 6 : false;
           if (!validBoardCapacity) {
-            throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, DIAMOND: ровно 4, PENTA: ровно 5, HEX: ровно 6.');
+            throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, PENTA: ровно 5, HEX: ровно 6.');
           }
           if (body.isPublic !== undefined && typeof body.isPublic !== 'boolean') {
             throw new RoomError('INVALID_ROOM_CONFIG', 'isPublic должен быть логическим значением.');
