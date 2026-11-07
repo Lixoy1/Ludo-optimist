@@ -88,7 +88,8 @@ test('all four pawns on one square shrink into a separated 2x2 stack inside the 
   assert.ok(positions.every((item) => item.scale === 0.44));
   assert.equal(new Set(positions.map((item) => `${item.left.toFixed(4)}:${item.top.toFixed(4)}`)).size, 4);
 
-  const center = gridToImage(MAIN_TRACK[5].col, MAIN_TRACK[5].row);
+  const globalIndex = (PLAYER_CONFIG.green.start + 5) % MAIN_TRACK.length;
+  const center = gridToImage(MAIN_TRACK[globalIndex].col, MAIN_TRACK[globalIndex].row);
   const pawnDiameter = BOARD_IMAGE_SIZE * PAWN_DIAMETER_RATIO * 0.44;
   const halfCell = 43.57 / 2;
   for (const item of positions) {
