@@ -148,6 +148,7 @@ for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
     assert.ok(Math.abs(home.y - geometry.arms[0].homeLane[2].y) < .001);
     assert.equal(finish.zone, 'finished');
     assert.ok(Math.abs(finish.x - geometry.arms[0].finishSlots[2].x) < .001);
+    if (mode === 'DIAMOND') assert.equal(finish.scale, .82);
     assert.equal(base.zone, 'base');
     assert.ok(Math.abs(base.x - geometry.arms[0].baseSlots[3].x) < .001);
     assert.equal(positions.length, geometry.maxPlayers * 4);
