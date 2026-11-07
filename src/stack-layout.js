@@ -4,7 +4,7 @@ export function getStackLayout(count,cellSize=40){
  if(!Number.isFinite(cellSize)||cellSize<=0)throw new RangeError('Cell size must be positive.');
  if(count===0)return{positions:[],hiddenCount:0,badge:null};
  if(count===1)return{positions:[{x:0,y:0,scale:1,visible:true}],hiddenCount:0,badge:null};
- const scale=.42/.68,offset=.23*cellSize;
+ const scale=.44,offset=.23*cellSize;
  const slots=[[-offset,-offset],[offset,-offset],[-offset,offset],[offset,offset]];
  const visibleCount=Math.min(count,4);
  const positions=Array.from({length:count},(_,i)=>{
