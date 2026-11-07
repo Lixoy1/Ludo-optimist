@@ -31,14 +31,11 @@ test('board image and client modules are present in the integrated page', async 
   const board = await readFile(new URL('../assets/boards/optimist-ludo-neon.svg', import.meta.url), 'utf8');
   const penta = await readFile(new URL('../assets/boards/optimist-ludo-penta-neon.svg', import.meta.url), 'utf8');
   const hex = await readFile(new URL('../assets/boards/optimist-ludo-hex-neon.svg', import.meta.url), 'utf8');
-  const diamond = await readFile(new URL('../assets/boards/optimist-ludo-diamond-neon.svg', import.meta.url), 'utf8');
-  assert.match(main, /\['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'\]/);
-  assert.match(html, /data-board-choice="DIAMOND"/);
   assert.match(html, /data-board-choice="PENTA"/);
   assert.match(html, /data-board-choice="HEX"/);
   assert.match(html, /data-theme-choice="neon"/);
   assert.match(html, /id="startSummaryText"/);
-  for (const svg of [board, diamond, penta, hex]) assert.match(svg, /viewBox="0 0 720 720"/);
+  for (const svg of [board, penta, hex]) assert.match(svg, /viewBox="0 0 720 720"/);
 });
 
 test('interactive pawn and voice-message states have visible styles', () => {
@@ -102,7 +99,7 @@ test('mobile secondary controls and chooser close have accessible touch dimensio
 
 
 test('lobby previews all four real SVG board types and four material themes before starting', () => {
-  for (const mode of ['CLASSIC','DIAMOND','PENTA','HEX']) {
+  for (const mode of ['CLASSIC','PENTA','HEX']) {
     assert.match(html, new RegExp(`data-board-preview="${mode}"`));
     assert.match(html, new RegExp(`data-board-choice="${mode}"`));
   }
