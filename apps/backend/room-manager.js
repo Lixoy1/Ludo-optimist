@@ -1,7 +1,7 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import { rollUniversalDice, applyUniversalMove, assertUniversalState, createUniversalState } from './universal-engine.js';
 import { COLORS } from '../../src/geometry.js';
-import { getExtendedGeometry } from '../../src/extended-geometries.js';
+import { getPlayableGeometry } from '../../src/game-geometries.js';
 import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
 
 const ROOM_TTL_MS = 6 * 60 * 60 * 1000;
@@ -28,16 +28,17 @@ export class RoomManager {
   createRoom(user, options = {}) {
     const requestedPlayers = options.maxPlayers;
     const requestedType = String(options.boardType || (requestedPlayers === 5 ? 'PENTA' : requestedPlayers === 6 ? 'HEX' : 'CLASSIC')).toUpperCase();
-    if (!['CLASSIC', 'PENTA', 'HEX'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
+    if (!['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
     const maxPlayers = requestedPlayers ?? (requestedType === 'PENTA' ? 5 : requestedType === 'HEX' ? 6 : 4);
     const validCapacity = requestedType === 'CLASSIC'
       ? Number.isInteger(maxPlayers) && maxPlayers >= 2 && maxPlayers <= 4
-      : maxPlayers === (requestedType === 'PENTA' ? 5 : 6);
-    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4 игрока, PENTA: ровно 5, HEX: ровно 6.');
+      : requestedType === 'DIAMOND' ? maxPlayers === 4
+        : maxPlayers === (requestedType === 'PENTA' ? 5 : 6);
+    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, DIAMOND: ровно 4, PENTA: ровно 5, HEX: ровно 6.');
     this.pruneIdleRooms();
     if (this.rooms.size >= this.maxRooms) throw new RoomError('ROOM_LIMIT', 'Сейчас все игровые столы заняты. Попробуй позже.', 503);
     if (!user?.id || !user?.username) throw new RoomError('INVALID_USER', 'Не удалось определить игрока.');
-    const colors = requestedType === 'CLASSIC' ? COLORS : getExtendedGeometry(requestedType.toLowerCase()).arms.map((arm) => arm.player.id);
+    const colors = requestedType === 'CLASSIC' ? COLORS : getPlayableGeometry(requestedType).arms.map((arm) => arm.player.id);
     const roomId = randomBytes(8).toString('hex');
     const room = {
       id: roomId,
@@ -75,7 +76,7 @@ export class RoomManager {
     if (existing) return this.getSnapshot(roomId, user.id);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
     if (room.players.length >= room.maxPlayers) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
-    const colors = room.boardType === 'CLASSIC' ? COLORS : getExtendedGeometry(room.boardType.toLowerCase()).arms.map((arm) => arm.player.id);
+    const colors = room.boardType === 'CLASSIC' ? COLORS : getPlayableGeometry(room.boardType).arms.map((arm) => arm.player.id);
     const color = colors.find((candidate) => !room.players.some((player) => player.color === candidate));
     if (!color) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
     room.players.push({ id: user.id, username: String(user.username || user.id).slice(0, 40), color, characterId: isCharacterId(user.characterId) ? user.characterId : DEFAULT_CHARACTER_ID });
