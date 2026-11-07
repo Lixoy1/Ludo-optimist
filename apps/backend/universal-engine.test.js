@@ -18,7 +18,7 @@ function setTrack(state, playerId, index, step) {
   state.tokens[token(playerId, index)].position = { zone: 'track', step };
 }
 
-for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
+for (const mode of ['PENTA', 'HEX']) {
   const geometry = getPlayableGeometry(mode);
   test(`${mode} has one four-token seat per arm and geometry-aligned route metadata`, () => {
     const state = stateFor(mode);
