@@ -1,81 +1,64 @@
-# OPTIMIST LUDO — PENTA / HEX classic board specification
+# OPTIMIST LUDO 2.0 — HEXA / ROYAL geometry specification
 
-## Classic layout selected
-We use the classic radial Ludo construction shown in the five- and six-player references, not a ring of randomly placed markers.
+This document is the source-of-truth contract for the two non-Classic boards. Logical route coordinates are independent of SVG painting and are exported from `src/extended-geometries.js`.
 
-Every arm is a **3-column × 6-row grid**:
-- left flank: six shared-route squares;
-- outer connector: one shared-route square;
-- right flank: six shared-route squares;
-- middle column, remaining five squares: the owner's private home lane.
+## Board contracts
 
-This gives 13 shared-route squares per arm, so PENTA has 65 and HEX has 78. A player's triangular yard sits between two neighboring arms. Its four recessed pawn wells are arranged 2×2. The player's start square is the outer-left cell of its matching arm, immediately beside its yard. Its home lane runs down the same arm's middle column.
-
-## Rules and board counts
-
-| Detail | PENTA | HEX |
+| Detail | HEXA | ROYAL |
 |---|---:|---:|
-| Seats | 5 | 6 |
-| Shared route | 65 | 78 |
-| Cells per arm | 13 | 13 |
-| Grid per arm | 3 × 6 | 3 × 6 |
-| Private home lane | 5 | 5 |
-| Safe squares | 10 | 12 |
+| Seats | 6 | 4 |
+| Outer route cells | 72 | 68 |
+| Maximum outer step | 71 | 66 |
+| Cells per sector | 12 | 17 |
+| Private home lane | 6 | 7 |
+| Safe cells | 12 | 12 |
+| Safe cells per seat | 2 | 3 |
 | Pawn wells per seat | 4 | 4 |
 | Finish sockets per seat | 4 | 4 |
-| Total pawns | 20 | 24 |
+| Total pawns | 24 | 16 |
+| Native canvas | 2560 × 2560 | 2816 × 2816 |
+| SVG viewBox | 720 × 720 | 720 × 720 |
+| Native cell pitch | 128 | 128 |
+| SVG cell pitch | 36.00 | 32.7273 |
 
-Each seat has two safe cells: its start square and the star eight route steps after its start. The game loop is continuous: every consecutive route-cell centre, including the transition between arms and the closing connection, is exactly one cell pitch apart.
+Classic remains a separate 52-cell, four-colour route with five home cells. Its canonical coordinates are in `src/geometry.js`.
 
-## Coordinate system and dimensions
+## HEXA topology
 
-- SVG coordinate plane: 720 × 720, square.
-- Board radius to outer start cells: 260 SVG units.
-- Grid cell pitch is calculated separately for N=5 and N=6 so the 13-cell U-shaped arm endpoints meet the next arm exactly.
-- PENTA cell pitch: 35.976 SVG units; tile face: 31.299 units.
-- HEX cell pitch: 33.626 SVG units; tile face: 29.255 units.
-- Tile face is 87% of pitch, leaving a consistent gap and metallic bevel.
-- The central N-gon is sized so its side edges meet the inner edge of the final home-lane cell.
-- Each base is a triangular wedge between adjacent arms, with four wells inside its boundary.
-- The central finish is divided into N colored wedges, each with four individual finish sockets.
+HEXA is a six-arm radial board. The 72-cell loop consists of six 12-cell sectors. Each sector is a U-shaped rail: five cells on the right rail, one inner bridge, five cells on the next arm's left rail, and one outer bridge. Both bridges are part of the playable loop. Every consecutive pair of route centres, including sector joins and the closing link, is exactly one native cell pitch apart.
 
-## Pawn art and mobile hit areas
+Seat starts are at route indices 0, 12, 24, 36, 48 and 60. Each seat has a star six steps after its start. The home-entry index is `(startIndex + 71) % 72`; the six home cells continue one pitch at a time toward the centre. Finishing requires landing on step 78 exactly.
 
-- Single pawn art diameter: 82% of the local cell pitch.
-- Two pawns: 68% scale with ±0.15-cell horizontal offsets.
-- Three pawns: 64% scale with triangular offsets.
-- Four pawns: 61% scale in a 2×2 formation with ±0.17-cell offsets.
-- Four-pawn cluster bounding box remains smaller than the tile face.
-- Base-well bezel diameter is 32.4 SVG units; it fits one normal pawn without clipping.
-- On a 375 px-wide phone preview, the artwork scales uniformly; the square board is never stretched.
-- Touch target remains 48 × 48 CSS px and is independent from the small pawn artwork. Because route cells are narrower than 48 px on a phone, input should resolve the nearest active cell centre; when several movable pawns occupy it, open the existing token chooser rather than overlaying many competing 48 px buttons.
-- The dice dock remains outside the board art and keeps its mobile safe-area inset.
+## ROYAL topology
 
-## Visual language
-All eight PENTA/HEX assets use one grid and one set of coordinates; only surface materials and trim change:
-- CLASSIC: warm oak / ivory tiles / champagne-gold edging.
-- NEON: dark graphite / restrained violet-cyan ambience / bright gold metal / jewel-colour lanes.
-- ELITE: dark walnut / rich gold edging / warm ivory cells.
-- MARBLE: cool slate / pale marble cells / platinum-blue trim.
+ROYAL has a four-sided perimeter loop with 17 cells per side. Its 68 unique route centres are separated by exactly one native cell pitch, including the four side joins and the closing link.
 
-The original four-player board's visual hierarchy is retained: square light track tiles, coloured private lane, dark colour yard, four recessed pawn positions, metallic outlines, and a compact crowned centre. The five-/six-player form changes the geometry, not the visual vocabulary.
+Seat starts are at indices 0, 17, 34 and 51. Each seat has safe cells at its start, six steps after its start, and twelve steps after its start. The home-entry index is `(startIndex + 66) % 68`. The seven-cell home lane begins with an inward turn from the perimeter and continues at one-pitch intervals toward the central finish. Finishing requires landing on step 74 exactly.
 
-## Integration status
-PENTA and HEX are now selectable network room modes. The server requires a full five-player PENTA or six-player HEX roster before starting, assigns one geometry-aligned color per sector, validates dice/moves/captures/blockades and exact finish server-side, and broadcasts the selected board type to the Mini App. The Classic four-player mode continues to use its existing engine. The supported extended modes are PENTA and HEX. CLASSIC retains its independent four-player route.
+## Coordinate and movement invariants
 
-## Measured art dimensions (720 × 720 viewBox)
-All dimensions below are SVG units, derived from the shared radial cell pitch rather than guessed independently per screen.
+- One native grid pitch is 128 units for all three boards.
+- Each outer route index is unique and each route centre is unique.
+- The home-entry cell is the last outer cell for that seat; the first home cell is exactly one pitch beyond it.
+- All later home cells are also one pitch apart.
+- Home lanes may not overlap one another or the shared outer route.
+- Base wells and finish sockets must be separated by at least the pawn-art diameter.
+- Every track, home, base and finish anchor remains inside the 720 × 720 artwork.
+- The server's `maxOuterSteps`, `homeCellCount` and `finishStep` are the authoritative movement boundaries. Renderer indices are derived from `maxOuterSteps + 1`, not from route length.
 
-| Measure | PENTA | HEX |
-|---|---:|---:|
-| Logical cell pitch | 35.98 | 33.63 |
-| Visible square tile | 31.30 | 29.25 |
-| Single pawn art diameter | 29.50 | 27.57 |
-| Four-token pawn diameter | 18.00 | 16.82 |
-| Four-token cluster outer span | 30.23 | 28.25 |
-| Base socket outer diameter | 34.54 | 32.28 |
-| Base socket inner diameter | 30.94 | 28.92 |
+## Pawn art and stack layout
 
-The four-token cluster span stays below the tile face (30.23 < 31.30 for PENTA; 28.25 < 29.25 for HEX). Base yards use a true 2×2 pawn layout: two rows, two columns. The minimum center-to-center distance between sockets is 37.42 units in PENTA and 34.97 in HEX, both greater than the single-pawn art diameter. Socket rims are deliberately larger than the pawn diameter to leave a visible metallic bezel.
+Single pawns use the board-specific diameter derived from local cell pitch. Two to four pawns on one route cell use a compact 2×2 cluster with all four visible. Overflow beyond four is represented by a count badge; hidden overflow pawns keep their logical token identities and remain addressable through the token chooser. Hit targets remain a separate UI layer and are not scaled with the artwork.
 
-The board artwork is vector and scales proportionally. Pawn art size follows the local cell pitch; pointer/tap targets are a separate 48 CSS px layer and must not be scaled down with the artwork.
+## Themes and assets
+
+Each board supports CLASSIC, NEON, ELITE and MARBLE material themes. Theme changes must not change route centres, home lanes, bases, safe indices or finish anchors. The eight generated files are:
+
+- `optimist-ludo-hexa-{classic,neon,elite,marble}.svg`
+- `optimist-ludo-royal-{classic,neon,elite,marble}.svg`
+
+All boards use a 720 × 720 viewBox. Rebuild vector assets with `npm run build:extended-boards`; `npm run build` regenerates Classic and extended board assets together.
+
+## Validation contract
+
+`assertExtendedGeometry` and `tests/extended-geometries.test.js` validate board counts, unique route indices/centres, one-pitch continuity for every outer and home link, safe cells, player seat alignment, non-overlapping home lanes, base and finish clearances, SVG bounds and all theme asset markers. Server movement and token rendering are tested separately against the same geometry.
