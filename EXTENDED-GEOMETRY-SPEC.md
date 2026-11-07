@@ -60,8 +60,8 @@ All eight PENTA/HEX assets use one grid and one set of coordinates; only surface
 
 The original four-player board's visual hierarchy is retained: square light track tiles, coloured private lane, dark colour yard, four recessed pawn positions, metallic outlines, and a compact crowned centre. The five-/six-player form changes the geometry, not the visual vocabulary.
 
-## Integration boundary
-The SVGs and geometry data are ready as a design/coordinate foundation. The live room manager, Classic rules engine, and room creation API still accept Classic 2–4 only. PENTA and HEX are not selectable/playable online until server movement, player colours, token rendering, room size, and complete multiplayer tests are connected.
+## Integration status
+PENTA and HEX are now selectable network room modes. The server requires a full five-player PENTA or six-player HEX roster before starting, assigns one geometry-aligned color per sector, validates dice/moves/captures/blockades and exact finish server-side, and broadcasts the selected board type to the Mini App. The Classic four-player mode continues to use its existing engine. DIAMOND remains a visual showcase.
 
 ## Measured art dimensions (720 × 720 viewBox)
 All dimensions below are SVG units, derived from the shared radial cell pitch rather than guessed independently per screen.
