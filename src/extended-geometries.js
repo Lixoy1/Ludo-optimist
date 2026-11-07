@@ -465,7 +465,10 @@ export function assertExtendedGeometry(geometry) {
     }
   }
   for(const arm of geometry.arms) {
-    assertPolygonInsideCanvas(tileCorners(arm.baseCenter,arm.baseRadius*2), 'Base zone '+arm.player.id);
+    if(arm.baseCenter.x-arm.baseRadius<0||arm.baseCenter.x+arm.baseRadius>VIEW||
+       arm.baseCenter.y-arm.baseRadius<0||arm.baseCenter.y+arm.baseRadius>VIEW) {
+      throw new Error('Base zone '+arm.player.id+' falls outside the 720x720 artwork.');
+    }
   }
   return true;
 }
