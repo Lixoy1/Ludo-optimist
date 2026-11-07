@@ -123,7 +123,9 @@ function makeHexa() {
     { x:midpoint.x+perpendicular.x*height, y:midpoint.y+perpendicular.y*height },
     { x:midpoint.x-perpendicular.x*height, y:midpoint.y-perpendicular.y*height }
   ];
-  const innerBridge = candidates.sort((a,b)=>Math.hypot(a.x,a.y)-Math.hypot(b.x,b.y))[0];
+  // Choose the outer intersection: it keeps each square bridge tile separated
+  // from both rail tiles in their local axes (the inner solution overlaps).
+  const innerBridge = candidates.sort((a,b)=>Math.hypot(b.x,b.y)-Math.hypot(a.x,a.y))[0];
 
   const push = (xUnits, yUnits, rotation, sector, lane, row) => {
     const native = rotate(cx+xUnits*C, cy+yUnits*C, cx, cy, rotation);
@@ -248,7 +250,7 @@ function makeRoyal() {
       ...scaled(firstNative,scale),
       nativeX:fmt(firstNative.x),nativeY:fmt(firstNative.y),
       homeIndex:1,
-      rotation:Math.atan2(inwardNormal.y,inwardNormal.x)*180/Math.PI
+      rotation:Math.atan2(direction.y,direction.x)*180/Math.PI
     }];
     for(let homeIndex=1;homeIndex<7;homeIndex++) {
       const native={
