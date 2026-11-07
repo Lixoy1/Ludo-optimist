@@ -121,6 +121,7 @@ test('bottom dice dock centers one compact die and hides decorative labels witho
 
 test('start action explains that vacant seats are filled by bots', () => {
   assert.match(html, /Недостающие места займут боты/);
-  assert.match(main, /this\.fillBotSeats\(room\)/);
-  assert.match(main, /this\.runBotTurns\(room\)/);
+  const roomManager = await readFile(new URL('../apps/backend/room-manager.js', import.meta.url), 'utf8');
+  assert.match(roomManager, /this\.fillBotSeats\(room\)/);
+  assert.match(roomManager, /this\.runBotTurns\(room\)/);
 });
