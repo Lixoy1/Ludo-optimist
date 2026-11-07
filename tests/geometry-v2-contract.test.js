@@ -61,5 +61,5 @@ test('unknown board IDs and corrupted movement metadata are rejected', () => {
   assert.throws(() => getBoardContract('DIAMOND'), RangeError);
   assert.throws(() => assertBoardContract({
     ...getBoardContract('HEXA'), totalStepsToFinish: 77,
-  }), /finish-step arithmetic/);
+  }), /contract mismatch for totalStepsToFinish/);
 });
