@@ -23,11 +23,11 @@ jobs:
         run: npm test
       - name: Package local preview ZIP
         run: |
-          zip -qr OPTIMIST-LUDO-local.zip . -x ".git/*" "node_modules/*" ".env" "OPTIMIST-LUDO-local.zip"
+          zip -qr /tmp/OPTIMIST-LUDO-local.zip . -x ".git/*" "node_modules/*" ".env"
       - name: Upload local preview ZIP
         uses: actions/upload-artifact@v4
         with:
           name: optimist-ludo-local-preview
-          path: OPTIMIST-LUDO-local.zip
+          path: /tmp/OPTIMIST-LUDO-local.zip
           if-no-files-found: error
           retention-days: 7
