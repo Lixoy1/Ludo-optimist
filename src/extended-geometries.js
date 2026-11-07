@@ -127,10 +127,10 @@ function makeHexa() {
   // from both rail tiles in their local axes (the inner solution overlaps).
   const innerBridge = candidates.sort((a,b)=>Math.hypot(b.x,b.y)-Math.hypot(a.x,a.y))[0];
 
-  const push = (xUnits, yUnits, rotation, sector, lane, row) => {
-    const native = rotate(cx+xUnits*C, cy+yUnits*C, cx, cy, rotation);
+  const push = (xUnits, yUnits, positionRotation, sector, lane, row, tileRotation = positionRotation) => {
+    const native = rotate(cx+xUnits*C, cy+yUnits*C, cx, cy, positionRotation);
     track.push({
-      index:track.length, sector, lane, row, rotation,
+      index:track.length, sector, lane, row, rotation:tileRotation,
       nativeX:fmt(native.x), nativeY:fmt(native.y),
       ...scaled(native, scale)
     });
@@ -139,7 +139,7 @@ function makeHexa() {
   for (let sector=0; sector<6; sector++) {
     const angle = sector*60;
     for (let row=5; row>=1; row--) push(1, -(innerRadius+row), angle, sector, 'right-rail', row);
-    push(innerBridge.x, innerBridge.y, angle+30, sector, 'inner-bridge', 0);
+    push(innerBridge.x, innerBridge.y, angle, sector, 'inner-bridge', 0, angle+30);
     for (let row=1; row<=5; row++) push(-1, -(innerRadius+row), angle+60, sector, 'left-rail', row);
     push(0, -(innerRadius+5), angle+60, sector, 'outer-bridge', 6);
   }
