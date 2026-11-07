@@ -134,7 +134,7 @@ test('all eight generated HEXA and ROYAL theme assets match the logical geometry
   }
 });
 
-test('runtime SVG generation reproduces all four themes without changing coordinates',()=>
+test('runtime SVG generation reproduces all four themes without changing coordinates',()=>{
   for(const [id,contract] of Object.entries(expected)) for(const theme of themes) {
     const svg=renderExtendedBoardSvg(EXTENDED_GEOMETRIES[id],theme);
     assert.equal((svg.match(/data-track-cell=/g)||[]).length,contract.track);
