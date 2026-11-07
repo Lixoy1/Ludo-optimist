@@ -297,7 +297,7 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
     arm.baseSlots.forEach((q,i)=>{
       parts.push('<circle data-base-slot="'+arm.index+':'+i+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.48)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.2"/>');
       parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.43)+'" fill="url(#well)" stroke="'+color+'" stroke-width="1.8"/>');
-      parts.push('<circle cx="'+fmt(q.x-geometry.cellPitch*.07)+'" cy="'+fmt(q.y-geometry.cellPitch*.07)+'" r="'+fmt(p*.045)+'" fill="#fff" fill-opacity=".35"/>');
+      parts.push('<circle cx="'+fmt(q.x-geometry.cellPitch*.07)+'" cy="'+fmt(q.y-geometry.cellPitch*.07)+'" r="'+fmt(geometry.cellPitch*.045)+'" fill="#fff" fill-opacity=".35"/>');
     });
   }
 
