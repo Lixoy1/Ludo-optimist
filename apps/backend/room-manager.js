@@ -98,10 +98,10 @@ export class RoomManager {
     const room = this.getRoom(roomId);
     if (room.hostId !== userId) throw new RoomError('HOST_ONLY', 'Начать партию может создатель стола.', 403);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
-    if (room.players.length < 2) throw new RoomError('NOT_ENOUGH_PLAYERS', 'Нужен хотя бы ещё один игрок.');
     if (room.boardType !== 'CLASSIC' && room.players.length !== room.maxPlayers) {
       throw new RoomError('NOT_ENOUGH_PLAYERS', `Для ${room.boardType} нужны все ${room.maxPlayers} игроков.`);
     }
+    if (room.players.length < 2) throw new RoomError('NOT_ENOUGH_PLAYERS', 'Нужен хотя бы ещё один игрок.');
     room.state = createUniversalState(room.boardType, room.players);
     room.legalTokenIds = [];
     room.status = 'playing';
