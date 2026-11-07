@@ -48,9 +48,9 @@ const tokenChooserOptions = $('#tokenChooserOptions');
 const tokenChooserClose = $('#tokenChooserClose');
 const boardEffectOverlay = $('#boardEffectOverlay');
 
-const CLASSIC_COLOR_ORDER = ['blue', 'red', 'green', 'yellow'];
-const PLAYER_COLOR_ORDERS = { PENTA: ['blue', 'red', 'yellow', 'green', 'purple'], HEX: ['blue', 'red', 'yellow', 'green', 'purple', 'orange'] };
-const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЗОЛОТОЙ', purple: 'ФИОЛЕТОВЫЙ', orange: 'ОРАНЖЕВЫЙ' };
+const CLASSIC_COLOR_ORDER = ['blue', 'red', 'yellow', 'green'];
+const PLAYER_COLOR_ORDERS = { HEXA: ['blue', 'red', 'yellow', 'purple', 'green', 'cyan'], ROYAL: ['blue', 'red', 'yellow', 'green'] };
+const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЖЁЛТЫЙ', purple: 'ФИОЛЕТОВЫЙ', cyan: 'БИРЮЗОВЫЙ' };
 const query = new URLSearchParams(location.search);
 const telegram = window.Telegram?.WebApp ?? null;
 let selectedPlayerCount = 4;
@@ -151,7 +151,7 @@ function updateLobbySelection() {
   const boardChip = $('#selectedBoardChip');
   if (boardChip) boardChip.textContent = selectedBoardType;
   const count = selectedBoardType === 'CLASSIC' ? selectedPlayerCount :
-    selectedBoardType === 'PENTA' ? 5 : 6;
+    selectedBoardType === 'HEXA' ? 6 : 4;
   const title = $('#startSummaryTitle');
   const summary = $('#startSummaryText');
   if (title) title.textContent = `${selectedBoardType} · ${selectedBoardTheme.toUpperCase()}`;
@@ -160,9 +160,9 @@ function updateLobbySelection() {
 
 function selectBoardType(boardType) {
   const normalized = String(boardType || '').toUpperCase();
-  if (!['CLASSIC', 'PENTA', 'HEX'].includes(normalized)) return;
+  if (!['CLASSIC', 'HEXA', 'ROYAL'].includes(normalized)) return;
   selectedBoardType = normalized;
-  selectedPlayerCount = normalized === 'CLASSIC' ? 4 : normalized === 'PENTA' ? 5 : 6;
+  selectedPlayerCount = normalized === 'HEXA' ? 6 : 4;
   applyBoardTheme(selectedBoardTheme, selectedBoardType);
   updateLobbySelection();
 }
@@ -218,7 +218,7 @@ function chooseCharacter(characterId) {
 
 function applyBoardTheme(theme, boardType = selectedBoardType) {
   selectedBoardTheme = BOARD_THEMES.includes(theme) ? theme : 'neon';
-  selectedBoardType = ['CLASSIC', 'PENTA', 'HEX'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
+  selectedBoardType = ['CLASSIC', 'HEXA', 'ROYAL'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
   if (boardStage) boardStage.dataset.theme = selectedBoardTheme;
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
   if (boardArt) {
@@ -468,7 +468,7 @@ function renderTokens(snapshot) {
   const existingIds = new Set(positions.map((position) => position.tokenId));
   for (const [tokenId, element] of tokenElements) if (!existingIds.has(tokenId)) { element.remove(); tokenElements.delete(tokenId); }
   for (const [key, element] of cellHitElements) if (!groups.has(key)) { element.remove(); cellHitElements.delete(key); }
-  for (const [key, element] of stackBadgeElements) if (!groups.has(key) || groups.get(key).length <= 4) { element.remove(); stackBadgeElements.delete(key); }
+  for (const [key, element] of stackBadgeElements) if (!groups.has(key) || groups.get(key).length <= 2) { element.remove(); stackBadgeElements.delete(key); }
 
   positions.forEach((position, index) => {
     let element = tokenElements.get(position.tokenId);
@@ -512,10 +512,10 @@ function renderTokens(snapshot) {
     hit.setAttribute('aria-label', legalStack.length > 1
       ? `Выбрать одну из ${legalStack.length} доступных фишек`
       : legalStack.length === 1 ? `Передвинуть фишку ${legalStack[0].index + 1}` : 'Фишки на клетке');
-    if (stack.length > 4) {
+    if (stack.length > 2) {
       let badge = stackBadgeElements.get(stackKey);
       if (!badge) { badge = createStackBadge(stackKey); stackBadgeElements.set(stackKey, badge); tokenLayer.append(badge); }
-      badge.textContent = `+${stack.length - 4}`; badge.style.left = `${first.centerLeft}%`; badge.style.top = `${first.centerTop}%`;
+      badge.textContent = `×${stack.length}`; badge.style.left = `${first.centerLeft}%`; badge.style.top = `${first.centerTop}%`;
     }
   }
 }
