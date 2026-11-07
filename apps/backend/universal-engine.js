@@ -164,7 +164,7 @@ function copyState(state) {
 
 export function rollUniversalDice(state, playerId, dice) {
   if (state?.mode === 'CLASSIC') return rollClassicDice(state, playerId, dice);
-  if (!state || !['DIAMOND', 'PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
+  if (!state || !['PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
   if (state.phase !== 'playing' || state.currentPlayer !== playerId || state.dice !== null) {
     throw new Error('Dice cannot be rolled now.');
   }
@@ -197,7 +197,7 @@ export function rollUniversalDice(state, playerId, dice) {
 
 export function applyUniversalMove(state, playerId, tokenId) {
   if (state?.mode === 'CLASSIC') return applyClassicMove(state, playerId, tokenId);
-  if (!state || !['DIAMOND', 'PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
+  if (!state || !['PENTA', 'HEX'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
   if (state.phase !== 'playing' || state.currentPlayer !== playerId || state.dice === null) {
     throw new Error('There is no pending move for this player.');
   }
@@ -253,7 +253,7 @@ export function applyUniversalMove(state, playerId, tokenId) {
 
 export function assertUniversalState(state) {
   if (state?.mode === 'CLASSIC') return assertClassicState(state);
-  if (!state || !['DIAMOND', 'PENTA', 'HEX'].includes(state.mode) || !Array.isArray(state.players) || !state.tokens) {
+  if (!state || !['PENTA', 'HEX'].includes(state.mode) || !Array.isArray(state.players) || !state.tokens) {
     throw new TypeError('Malformed extended Ludo state.');
   }
   const geometry = extendedGeometry(state);
