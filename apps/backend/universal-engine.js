@@ -9,8 +9,8 @@ export const EXTENDED_HOME_CELLS = 5;
 
 function normalizeBoardType(boardType) {
   const value = String(boardType || 'CLASSIC').toUpperCase();
-  if (!['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(value)) {
-    throw new RangeError('Board type must be CLASSIC, DIAMOND, PENTA or HEX.');
+  if (!['CLASSIC', 'PENTA', 'HEX'].includes(value)) {
+    throw new RangeError('Board type must be CLASSIC, PENTA or HEX.');
   }
   return value;
 }
@@ -137,7 +137,7 @@ function canLand(state, token, destination) {
 
 export function universalLegalMoves(state, playerId, dice = state?.dice) {
   if (state?.mode === 'CLASSIC') return classicLegalMoves(state, playerId, dice);
-  if (!state || !['DIAMOND', 'PENTA', 'HEX'].includes(state.mode)) return [];
+  if (!state || !['PENTA', 'HEX'].includes(state.mode)) return [];
   if (state.phase !== 'playing' || state.currentPlayer !== playerId ||
       !playerById(state, playerId) || !Number.isInteger(dice) || dice < 1 || dice > 6) return [];
   return Object.values(state.tokens)
