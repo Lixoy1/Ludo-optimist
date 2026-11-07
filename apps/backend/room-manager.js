@@ -179,7 +179,7 @@ export class RoomManager {
       const seat = room.players.length;
       room.players.push({
         id: `bot_${room.id}_${seat}`,
-        username: `OPTIMIST BOT ${seat}`,
+        username: `БОТ ${seat}`,
         color: colors[seat],
         characterId: BOT_CHARACTER_IDS[(seat - 1) % BOT_CHARACTER_IDS.length],
         isBot: true,
