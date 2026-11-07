@@ -14,7 +14,8 @@ test('room host creates table, second player joins and host starts Classic match
   assert.equal(manager.getSnapshot(created.roomId, red.id).players[1].characterId, 'natalie');
   const started = manager.startGame(created.roomId, red.id);
   assert.equal(started.status, 'playing');
-  assert.equal(started.state.players.length, 2);
+  assert.equal(started.state.players.length, 4);
+  assert.equal(started.players.filter((player) => player.isBot).length, 2);
   assert.equal(started.state.currentPlayer, red.id);
 });
 
