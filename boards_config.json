@@ -1,0 +1,151 @@
+{
+  "version": "2.0.0",
+  "baseCellSize": 128,
+  "cellGeometry": {
+    "gridPitch": 128,
+    "visibleTile": 122.88,
+    "cornerRadius": 10.24,
+    "safeArea": 102.4,
+    "pawnBase": 87.04,
+    "pawnMaxWidth": 104.96,
+    "pawnHeight": [
+      147.2,
+      185.6
+    ]
+  },
+  "boards": [
+    {
+      "boardId": "classic",
+      "canvasSize": [
+        2304,
+        2304
+      ],
+      "cellSize": 128,
+      "playerCount": 4,
+      "playerCapacity": [
+        2,
+        4
+      ],
+      "piecesPerPlayer": 4,
+      "outerTrackLength": 52,
+      "maxOuterSteps": 50,
+      "homePathLength": 5,
+      "totalStepsToFinish": 56,
+      "startIndices": {
+        "blue": 0,
+        "red": 13,
+        "yellow": 26,
+        "green": 39
+      },
+      "homeEntryIndices": {
+        "blue": 50,
+        "red": 11,
+        "yellow": 24,
+        "green": 37
+      },
+      "safeIndices": [
+        0,
+        8,
+        13,
+        21,
+        26,
+        34,
+        39,
+        47
+      ]
+    },
+    {
+      "boardId": "hexa",
+      "canvasSize": [
+        2560,
+        2560
+      ],
+      "cellSize": 128,
+      "playerCount": 6,
+      "playerCapacity": [
+        6,
+        6
+      ],
+      "piecesPerPlayer": 4,
+      "outerTrackLength": 72,
+      "maxOuterSteps": 71,
+      "homePathLength": 6,
+      "totalStepsToFinish": 78,
+      "startIndices": {
+        "blue": 0,
+        "red": 12,
+        "yellow": 24,
+        "purple": 36,
+        "green": 48,
+        "cyan": 60
+      },
+      "homeEntryIndices": {
+        "blue": 71,
+        "red": 11,
+        "yellow": 23,
+        "purple": 35,
+        "green": 47,
+        "cyan": 59
+      },
+      "safeIndices": [
+        0,
+        6,
+        12,
+        18,
+        24,
+        30,
+        36,
+        42,
+        48,
+        54,
+        60,
+        66
+      ],
+      "routeTopology": "two parallel rails traversed sequentially as one continuous 72-cell path"
+    },
+    {
+      "boardId": "royal",
+      "canvasSize": [
+        2816,
+        2816
+      ],
+      "cellSize": 128,
+      "playerCount": 4,
+      "playerCapacity": [
+        4,
+        4
+      ],
+      "piecesPerPlayer": 4,
+      "outerTrackLength": 68,
+      "maxOuterSteps": 66,
+      "homePathLength": 7,
+      "totalStepsToFinish": 74,
+      "startIndices": {
+        "blue": 0,
+        "red": 17,
+        "yellow": 34,
+        "green": 51
+      },
+      "homeEntryIndices": {
+        "blue": 66,
+        "red": 15,
+        "yellow": 32,
+        "green": 49
+      },
+      "safeIndices": [
+        0,
+        6,
+        12,
+        17,
+        23,
+        29,
+        34,
+        40,
+        46,
+        51,
+        57,
+        63
+      ]
+    }
+  ]
+}
