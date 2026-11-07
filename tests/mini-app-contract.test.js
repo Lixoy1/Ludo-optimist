@@ -119,7 +119,7 @@ test('bottom dice dock centers one compact die and hides decorative labels witho
   assert.match(css, /#startGameBtn:not\(\[hidden\]\) \{ position:absolute; left:50%; top:50%/);
 });
 
-test('start action explains that vacant seats are filled by bots', () => {
+test('start action explains that vacant seats are filled by bots', async () => {
   assert.match(html, /Недостающие места займут боты/);
   const roomManager = await readFile(new URL('../apps/backend/room-manager.js', import.meta.url), 'utf8');
   assert.match(roomManager, /this\.fillBotSeats\(room\)/);
