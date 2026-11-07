@@ -87,13 +87,14 @@
         <section class="lobby-panel create-panel create-panel-simple">
           <div class="start-summary"><div><div class="panel-kicker">03 / ГОТОВ К ИГРЕ</div><h2 id="startSummaryTitle">CLASSIC · NEON</h2><p class="panel-note" id="startSummaryText">4 участника · 1 человек + 3 бота</p></div><span class="summary-die">⚄</span></div>
           <input type="checkbox" id="publicRoom" checked hidden />
-          <button type="button" class="primary-button wide" id="createRoomBtn"><span>ИГРАТЬ</span><b>↗</b></button>
+          <button type="button" class="primary-button wide" id="createRoomBtn"><span>ИГРАТЬ С БОТАМИ</span><b>↗</b></button>
           <p class="bot-note"><span aria-hidden="true">♟</span> Недостающие места займут боты. Начинать можно одному.</p>
         </section>
 
         <details class="lobby-panel join-panel join-panel-collapsed">
           <summary>Пригласить друзей или войти по коду</summary>
-          <p class="panel-note">Создай игру и отправь приглашение. Уже есть код — введи его здесь.</p>
+          <p class="panel-note">Создай комнату, пригласи друзей и запусти, когда будете готовы.</p>
+          <button type="button" class="secondary-button invite-create-button" id="createInviteRoomBtn">СОЗДАТЬ ИГРУ С ДРУЗЬЯМИ</button>
           <form id="joinRoomForm" class="join-form">
             <input id="roomCodeInput" type="text" maxlength="16" minlength="16" placeholder="Код игры из 16 символов" autocomplete="off" spellcheck="false" />
             <button type="submit" class="icon-button" aria-label="Войти в игру">➜</button>
