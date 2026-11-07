@@ -4,7 +4,7 @@ import { createClassicState } from '../apps/backend/classic-engine.js';
 import { tokenBoardPositions, tokenMovementPath, gridToImage, BOARD_IMAGE_SIZE, BASE_SLOT_POINTS, FINISH_POINTS, GRID_CELL, PAWN_DIAMETER_RATIO } from '../src/board-render.js';
 import { PLAYER_CONFIG, MAIN_TRACK } from '../src/geometry.js';
 import { createExtendedState } from '../apps/backend/universal-engine.js';
-import { getExtendedGeometry } from '../src/extended-geometries.js';
+import { getPlayableGeometry, getPlayableStackLayout } from '../src/game-geometries.js';
 
 const roster = [
   { id: 'render-green', color: 'green', username: 'Green' },
@@ -125,9 +125,9 @@ test('all track and home-lane centers stay inside the 720px artwork', () => {
 });
 
 
-for (const mode of ['PENTA', 'HEX']) {
+for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
   test(mode + ' board renderer maps base, track, home and finish tokens to its own SVG geometry', () => {
-    const geometry = getExtendedGeometry(mode.toLowerCase());
+    const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-render-' + index, username: 'Player ' + index, color: arm.player.id }));
     const state = createExtendedState(mode, roster);
     const first = state.players[0];
@@ -150,7 +150,7 @@ for (const mode of ['PENTA', 'HEX']) {
     assert.ok(Math.abs(finish.x - geometry.arms[0].finishSlots[2].x) < .001);
     assert.equal(base.zone, 'base');
     assert.ok(Math.abs(base.x - geometry.arms[0].baseSlots[3].x) < .001);
-    assert.equal(positions.length, mode === 'PENTA' ? 20 : 24);
+    assert.equal(positions.length, geometry.maxPlayers * 4);
   });
 
   test(mode + ' board renderer stacks four pawns within one extended route cell', () => {
@@ -164,7 +164,8 @@ for (const mode of ['PENTA', 'HEX']) {
     const positions = tokenBoardPositions(state).filter(item => item.zone === 'track');
     assert.equal(positions.length, 4);
     assert.equal(new Set(positions.map(item => item.left.toFixed(4) + ':' + item.top.toFixed(4))).size, 4);
-    assert.ok(positions.every(item => item.scale === geometry.stackLayout[4].scale && item.visible));
+    const expectedScale = getPlayableStackLayout(mode, 4).tokens[0].scale;
+    assert.ok(positions.every(item => item.scale === expectedScale && item.visible));
     assert.ok(positions.every(item => Math.abs(item.diameter - geometry.pawnDiameter) < .001));
     assert.equal(positions[0].overflowCount, 0);
   });
