@@ -8,6 +8,8 @@ const gameView = $('#gameView');
 const connectionPill = $('#connectionPill');
 const connectionText = $('#connectionText');
 const createRoomBtn = $('#createRoomBtn');
+const createInviteRoomBtn = $('#createInviteRoomBtn');
+const gameControls = document.querySelector('.game-controls');
 const joinRoomForm = $('#joinRoomForm');
 const roomCodeInput = $('#roomCodeInput');
 const roomList = $('#roomList');
@@ -571,6 +573,7 @@ function setDiceFace(value = 5) {
 
 function renderTurn(snapshot) {
   const state = snapshot?.state;
+  gameControls?.classList.toggle('awaiting-start', !state);
   const roster = snapshot?.players || [];
   const me = roster.find((player) => player.id === activeClient?.currentUserId);
   const myColor = me?.color || state?.players?.find((player) => player.id === activeClient?.currentUserId)?.color || 'yellow';
@@ -753,9 +756,11 @@ async function enterRoom(roomId) {
   }
 }
 
-async function createRoom() {
-  createRoomBtn.disabled = true;
-  createRoomBtn.querySelector('span').textContent = 'СОЗДАЁМ ИГРУ…';
+async function createRoom({ autoStart = true, trigger = createRoomBtn } = {}) {
+  trigger.disabled = true;
+  const label = trigger.querySelector('span') || trigger;
+  const originalLabel = label.textContent;
+  label.textContent = autoStart ? 'ЗАПУСКАЕМ…' : 'СОЗДАЁМ…';
   try {
     const result = await LudoRoomClient.createRoom({
       ...authOptions(),
@@ -765,11 +770,12 @@ async function createRoom() {
       characterId: selectedCharacterId,
     });
     await enterRoom(result.roomId);
+    if (autoStart && activeClient) activeClient.startGame();
   } catch (error) {
     showToast(error.message || 'Не удалось создать комнату.');
   } finally {
-    createRoomBtn.disabled = false;
-    createRoomBtn.querySelector('span').textContent = 'ИГРАТЬ';
+    trigger.disabled = false;
+    label.textContent = originalLabel;
   }
 }
 
@@ -796,7 +802,8 @@ if (soundToggleBtn) {
   soundToggleBtn.addEventListener('click', () => { soundEnabled = !soundEnabled; try { localStorage.setItem('optimist-ludo-sound', soundEnabled ? 'on' : 'off'); } catch { /* Optional preference. */ } updateSoundButton(); if (soundEnabled) playGameSound('tap'); });
 }
 
-createRoomBtn.addEventListener('click', () => void createRoom());
+createRoomBtn.addEventListener('click', () => void createRoom({ autoStart: true }));
+if (createInviteRoomBtn) createInviteRoomBtn.addEventListener('click', () => void createRoom({ autoStart: false, trigger: createInviteRoomBtn }));
 joinRoomForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const roomId = roomCodeInput.value.trim().toLowerCase();
