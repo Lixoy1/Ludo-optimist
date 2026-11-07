@@ -21,3 +21,5 @@ jobs:
           find src apps scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
       - name: Run test suite
         run: npm test
+      - name: Run HTTP and WebSocket smoke test
+        run: npm run smoke
