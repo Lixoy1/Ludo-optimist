@@ -22,19 +22,19 @@ async function createRoom(origin, userId, boardType, maxPlayers) {
   });
 }
 
-test('HTTP room API creates PENTA and HEX rooms with exact board type and capacity', async () => {
+test('HTTP room API creates HEXA and ROYAL rooms with exact board type and capacity', async () => {
   await withServer(async (origin) => {
-    const pentaResponse = await createRoom(origin, 'api-penta-host', 'PENTA', 5);
+    const pentaResponse = await createRoom(origin, 'api-hexa-host', 'HEXA', 5);
     assert.equal(pentaResponse.status, 201);
     const penta = await pentaResponse.json();
-    assert.equal(penta.snapshot.boardType, 'PENTA');
-    assert.equal(penta.snapshot.maxPlayers, 5);
+    assert.equal(penta.snapshot.boardType, 'HEXA');
+    assert.equal(penta.snapshot.maxPlayers, 6);
     assert.equal(penta.snapshot.players.length, 1);
 
-    const hexResponse = await createRoom(origin, 'api-hex-host', 'HEX', 6);
+    const hexResponse = await createRoom(origin, 'api-royal-host', 'ROYAL', 6);
     assert.equal(hexResponse.status, 201);
     const hex = await hexResponse.json();
-    assert.equal(hex.snapshot.boardType, 'HEX');
+    assert.equal(hex.snapshot.boardType, 'ROYAL');
     assert.equal(hex.snapshot.maxPlayers, 6);
     assert.equal(hex.snapshot.players.length, 1);
   });
@@ -42,7 +42,7 @@ test('HTTP room API creates PENTA and HEX rooms with exact board type and capaci
 
 test('HTTP room API rejects mixed board and seat counts without creating an invalid room', async () => {
   await withServer(async (origin) => {
-    const invalid = await createRoom(origin, 'api-invalid-host', 'PENTA', 4);
+    const invalid = await createRoom(origin, 'api-invalid-host', 'HEXA', 4);
     assert.equal(invalid.status, 400);
     const body = await invalid.json();
     assert.equal(body.code, 'INVALID_ROOM_CONFIG');
