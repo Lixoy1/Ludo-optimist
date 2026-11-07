@@ -219,9 +219,6 @@ export class RoomManager {
       if (moved.state.phase === 'finished') room.status = 'finished';
     }
 
-    room.legalTokenIds = room.state?.currentPlayer && room.players.find((item) => item.id === room.state.currentPlayer)?.isBot
-      ? [...room.legalTokenIds]
-      : [];
     room.updatedAt = this.now();
   }
 
