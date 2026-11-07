@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getExtendedGeometry } from '../../src/extended-geometries.js';
+import { getPlayableGeometry } from '../../src/game-geometries.js';
 import {
   createExtendedState, extendedGlobalTrackIndex, universalLegalMoves,
   rollUniversalDice, applyUniversalMove, assertUniversalState,
 } from './universal-engine.js';
 
 function roster(mode) {
-  const geometry = getExtendedGeometry(mode.toLowerCase());
+  const geometry = getPlayableGeometry(mode);
   return geometry.arms.map((arm, index) => ({
     id: `player-${index}`, username: `Player ${index + 1}`, color: arm.player.id,
   }));
@@ -18,12 +18,13 @@ function setTrack(state, playerId, index, step) {
   state.tokens[token(playerId, index)].position = { zone: 'track', step };
 }
 
-for (const mode of ['PENTA', 'HEX']) {
+for (const mode of ['DIAMOND', 'PENTA', 'HEX']) {
   const geometry = getExtendedGeometry(mode.toLowerCase());
   test(`${mode} has one four-token seat per arm and geometry-aligned route metadata`, () => {
     const state = stateFor(mode);
     assert.equal(state.players.length, geometry.sides);
     assert.equal(Object.keys(state.tokens).length, geometry.sides * 4);
+    assert.equal(state.trackLength, geometry.trackLength);
     assert.equal(state.trackLength, geometry.sides * 13);
     assert.equal(state.homeCellCount, 5);
     assert.equal(state.finishStep, geometry.trackLength + 5);
