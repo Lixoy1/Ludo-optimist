@@ -542,6 +542,7 @@ function renderPlayers(snapshot) {
     state.className = 'player-state';
     if (!player) state.textContent = 'СВОБОДНО';
     else if (player.status === 'finished') state.textContent = 'ФИНИШ';
+    else if (player.isBot) state.textContent = player.id === snapshot?.state?.currentPlayer ? 'БОТ · ХОДИТ' : 'БОТ';
     else if (player.id === snapshot?.state?.currentPlayer) state.textContent = 'ХОДИТ';
     else state.textContent = 'В ИГРЕ';
     const dots = document.createElement('span');
