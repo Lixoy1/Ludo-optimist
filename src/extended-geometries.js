@@ -161,9 +161,9 @@ function makeGeometry(id,sides) {
     pawnDiameterRatio:.82,
     stackLayout:{
       1:{scale:1,offsets:[[0,0]]},
-      2:{scale:.68,offsets:[[-.15,0],[.15,0]]},
-      3:{scale:.64,offsets:[[0,-.16],[-.16,.16],[.16,.16]]},
-      4:{scale:.61,offsets:[[-.17,-.17],[.17,-.17],[-.17,.17],[.17,.17]]},
+      2:{scale:.46,offsets:[[-.24,0],[.24,0]]},
+      3:{scale:.44,offsets:[[0,-.24],[-.24,.24],[.24,.24]]},
+      4:{scale:.44,offsets:[[-.24,-.24],[.24,-.24],[-.24,.24],[.24,.24]]},
     },
     touchTargetCssPx:48,
     bounds:{
@@ -297,7 +297,7 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
     arm.baseSlots.forEach((q,i)=>{
       parts.push('<circle data-base-slot="'+arm.index+':'+i+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.48)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.2"/>');
       parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.43)+'" fill="url(#well)" stroke="'+color+'" stroke-width="1.8"/>');
-      parts.push('<circle cx="'+fmt(q.x-geometry.cellPitch*.07)+'" cy="'+fmt(q.y-geometry.cellPitch*.07)+'" r="'+fmt(p*.045)+'" fill="#fff" fill-opacity=".35"/>');
+      parts.push('<circle cx="'+fmt(q.x-geometry.cellPitch*.07)+'" cy="'+fmt(q.y-geometry.cellPitch*.07)+'" r="'+fmt(geometry.cellPitch*.045)+'" fill="#fff" fill-opacity=".35"/>');
     });
   }
 

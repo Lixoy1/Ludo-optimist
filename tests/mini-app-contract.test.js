@@ -18,11 +18,11 @@ test('integrated Mini App markup contains every DOM target used by main.js', () 
 });
 
 test('board image and client modules are present in the integrated page', async () => {
-  assert.match(html, /src="\/assets\/optimist-ludo-board\.webp"/);
+  assert.match(html, /src="\/assets\/boards\/optimist-ludo-neon\.svg"/);
   assert.match(html, /src="\/src\/main\.js"/);
   assert.match(main, /from '\.\/client\/room-client\.js'/);
   assert.match(main, /from '\.\/board-render\.js'/);
-  assert.ok((await stat(new URL('../assets/optimist-ludo-board.webp', import.meta.url))).size > 100_000);
+  assert.ok((await stat(new URL('../assets/boards/optimist-ludo-neon.svg', import.meta.url))).size > 10_000);
 });
 
 test('interactive pawn and voice-message states have visible styles', () => {

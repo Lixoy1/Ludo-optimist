@@ -104,7 +104,7 @@ test('all four material themes render from the shared geometry without changing 
 
 
 test('PENTA and HEX pawn art and base sockets are sized from their own cell pitch',()=>{
-  const expected={penta:{pitch:35.98,tile:31.30,pawn:29.50,stack:18.00,span:30.23},hex:{pitch:33.63,tile:29.25,pawn:27.57,stack:16.82,span:28.25}};
+  const expected={penta:{pitch:35.98,tile:31.30,pawn:29.50,stack:12.98,span:30.25},hex:{pitch:33.63,tile:29.25,pawn:27.57,stack:12.13,span:28.28}};
   for(const id of ids){
     const g=EXTENDED_GEOMETRIES[id],e=expected[id];
     assert.ok(Math.abs(g.cellPitch-e.pitch)<.02);
@@ -116,6 +116,19 @@ test('PENTA and HEX pawn art and base sockets are sized from their own cell pitc
     assert.ok(Math.abs(span-e.span)<.03);
     assert.ok(span<g.tileSize);
     assert.ok(g.arms.every(a=>a.baseSlots.length===4));
+    for (const count of [2,3,4]) {
+      const tokens=getExtendedStackLayout(id,count).tokens;
+      for(let a=0;a<tokens.length;a++) for(let b=a+1;b<tokens.length;b++) {
+        assert.ok(distance(tokens[a],tokens[b])>(tokens[a].diameter+tokens[b].diameter)/2,
+          id+' has overlapping pawn art in a '+count+'-pawn stack');
+      }
+      const minX=Math.min(...tokens.map(t=>t.x-t.diameter/2));
+      const maxX=Math.max(...tokens.map(t=>t.x+t.diameter/2));
+      const minY=Math.min(...tokens.map(t=>t.y-t.diameter/2));
+      const maxY=Math.max(...tokens.map(t=>t.y+t.diameter/2));
+      assert.ok(maxX-minX<g.tileSize,id+' '+count+'-pawn stack exceeds tile width');
+      assert.ok(maxY-minY<g.tileSize,id+' '+count+'-pawn stack exceeds tile height');
+    }
   }
 });
 
