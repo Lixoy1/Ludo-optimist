@@ -91,6 +91,6 @@ test('player bases and start squares match the supplied OPTIMIST LUDO artwork', 
   assert.deepEqual(PLAYER_CONFIG.green.base, { col: 0, row: 9 });
   assert.deepEqual(PLAYER_CONFIG.yellow.base, { col: 9, row: 9 });
   assert.deepEqual(Object.fromEntries(Object.entries(PLAYER_CONFIG).map(([color, config]) => [color, config.start])), {
-    green: 0, blue: 13, red: 26, yellow: 39,
+    blue: 0, red: 13, yellow: 26, green: 39,
   });
 });
