@@ -189,11 +189,11 @@ test('Classic movement path visits every intervening route cell before entering 
 test('Classic movement path follows the five-cell home lane and maps its finish socket', () => {
   const state = createClassicState(roster);
   const player = state.players.find(item => item.id === 'render-green');
-  const lanePath = tokenMovementPath(state, player.id, { zone: 'track', step: 51 }, { zone: 'home', step: 54 }, 2);
+  const lanePath = tokenMovementPath(state, player.id, { zone: 'track', step: 50 }, { zone: 'home', step: 53 }, 2);
   assert.equal(lanePath.length, 3);
   assert.deepEqual(lanePath[0], gridToImage(PLAYER_CONFIG.green.lane[0][0], PLAYER_CONFIG.green.lane[0][1]));
   assert.deepEqual(lanePath[2], gridToImage(PLAYER_CONFIG.green.lane[2][0], PLAYER_CONFIG.green.lane[2][1]));
-  const finish = tokenMovementPath(state, player.id, { zone: 'home', step: 56 }, { zone: 'finished', step: 57 }, 2);
+  const finish = tokenMovementPath(state, player.id, { zone: 'home', step: 55 }, { zone: 'finished', step: 56 }, 2);
   assert.equal(finish.length, 1);
   assert.deepEqual(finish[0], { x: FINISH_POINTS[2][0], y: FINISH_POINTS[2][1] });
 });
