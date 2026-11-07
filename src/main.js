@@ -120,16 +120,67 @@ function switchView(view) {
   if (showGame) window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-function selectCount(count, boardType = count === 5 ? 'PENTA' : count === 6 ? 'HEX' : 'CLASSIC') {
-  selectedPlayerCount = count;
-  selectedBoardType = boardType;
-  document.querySelectorAll('[data-count]').forEach((button) => {
-    button.classList.toggle('active', Number(button.dataset.count) === count && (button.dataset.boardType || 'CLASSIC') === boardType);
-  });
+function boardAssetUrl(boardType, theme = selectedBoardTheme) {
+  const normalized = String(boardType || 'CLASSIC').toUpperCase();
+  const file = normalized === 'CLASSIC'
+    ? `optimist-ludo-${theme}.svg`
+    : `optimist-ludo-${normalized.toLowerCase()}-${theme}.svg`;
+  return new URL(`../assets/boards/${file}`, import.meta.url).href;
 }
 
-document.querySelectorAll('[data-count]').forEach((button) => {
-  button.addEventListener('click', () => selectCount(Number(button.dataset.count), button.dataset.boardType || 'CLASSIC'));
+function updateLobbySelection() {
+  document.querySelectorAll('[data-board-choice]').forEach((button) => {
+    const active = button.dataset.boardChoice === selectedBoardType;
+    button.classList.toggle('selected', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  document.querySelectorAll('[data-theme-choice]').forEach((button) => {
+    const active = button.dataset.themeChoice === selectedBoardTheme;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  document.querySelectorAll('[data-classic-count]').forEach((button) => {
+    const active = Number(button.dataset.classicCount) === selectedPlayerCount;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  const classicPicker = $('#classicCountPicker');
+  if (classicPicker) classicPicker.hidden = selectedBoardType !== 'CLASSIC';
+  const boardChip = $('#selectedBoardChip');
+  if (boardChip) boardChip.textContent = selectedBoardType;
+  const count = selectedBoardType === 'CLASSIC' ? selectedPlayerCount :
+    selectedBoardType === 'DIAMOND' ? 4 : selectedBoardType === 'PENTA' ? 5 : 6;
+  const title = $('#startSummaryTitle');
+  const summary = $('#startSummaryText');
+  if (title) title.textContent = `${selectedBoardType} · ${selectedBoardTheme.toUpperCase()}`;
+  if (summary) summary.textContent = `${count} участника · 1 человек + ${count - 1} бота(ов)`;
+}
+
+function selectBoardType(boardType) {
+  const normalized = String(boardType || '').toUpperCase();
+  if (!['CLASSIC', 'DIAMOND', 'PENTA', 'HEX'].includes(normalized)) return;
+  selectedBoardType = normalized;
+  selectedPlayerCount = normalized === 'CLASSIC' ? 4 : normalized === 'DIAMOND' ? 4 : normalized === 'PENTA' ? 5 : 6;
+  applyBoardTheme(selectedBoardTheme, selectedBoardType);
+  updateLobbySelection();
+}
+
+document.querySelectorAll('[data-board-choice]').forEach((button) => {
+  button.addEventListener('click', () => selectBoardType(button.dataset.boardChoice));
+});
+document.querySelectorAll('[data-classic-count]').forEach((button) => {
+  button.addEventListener('click', () => {
+    selectedPlayerCount = Number(button.dataset.classicCount);
+    updateLobbySelection();
+  });
+});
+document.querySelectorAll('[data-theme-choice]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const theme = button.dataset.themeChoice;
+    if (!BOARD_THEMES.includes(theme)) return;
+    applyBoardTheme(theme, selectedBoardType);
+    updateLobbySelection();
+  });
 });
 
 function renderCharacterGrid() {
@@ -140,7 +191,8 @@ function renderCharacterGrid() {
     const button = document.createElement('button');
     button.type = 'button'; button.className = `character-option${character.id === selectedCharacterId ? ' selected' : ''}`;
     button.setAttribute('aria-pressed', String(character.id === selectedCharacterId));
-    const image = document.createElement('img'); image.src = character.src; image.alt = character.name; image.loading = 'lazy'; image.draggable = false;
+    const image = document.createElement('img'); image.src = character.src; image.alt = character.name; image.loading = 'eager'; image.decoding = 'async'; image.draggable = false;
+    image.onerror = () => { image.hidden = true; button.classList.add('image-fallback'); };
     const name = document.createElement('b'); name.textContent = character.name;
     const subtitle = document.createElement('small'); subtitle.textContent = character.subtitle;
     button.append(image, name, subtitle);
@@ -168,7 +220,7 @@ function applyBoardTheme(theme, boardType = selectedBoardType) {
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
   if (boardArt) {
     const boardFile = selectedBoardType === 'CLASSIC' ? `optimist-ludo-${selectedBoardTheme}.svg` : `optimist-ludo-${selectedBoardType.toLowerCase()}-${selectedBoardTheme}.svg`;
-    const nextSrc = `/assets/boards/${boardFile}`;
+    const nextSrc = boardAssetUrl(selectedBoardType, selectedBoardTheme);
     if (!boardArt.getAttribute('src')?.endsWith(nextSrc)) boardArt.setAttribute('src', nextSrc);
     boardArt.alt = `Игровое поле OPTIMIST LUDO ${selectedBoardType} — ${selectedBoardTheme.toUpperCase()}`;
   }
@@ -462,7 +514,7 @@ function renderTokens(snapshot) {
 }
 
 function renderPlayers(snapshot) {
-  const players = snapshot?.state?.players || snapshot?.players || [];
+  const players = snapshot?.players || snapshot?.state?.players || [];
   const byColor = new Map(players.map((player) => [player.color, player]));
   playersStrip.replaceChildren();
   const boardType = String(snapshot?.boardType || snapshot?.state?.mode || 'CLASSIC').toUpperCase();
@@ -471,7 +523,7 @@ function renderPlayers(snapshot) {
   colorOrder.forEach((color) => {
     const player = byColor.get(color);
     const card = document.createElement('div');
-    card.className = `player-card${player && player.id === snapshot?.state?.currentPlayer ? ' current' : ''}${player ? '' : ' empty'}`;
+    card.className = `player-card${player && player.id === snapshot?.state?.currentPlayer ? ' current' : ''}${player ? '' : ' empty'}${player?.isBot ? ' bot' : ''}`;
     card.style.setProperty('--player-color', `var(--${color})`);
     const avatar = document.createElement('img');
     avatar.className = 'player-character-avatar';
@@ -526,10 +578,9 @@ function renderTurn(snapshot) {
     setDiceFace(5);
     rollDiceBtn.disabled = true;
     startGameBtn.hidden = snapshot?.hostId !== activeClient?.currentUserId;
-    const needsFullRoster = snapshot?.boardType === 'DIAMOND' || snapshot?.boardType === 'PENTA' || snapshot?.boardType === 'HEX';
-    const readyToStart = roster.length >= 2 && (!needsFullRoster || roster.length === snapshot.maxPlayers);
+    const readyToStart = roster.some((player) => player.id === activeClient?.currentUserId);
     startGameBtn.disabled = !readyToStart;
-    moveHint.textContent = roster.length < 2 ? 'Отправь другу ссылку или код комнаты.' : needsFullRoster && !readyToStart ? 'Для ' + snapshot.boardType + ' нужно пригласить всех ' + snapshot.maxPlayers + ' игроков.' : 'Все фишки появятся на поле после старта партии.';
+    moveHint.textContent = 'Недостающие места будут автоматически заняты ботами при старте.';
     return;
   }
 
@@ -695,7 +746,7 @@ async function enterRoom(roomId) {
 
 async function createRoom() {
   createRoomBtn.disabled = true;
-  createRoomBtn.querySelector('span').textContent = 'СОЗДАЁМ СТОЛ…';
+  createRoomBtn.querySelector('span').textContent = 'СОЗДАЁМ ИГРУ…';
   try {
     const result = await LudoRoomClient.createRoom({
       ...authOptions(),
@@ -709,7 +760,7 @@ async function createRoom() {
     showToast(error.message || 'Не удалось создать комнату.');
   } finally {
     createRoomBtn.disabled = false;
-    createRoomBtn.querySelector('span').textContent = 'СОЗДАТЬ ИГРУ';
+    createRoomBtn.querySelector('span').textContent = 'ИГРАТЬ';
   }
 }
 
@@ -723,7 +774,8 @@ async function copyText(text) {
 }
 
 renderCharacterGrid();
-applyBoardTheme(selectedBoardTheme);
+applyBoardTheme(selectedBoardTheme, selectedBoardType);
+updateLobbySelection();
 if (tokenLayer) tokenLayer.addEventListener('pointerup', handleBoardPointerUp);
 if (tokenChooserClose) tokenChooserClose.addEventListener('click', closeTokenChooser);
 if (tokenChooser) tokenChooser.addEventListener('click', (event) => { if (event.target === tokenChooser) closeTokenChooser(); });
