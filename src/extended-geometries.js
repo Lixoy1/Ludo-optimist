@@ -449,6 +449,11 @@ export function assertExtendedGeometry(geometry) {
     id:'finish '+slot.armIndex+':'+slot.slotIndex,
     center:slot,radius:finishRadius
   }));
+  const baseZones=geometry.arms.map((arm)=>({
+    id:'base zone '+arm.player.id,center:arm.baseCenter,radius:arm.baseRadius
+  }));
+  assertCirclesDoNotOverlap(baseZones,'Base zones');
+  assertCirclesOutsidePolygons(baseZones,[...trackTiles,...homeTiles],'Base zone');
   assertCirclesDoNotOverlap(baseCircles,'Base pawn wells');
   assertCirclesDoNotOverlap(finishCircles,'Finish pawn sockets');
   assertCirclesOutsidePolygons(baseCircles,[...trackTiles,...homeTiles],'Base pawn well');
