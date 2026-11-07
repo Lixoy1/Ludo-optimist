@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080912" />
-  <meta name="description" content="OPTIMIST LUDO — онлайн Ludo с друзьями. Classic 2–4 players." />
+  <meta name="description" content="OPTIMIST LUDO — онлайн Ludo с друзьями. Classic 2–4, PENTA 5 and HEX 6 players." />
   <title>OPTIMIST LUDO</title>
   <link rel="preload" href="/assets/boards/optimist-ludo-neon.svg" as="image" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
@@ -29,7 +29,7 @@
   <main class="app-shell">
     <section class="view lobby-view" id="lobbyView">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="spark"></span> THE CLASSIC BOARD · ONLINE</div>
+        <div class="eyebrow"><span class="spark"></span> THREE BOARDS · ONLINE</div>
         <h1>Твоя партия.<br><em>Твои правила.</em></h1>
         <p>Собери друзей за столом, бросай кубик и веди четыре фишки к победе.</p>
       </div>
@@ -42,11 +42,13 @@
         <section class="lobby-panel create-panel">
           <div class="panel-kicker">01 / НОВАЯ ПАРТИЯ</div>
           <h2>Создать стол</h2>
-          <p class="panel-note">Classic · 2–4 игрока · бесплатно</p>
+          <p class="panel-note">Classic · 2–4 / PENTA · 5 / HEX · 6 игроков</p>
           <div class="player-count" role="group" aria-label="Количество игроков">
             <button type="button" class="count-option" data-count="2">2 <small>ИГРОКА</small></button>
             <button type="button" class="count-option" data-count="3">3 <small>ИГРОКА</small></button>
-            <button type="button" class="count-option active" data-count="4">4 <small>ИГРОКА</small></button>
+            <button type="button" class="count-option active" data-count="4">4 <small>CLASSIC</small></button>
+            <button type="button" class="count-option" data-count="5">5 <small>PENTA</small></button>
+            <button type="button" class="count-option" data-count="6">6 <small>HEX</small></button>
           </div>
           <label class="switch-row"><span><b>Открытый стол</b><small>Видно в общем списке комнат</small></span><input type="checkbox" id="publicRoom" checked /><i class="switch"></i></label>
           <button type="button" class="primary-button wide" id="createRoomBtn"><span>СОЗДАТЬ ИГРУ</span><b>↗</b></button>
