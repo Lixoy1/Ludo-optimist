@@ -29,8 +29,35 @@ export function isSafeTrackIndex(index){return SAFE_TRACK_INDICES.has(((index%CE
 export function getBaseSlots(color){const c=PLAYER_CONFIG[color];if(!c)throw new Error('Unknown player color: '+color);return HOME_SLOTS.map((s,index)=>({id:color+'-base-'+index,slotIndex:index,x:c.base.col+3+s.x,y:c.base.row+3+s.y}));}
 export function assertBoardGeometry(){
  if(MAIN_TRACK.length!==52||new Set(MAIN_TRACK.map(p=>p.col+','+p.row)).size!==52)throw new Error('Classic route must have 52 unique cells.');
- for(const c of COLORS){const p=PLAYER_CONFIG[c];if(p.lane.length!==5)throw new Error(c+' home lane must contain five cells.');if((p.start+50)%52!==p.homeEntry)throw new Error(c+' home entry index mismatch.');}
- const keys=new Set(MAIN_TRACK.map(p=>p.col+','+p.row));
- for(const c of COLORS)for(const [col,row] of PLAYER_CONFIG[c].lane){if(keys.has(col+','+row))throw new Error('Classic home lane overlaps outer route.');}
+ const routeKeys=new Set(MAIN_TRACK.map(p=>p.col+','+p.row));
+ let diagonalConnectors=0;
+ for(let index=0;index<MAIN_TRACK.length;index++){
+  const current=MAIN_TRACK[index],next=MAIN_TRACK[(index+1)%MAIN_TRACK.length];
+  const dx=Math.abs(next.col-current.col),dy=Math.abs(next.row-current.row);
+  const distance=Math.hypot(dx,dy);
+  if(Math.abs(distance-1)<1e-8)continue;
+  if(Math.abs(distance-Math.SQRT2)<1e-8&&dx===1&&dy===1){diagonalConnectors++;continue;}
+  throw new Error('Classic route has an invalid link '+index+' -> '+((index+1)%MAIN_TRACK.length)+'.');
+ }
+ if(diagonalConnectors!==4)throw new Error('Classic route must have exactly four diagonal corner connectors.');
+ const homeKeys=new Set();
+ for(const c of COLORS){
+  const p=PLAYER_CONFIG[c];
+  if(p.lane.length!==5)throw new Error(c+' home lane must contain five cells.');
+  if((p.start+50)%52!==p.homeEntry)throw new Error(c+' home entry index mismatch.');
+  const entry=MAIN_TRACK[p.homeEntry],first=p.lane[0];
+  const entryDistance=Math.hypot(first[0]-entry.col,first[1]-entry.row);
+  if(Math.abs(entryDistance-1)>1e-8&&Math.abs(entryDistance-Math.SQRT2)>1e-8)throw new Error(c+' home lane does not connect to its entry cell.');
+  for(let index=0;index<p.lane.length;index++){
+   const [col,row]=p.lane[index],key=col+','+row;
+   if(routeKeys.has(key))throw new Error(c+' home lane overlaps outer route at '+key+'.');
+   if(homeKeys.has(key))throw new Error('Classic home lanes overlap at '+key+'.');
+   homeKeys.add(key);
+   if(index>0){
+    const [prevCol,prevRow]=p.lane[index-1];
+    if(Math.hypot(col-prevCol,row-prevRow)!==1)throw new Error(c+' home lane contains a disconnected step.');
+   }
+  }
+ }
  return true;
 }
