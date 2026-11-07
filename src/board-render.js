@@ -75,3 +75,41 @@ export function extendedTokenBoardPositions(state) {
    scale:p.scale,slot:p.slot,stackKey:p.stackKey,stackCount:p.stackCount,visible:p.visible!==false,overflowCount:p.overflowCount||0};
  });
 }
+
+
+export function tokenMovementPath(state, playerId, from, to, tokenIndex) {
+ if(!state||!from||!to)return[];
+ const player=state.players?.find(item=>item.id===playerId);
+ if(!player)return[];
+ const extended=state.mode==='PENTA'||state.mode==='HEX';
+ const geometry=extended?getExtendedGeometry(state.mode.toLowerCase()):null;
+ const config=extended?null:PLAYER_CONFIG[player.color];
+ const trackLength=extended?geometry.trackLength:MAIN_TRACK.length;
+ const homeStart=trackLength;
+ const finishStep=trackLength+5;
+ const pointForStep=step=>{
+  if(step<trackLength){
+   const global=extended?(player.startIndex+step)%trackLength:(config.start+step)%trackLength;
+   const cell=extended?geometry.track[global]:MAIN_TRACK[global];
+   return extended?{x:cell.x,y:cell.y}:gridToImage(cell.col,cell.row);
+  }
+  if(step<finishStep){
+   const index=step-homeStart;
+   if(extended){const point=geometry.arms[player.armIndex]?.homeLane[index];return point?{x:point.x,y:point.y}:null;}
+   const point=config.lane[index];return point?gridToImage(point[0],point[1]):null;
+  }
+  if(step===finishStep){
+   if(extended){const point=geometry.arms[player.armIndex]?.finishSlots[tokenIndex];return point?{x:point.x,y:point.y}:null;}
+   const point=FINISH_POINTS[tokenIndex];return point?{x:point[0],y:point[1]}:null;
+  }
+  return null;
+ };
+ const firstStep=from.zone==='base'?0:from.step+1;
+ const points=[];
+ for(let step=firstStep;step<=to.step;step+=1){
+  const point=pointForStep(step);
+  if(!point)return[];
+  points.push(point);
+ }
+ return points;
+}
