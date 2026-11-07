@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/classic-hexa-royal-board-system, fix/three-board-geometry-validation-2026-11-07]
   pull_request:
     branches: [main]
 
@@ -19,6 +19,8 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           find src apps scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+      - name: Build board SVG assets
+        run: npm run build
       - name: Run test suite
         run: npm test
       - name: Package local preview ZIP
