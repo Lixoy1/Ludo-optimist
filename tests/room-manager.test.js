@@ -192,3 +192,65 @@ test('server-controlled bots cannot authenticate as real room members', () => {
   assert.throws(() => manager.getSnapshot(created.roomId, bot.id), /не участник/);
   assert.throws(() => manager.roll(created.roomId, bot.id), /не участник/);
 });
+
+test('observers can read the game and use text and voice chat but cannot control the match', () => {
+  let now=10_000;
+  const manager = new RoomManager({ now:()=>now, dice:()=>6 });
+  const created = manager.createRoom(red, { maxPlayers:2 });
+  manager.startGame(created.roomId, red.id);
+  const observer = { id:'guest-observer', username:'Guest Observer' };
+  const joined = manager.joinAsObserver(created.roomId, observer);
+  assert.equal(joined.viewerRole,'OBSERVER');
+  assert.equal(joined.observerCount,1);
+  assert.deepEqual(joined.observers.map((item)=>item.id),[observer.id]);
+  assert.equal(manager.isMember(created.roomId,observer.id),false);
+  assert.equal(manager.isObserver(created.roomId,observer.id),true);
+  assert.equal(manager.getRole(created.roomId,observer.id),'OBSERVER');
+  assert.equal(manager.getSnapshot(created.roomId,observer.id).state.phase,'playing');
+
+  const textMessage=manager.sendChat(created.roomId,observer.id,'Привет, я смотрю игру');
+  assert.equal(textMessage.senderType,'OBSERVER');
+  assert.equal(textMessage.senderName,observer.username);
+  assert.equal(textMessage.text,'Привет, я смотрю игру');
+
+  now+=1600;
+  assert.equal(manager.assertVoiceAllowed(created.roomId,observer.id),true);
+  const voiceMessage=manager.sendVoice(created.roomId,observer.id,{
+    id:'b'.repeat(32),durationSeconds:3,mimeType:'audio/webm',sizeBytes:512,
+  });
+  assert.equal(voiceMessage.senderType,'OBSERVER');
+  assert.equal(voiceMessage.voice.id,'b'.repeat(32));
+  assert.equal(manager.getSnapshot(created.roomId,observer.id).chat.length,2);
+
+  assert.throws(()=>manager.roll(created.roomId,observer.id),/не участник/);
+  assert.throws(()=>manager.move(created.roomId,observer.id,red.id+':0'),/не участник/);
+  assert.throws(()=>manager.setCharacter(created.roomId,observer.id,'poison'),/не участник/);
+  assert.throws(()=>manager.joinRoom(created.roomId,observer),/уже началась/);
+});
+
+test('an observer in the lobby can take an open player seat before the game starts', () => {
+  const manager = new RoomManager({ dice:()=>1 });
+  const created = manager.createRoom(red,{maxPlayers:4});
+  const observer={id:'waiting-guest',username:'Waiting Guest'};
+  const observation=manager.joinAsObserver(created.roomId,observer);
+  assert.equal(observation.viewerRole,'OBSERVER');
+  assert.equal(observation.observerCount,1);
+  const promoted=manager.joinRoom(created.roomId,observer);
+  assert.equal(promoted.viewerRole,'PLAYER');
+  assert.equal(promoted.players.some((player)=>player.id===observer.id),true);
+  assert.equal(promoted.observerCount,0);
+  assert.equal(manager.isMember(created.roomId,observer.id),true);
+  assert.equal(manager.isObserver(created.roomId,observer.id),false);
+});
+
+test('observers cannot claim bot identities or exceed the per-room observer limit', () => {
+  const manager = new RoomManager({maxRooms:2,dice:()=>1});
+  const created=manager.createRoom(red,{maxPlayers:2});
+  manager.startGame(created.roomId,red.id);
+  const bot=manager.getSnapshot(created.roomId,red.id).players.find((player)=>player.isBot);
+  assert.throws(()=>manager.joinAsObserver(created.roomId,{id:bot.id,username:'Fake bot'}),/боту/);
+  for(let index=0;index<100;index++) {
+    manager.joinAsObserver(created.roomId,{id:'observer-'+index,username:'Observer '+index});
+  }
+  assert.throws(()=>manager.joinAsObserver(created.roomId,{id:'observer-overflow',username:'Too many'}),/слишком много наблюдателей/);
+});
