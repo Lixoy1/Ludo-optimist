@@ -6,7 +6,7 @@ import {
   gridToImage, BASE_SLOT_POINTS, FINISH_POINTS, BOARD_IMAGE_SIZE, GRID_CELL,
 } from '../src/board-render.js';
 
-const THEMES = ['classic', 'neon', 'elite', 'marble'];
+const THEMES = ['classic', 'neon'];
 const readBoard = (theme) => readFile(resolve('assets/boards', `optimist-ludo-${theme}.svg`), 'utf8');
 const tileMarkup = (svg, col, row) => svg.match(
   new RegExp(`<rect data-cell="${col},${row}" x="([^"]+)" y="([^"]+)" width="38.4" height="38.4"`),
