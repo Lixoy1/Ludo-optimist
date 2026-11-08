@@ -149,6 +149,23 @@ test('all eight generated HEXA and ROYAL theme assets match the logical geometry
     assert.equal((svg.match(/data-finish-slot=/g)||[]).length,contract.sides*4);
     assert.equal((svg.match(/data-safe-cell=/g)||[]).length,contract.safe);
     assertSvgCellFootprints(svg,EXTENDED_GEOMETRIES[id].tileSize,id+' '+theme);
+    assert.match(svg,/data:image\/webp;base64,/,'board artwork must embed its avatar assets');
+    assert.match(svg,/data-avatar="optimist"/,'board artwork must include OPTIMIST character art');
+    assert.doesNotMatch(svg,/href="characters\//,'board artwork must not depend on external avatar files');
+    const trackCenters=[...svg.matchAll(/<g data-track-cell="(\d+)" data-center="([0-9.]+),([0-9.]+)"/g)];
+    assert.equal(trackCenters.length,contract.track);
+    for(const [,index,x,y] of trackCenters) {
+      const cell=EXTENDED_GEOMETRIES[id].track[Number(index)];
+      assert.equal(Number(x),cell.x, id+' track '+index+' x anchor changed');
+      assert.equal(Number(y),cell.y, id+' track '+index+' y anchor changed');
+    }
+    const homeCenters=[...svg.matchAll(/<g data-home-cell="(\d+):(\d+)" data-center="([0-9.]+),([0-9.]+)"/g)];
+    assert.equal(homeCenters.length,contract.sides*contract.home);
+    for(const [,armIndex,homeIndex,x,y] of homeCenters) {
+      const cell=EXTENDED_GEOMETRIES[id].arms[Number(armIndex)].homeLane[Number(homeIndex)];
+      assert.equal(Number(x),cell.x,id+' home '+armIndex+':'+homeIndex+' x anchor changed');
+      assert.equal(Number(y),cell.y,id+' home '+armIndex+':'+homeIndex+' y anchor changed');
+    }
   }
 });
 
