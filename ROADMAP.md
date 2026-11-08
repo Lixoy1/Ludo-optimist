@@ -60,6 +60,7 @@
 
 - [x] Telegram WebApp initData validation на сервере.
 - [x] Комнатный текстовый чат по WebSocket с ограничением частоты и длины.
+- [x] Роль наблюдателя: просмотр полного состояния, общий текстовый и голосовой чат, запрет игровых команд; автоматический переход в наблюдатели при заполненной/начатой партии.
 - [x] Голосовой backend transport по схеме DURAK: binary HTTP upload/download, room session, membership check, MIME/size/duration/rate limits, TTL cache.
 - [x] Переиспользуемый клиент `MediaRecorder` с удержанием для записи и свайпом для отмены; unit-тесты протокола.
 - [x] Подключить клиентский адаптер и голосовую панель к реальному экрану Mini App.
