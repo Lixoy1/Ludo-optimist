@@ -220,7 +220,7 @@ export class LudoRoomClient {
     if (!target || typeof document === 'undefined') return;
     const bubble = document.createElement('div');
     bubble.className = 'msg' + (message.senderId === this.currentUserId ? ' mine' : '');
-    const author = document.createElement('div'); author.className = 'msg-author'; author.textContent = message.senderName || 'Игрок';
+    const author = document.createElement('div'); author.className = 'msg-author'; author.textContent = message.senderType === 'OBSERVER' ? `${message.senderName || 'Гость'} · Наблюдатель` : (message.senderName || 'Игрок');
     bubble.append(author);
     if (message.voice && this.voiceClient) bubble.append(createVoiceMessagePlayer(message, this.voiceClient));
     else { const text = document.createElement('div'); text.textContent = message.text || ''; bubble.append(text); }
