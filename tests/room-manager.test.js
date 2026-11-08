@@ -140,7 +140,7 @@ test('a one-human Classic game starts immediately with three bots that take comp
   const snapshot = manager.getSnapshot(created.roomId, red.id);
   assert.equal(snapshot.state.currentPlayer, red.id);
   for (const bot of snapshot.players.filter((player) => player.isBot)) {
-    const movedToken = Object.values(snapshot.state.tokens).find((token) => token.owner === bot.id && token.position.zone === 'track' && token.position.step === 1);
+    const movedToken = Object.values(snapshot.state.tokens).find((token) => token.owner === bot.id && token.stepProgress === 1);
     assert.ok(movedToken, `${bot.username} should release a pawn and move it one legal cell`);
   }
 });
