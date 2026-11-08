@@ -16,7 +16,6 @@ import { getPlayableGeometry } from '../src/game-geometries.js';
 const cases = [
   ['CLASSIC', CLASSIC_PROGRESS_CONFIG, 4, ['blue','red','yellow','green']],
   ['HEXA', { mode:'HEXA', trackLength:72, maxOuterSteps:71, homeCells:6, finishStep:78 }, 6, null],
-  ['ROYAL', { mode:'ROYAL', trackLength:68, maxOuterSteps:66, homeCells:7, finishStep:74 }, 4, null],
 ];
 
 function rosterFor(mode, colors) {

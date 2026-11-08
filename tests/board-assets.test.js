@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const THEMES = ['classic', 'neon', 'elite', 'marble'];
+const THEMES = ['classic', 'neon'];
 const readBoard = (theme) => readFile(resolve('assets/boards', `optimist-ludo-${theme}.svg`), 'utf8');
 const packageJson = JSON.parse(await readFile(resolve('package.json'), 'utf8'));
 
@@ -21,7 +21,7 @@ test('authored vector boards keep the 720x720 contract and are validated without
   }
 });
 
-test('all four authored board themes preserve the same logical cell set', async () => {
+test('both authored board themes preserve the same logical cell set', async () => {
   const svgs = await Promise.all(THEMES.map(readBoard));
   const cells = (svg) => [...svg.matchAll(/data-cell="([^"]+)"/g)].map((match) => match[1]).sort();
   const canonical = cells(svgs[0]);
@@ -29,8 +29,12 @@ test('all four authored board themes preserve the same logical cell set', async 
   for (const svg of svgs.slice(1)) assert.deepEqual(cells(svg), canonical);
 });
 
-test('obsolete PENTA and legacy HEX SVGs are not shipped with the three-board release', async () => {
-  const files = await readdir(resolve('assets/boards'));
-  const legacy = files.filter((name) => /^optimist-ludo-(?:penta|hex)-/i.test(name));
-  assert.deepEqual(legacy, []);
+test('only the two canonical geometries and their two themes are shipped', async () => {
+  const files = (await readdir(resolve('assets/boards'))).filter((name) => name.endsWith('.svg')).sort();
+  assert.deepEqual(files, [
+    'optimist-ludo-classic.svg',
+    'optimist-ludo-hexa-classic.svg',
+    'optimist-ludo-hexa-neon.svg',
+    'optimist-ludo-neon.svg',
+  ]);
 });

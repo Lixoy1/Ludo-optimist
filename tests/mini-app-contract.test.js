@@ -32,19 +32,20 @@ test('board image and client modules are present in the integrated page', async 
   assert.match(main, /boardAssetUrl\(image\.dataset\.boardPreview, selectedBoardTheme\)/);
   const board = await readFile(new URL('../assets/boards/optimist-ludo-neon.svg', import.meta.url), 'utf8');
   const hexa = await readFile(new URL('../assets/boards/optimist-ludo-hexa-neon.svg', import.meta.url), 'utf8');
-  const royal = await readFile(new URL('../assets/boards/optimist-ludo-royal-neon.svg', import.meta.url), 'utf8');
+
   assert.match(html, /data-board-choice="HEXA"/);
-  assert.match(html, /data-board-choice="ROYAL"/);
   assert.match(html, /data-theme-choice="neon"/);
+  assert.doesNotMatch(html, /ROYAL|ELITE|MARBLE/);
+  assert.match(html, />OPTIMIST<\/button>/);
   assert.match(html, /id="startSummaryText"/);
-  for (const svg of [board, hexa, royal]) assert.match(svg, /viewBox="0 0 720 720"/);
+  for (const svg of [board, hexa]) assert.match(svg, /viewBox="0 0 720 720"/);
 });
 
 test('interactive pawn and voice-message states have visible styles', () => {
   assert.match(css, /\.pawn\.legal/);
   assert.match(css, /\.pawn-character/);
   assert.match(css, /\.character-option\.selected/);
-  assert.match(css, /#boardStage\[data-theme="marble"\]/);
+  assert.match(css, /#boardStage\[data-theme="classic"\]/);
   assert.match(main, /pawn-\$\{position\.color\}/);
   assert.match(css, /--token-color/);
   assert.match(css, /\.voice-button\.recording/);
@@ -83,7 +84,7 @@ test('roll control is a custom six-state die and remains fixed in the bottom pla
 });
 
 test('vector board themes and mobile stack selection are wired', async () => {
-  const boards = await Promise.all(['classic','neon','elite','marble'].map((theme) => readFile(new URL(`../assets/boards/optimist-ludo-${theme}.svg`, import.meta.url), 'utf8')));
+  const boards = await Promise.all(['classic','neon'].map((theme) => readFile(new URL(`../assets/boards/optimist-ludo-${theme}.svg`, import.meta.url), 'utf8')));
   assert.doesNotMatch(html, /maximum-scale=1/);
   assert.match(html, /id="boardArt"/);
   assert.match(html, /id="tokenChooser"/);
@@ -100,12 +101,12 @@ test('mobile secondary controls and chooser close have accessible touch dimensio
 });
 
 
-test('lobby previews all three real SVG board types and four material themes before starting', () => {
-  for (const mode of ['CLASSIC','HEXA','ROYAL']) {
+test('lobby offers only Classic and Hexa boards with Optimist and Classic designs', () => {
+  for (const mode of ['CLASSIC','HEXA']) {
     assert.match(html, new RegExp(`data-board-preview="${mode}"`));
     assert.match(html, new RegExp(`data-board-choice="${mode}"`));
   }
-  for (const theme of ['neon','classic','elite','marble']) {
+  for (const theme of ['neon','classic']) {
     assert.match(html, new RegExp(`data-theme-choice="${theme}"`));
   }
   assert.match(main, /function boardAssetUrl\(boardType, theme = selectedBoardTheme\)/);

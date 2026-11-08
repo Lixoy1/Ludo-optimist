@@ -45,9 +45,9 @@ test('room client createRoom sends Telegram initData and room limits', async () 
 
 
 
-test('room client accepts HEXA and ROYAL using canonical board IDs', async () => {
+test('room client accepts HEXA as the only six-player board ID', async () => {
   const { LudoRoomClient } = await import('../src/client/room-client.js');
-  for (const [boardType, maxPlayers] of [['HEXA', 6], ['ROYAL', 4]]) {
+  for (const [boardType, maxPlayers] of [['HEXA', 6]]) {
     let payload;
     await LudoRoomClient.createRoom({
       maxPlayers, boardType:boardType.toLowerCase(),
@@ -62,13 +62,13 @@ test('room client rejects unsupported board IDs and impossible player capacities
   const { LudoRoomClient } = await import('../src/client/room-client.js');
   let fetched=false;
   const fetchImpl=async()=>{fetched=true;throw new Error('fetch should not run');};
-  for (const boardType of ['UNKNOWN', 'DIAMOND', 'PENTA', 'HEX']) {
+  for (const boardType of ['UNKNOWN', 'DIAMOND', 'PENTA', 'HEX', 'ROYAL']) {
     await assert.rejects(
       LudoRoomClient.createRoom({boardType,fetchImpl}),
-      /Board type must be CLASSIC, HEXA or ROYAL/,
+      /Board type must be CLASSIC or HEXA/,
     );
   }
-  for (const [boardType,maxPlayers] of [['CLASSIC',6],['HEXA',4],['ROYAL',6]]) {
+  for (const [boardType,maxPlayers] of [['CLASSIC',6],['HEXA',4]]) {
     await assert.rejects(
       LudoRoomClient.createRoom({boardType,maxPlayers,fetchImpl}),
       /requires/,

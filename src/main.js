@@ -50,7 +50,7 @@ const tokenChooserClose = $('#tokenChooserClose');
 const boardEffectOverlay = $('#boardEffectOverlay');
 
 const CLASSIC_COLOR_ORDER = ['blue', 'red', 'yellow', 'green'];
-const PLAYER_COLOR_ORDERS = { HEXA: ['blue', 'red', 'yellow', 'purple', 'green', 'cyan'], ROYAL: ['blue', 'red', 'yellow', 'green'] };
+const PLAYER_COLOR_ORDERS = { HEXA: ['blue', 'red', 'yellow', 'purple', 'green', 'cyan'] };
 const COLOR_LABELS = { red: 'КРАСНЫЙ', green: 'ЗЕЛЁНЫЙ', blue: 'СИНИЙ', yellow: 'ЖЁЛТЫЙ', purple: 'ФИОЛЕТОВЫЙ', cyan: 'БИРЮЗОВЫЙ' };
 const query = new URLSearchParams(location.search);
 const telegram = window.Telegram?.WebApp ?? null;
@@ -65,9 +65,9 @@ const tokenElements = new Map();
 const cellHitElements = new Map();
 const stackBadgeElements = new Map();
 const previousTokenPositions = new Map();
-const BOARD_THEMES = ['neon', 'classic', 'elite', 'marble'];
+const BOARD_THEMES = ['neon', 'classic'];
 let selectedCharacterId = (() => { try { const saved = localStorage.getItem('optimist-ludo-character'); return CHARACTERS.some((item) => item.id === saved) ? saved : DEFAULT_CHARACTER_ID; } catch { return DEFAULT_CHARACTER_ID; } })();
-let selectedBoardTheme = (() => { try { return localStorage.getItem('optimist-ludo-board-theme') || 'neon'; } catch { return 'neon'; } })();
+let selectedBoardTheme = (() => { try { const saved = localStorage.getItem('optimist-ludo-board-theme'); return BOARD_THEMES.includes(saved) ? saved : 'neon'; } catch { return 'neon'; } })();
 let selectedBoardType = 'CLASSIC';
 let soundEnabled = (() => { try { return localStorage.getItem('optimist-ludo-sound') !== 'off'; } catch { return true; } })();
 let audioContext = null;
@@ -151,17 +151,16 @@ function updateLobbySelection() {
   if (classicPicker) classicPicker.hidden = selectedBoardType !== 'CLASSIC';
   const boardChip = $('#selectedBoardChip');
   if (boardChip) boardChip.textContent = selectedBoardType;
-  const count = selectedBoardType === 'CLASSIC' ? selectedPlayerCount :
-    selectedBoardType === 'HEXA' ? 6 : 4;
+  const count = selectedBoardType === 'HEXA' ? 6 : selectedPlayerCount;
   const title = $('#startSummaryTitle');
   const summary = $('#startSummaryText');
-  if (title) title.textContent = `${selectedBoardType} · ${selectedBoardTheme.toUpperCase()}`;
+  if (title) title.textContent = `${selectedBoardType} · ${selectedBoardTheme === 'neon' ? 'OPTIMIST' : 'CLASSIC'}`;
   if (summary) summary.textContent = `${count} участника · 1 человек + ${count - 1} бота(ов)`;
 }
 
 function selectBoardType(boardType) {
   const normalized = String(boardType || '').toUpperCase();
-  if (!['CLASSIC', 'HEXA', 'ROYAL'].includes(normalized)) return;
+  if (!['CLASSIC', 'HEXA'].includes(normalized)) return;
   selectedBoardType = normalized;
   selectedPlayerCount = normalized === 'HEXA' ? 6 : 4;
   applyBoardTheme(selectedBoardTheme, selectedBoardType);
@@ -219,14 +218,14 @@ function chooseCharacter(characterId) {
 
 function applyBoardTheme(theme, boardType = selectedBoardType) {
   selectedBoardTheme = BOARD_THEMES.includes(theme) ? theme : 'neon';
-  selectedBoardType = ['CLASSIC', 'HEXA', 'ROYAL'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
+  selectedBoardType = ['CLASSIC', 'HEXA'].includes(String(boardType).toUpperCase()) ? String(boardType).toUpperCase() : 'CLASSIC';
   if (boardStage) boardStage.dataset.theme = selectedBoardTheme;
   if (boardWrap) boardWrap.dataset.theme = selectedBoardTheme;
   if (boardArt) {
     const boardFile = selectedBoardType === 'CLASSIC' ? `optimist-ludo-${selectedBoardTheme}.svg` : `optimist-ludo-${selectedBoardType.toLowerCase()}-${selectedBoardTheme}.svg`;
     const nextSrc = boardAssetUrl(selectedBoardType, selectedBoardTheme);
     if (!boardArt.getAttribute('src')?.endsWith(nextSrc)) boardArt.setAttribute('src', nextSrc);
-    boardArt.alt = `Игровое поле OPTIMIST LUDO ${selectedBoardType} — ${selectedBoardTheme.toUpperCase()}`;
+    boardArt.alt = `Игровое поле OPTIMIST LUDO ${selectedBoardType} — ${selectedBoardTheme === 'neon' ? 'OPTIMIST' : 'CLASSIC'}`;
   }
   if (boardThemeSelect) boardThemeSelect.value = selectedBoardTheme;
   document.querySelectorAll('[data-board-preview]').forEach((image) => {

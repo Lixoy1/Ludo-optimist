@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080912" />
-  <meta name="description" content="OPTIMIST LUDO 2.0 — Classic, Hexa and Royal online boards. Play with friends or bots." />
+  <meta name="description" content="OPTIMIST LUDO — Classic and Hexa boards with Optimist or classic design." />
   <title>OPTIMIST LUDO</title>
   <link rel="preload" href="/assets/boards/optimist-ludo-neon.svg" as="image" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
@@ -19,7 +19,7 @@
     </div>
     <div class="topbar-tools">
       <select id="boardThemeSelect" class="theme-select" aria-label="Оформление доски" hidden>
-        <option value="neon">NEON</option><option value="classic">CLASSIC</option><option value="elite">ELITE</option><option value="marble">MARBLE</option>
+        <option value="neon">OPTIMIST</option><option value="classic">CLASSIC</option>
       </select>
       <div class="connection-pill" id="connectionPill"><i></i><span id="connectionText">ПОДКЛЮЧАЕМСЯ</span></div>
     </div>
@@ -48,18 +48,12 @@
               <img data-board-preview="HEXA" src="assets/boards/optimist-ludo-hexa-neon.svg" alt="Доска Hexa" loading="lazy" />
               <span><b>HEXA</b><small>6 игроков</small></span>
             </button>
-            <button type="button" class="board-mode-card" data-board-choice="ROYAL" aria-pressed="false">
-              <img data-board-preview="ROYAL" src="assets/boards/optimist-ludo-royal-neon.svg" alt="Доска Royal" loading="lazy" />
-              <span><b>ROYAL</b><small>4 игрока</small></span>
-            </button>
           </div>
           <div class="theme-picker-wrap">
             <div class="theme-picker-title">ОФОРМЛЕНИЕ</div>
             <div class="theme-picker" id="themePicker" role="group" aria-label="Оформление доски">
-              <button type="button" class="theme-chip active" data-theme-choice="neon" aria-pressed="true"><i class="theme-dot theme-neon"></i>NEON</button>
+              <button type="button" class="theme-chip active" data-theme-choice="neon" aria-pressed="true"><i class="theme-dot theme-neon"></i>OPTIMIST</button>
               <button type="button" class="theme-chip" data-theme-choice="classic" aria-pressed="false"><i class="theme-dot theme-classic"></i>CLASSIC</button>
-              <button type="button" class="theme-chip" data-theme-choice="elite" aria-pressed="false"><i class="theme-dot theme-elite"></i>ELITE</button>
-              <button type="button" class="theme-chip" data-theme-choice="marble" aria-pressed="false"><i class="theme-dot theme-marble"></i>MARBLE</button>
             </div>
           </div>
           <div class="classic-count-picker" id="classicCountPicker">

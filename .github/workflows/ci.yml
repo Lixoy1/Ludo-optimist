@@ -25,39 +25,34 @@ jobs:
           find src apps scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
       - name: Build geometry assets and coordinate map
         run: npm run build
-      - name: Decode every embedded character portrait
+      - name: Validate HEXA board geometry assets
         run: |
-          python3 -m pip install --user --quiet pillow
           python3 - <<'PY'
-          import base64
-          import io
-          import re
           from pathlib import Path
-          from PIL import Image
+          import re
+          import xml.etree.ElementTree as ET
 
           files = sorted(Path("assets/boards").glob("optimist-ludo-hexa-*.svg"))
-          files += sorted(Path("assets/boards").glob("optimist-ludo-royal-*.svg"))
-          if len(files) != 8:
-              raise SystemExit(f"Expected 8 extended board SVGs, found {len(files)}")
+          if len(files) != 2:
+              raise SystemExit(f"Expected exactly 2 HEXA theme SVGs, found {len(files)}")
 
-          checked = 0
           for path in files:
               svg = path.read_text(encoding="utf-8")
-              references = re.findall(r"data:image/webp;base64,([A-Za-z0-9+/=]+)", svg)
-              images = list(dict.fromkeys(references))
-              expected = 6 if "-hexa-" in path.name else 4
-              if len(images) != expected:
-                  raise SystemExit(f"{path}: expected {expected} unique embedded WebP portraits, found {len(images)}")
-              for index, payload in enumerate(images):
-                  raw = base64.b64decode(payload, validate=True)
-                  try:
-                      image = Image.open(io.BytesIO(raw))
-                      image.verify()
-                  except Exception as error:
-                      raise SystemExit(f"{path}: embedded portrait {index} is not a decodable WebP: {error}")
-                  checked += 1
+              ET.fromstring(svg)
+              counts = {
+                  "track": len(re.findall(r'data-track-cell=', svg)),
+                  "home": len(re.findall(r'data-home-cell=', svg)),
+                  "base": len(re.findall(r'data-base-slot=', svg)),
+                  "finish": len(re.findall(r'data-finish-slot=', svg)),
+                  "safe": len(re.findall(r'data-safe-cell=', svg)),
+              }
+              expected = {"track": 72, "home": 36, "base": 24, "finish": 24, "safe": 12}
+              if counts != expected:
+                  raise SystemExit(f"{path}: geometry mismatch: {counts}, expected {expected}")
+              if "data-avatar=" in svg or "data:image/webp;base64," in svg:
+                  raise SystemExit(f"{path}: static player portraits must not be baked into live pawn wells")
 
-          print(f"Successfully decoded {checked} embedded WebP portrait instances in all 8 extended boards.")
+          print("Both HEXA themes contain 72 route cells, 36 home cells, 24 base anchors, 24 finish anchors and 12 safe cells.")
           PY
       - name: Validate all board SVG files as XML
         run: |
@@ -66,11 +61,20 @@ jobs:
           import xml.etree.ElementTree as ET
 
           files = sorted(Path("assets/boards").glob("optimist-ludo-*.svg"))
-          if len(files) != 12:
-              raise SystemExit(f"Expected 12 active board SVGs, found {len(files)}")
+          if len(files) != 4:
+              raise SystemExit(f"Expected exactly 4 active board SVGs (2 geometries × 2 themes), found {len(files)}")
+          expected = {
+              "optimist-ludo-classic.svg",
+              "optimist-ludo-neon.svg",
+              "optimist-ludo-hexa-classic.svg",
+              "optimist-ludo-hexa-neon.svg",
+          }
+          actual = {path.name for path in files}
+          if actual != expected:
+              raise SystemExit(f"Unexpected board SVG set: {sorted(actual)}")
           for path in files:
               ET.parse(path)
-          print(f"XML validation passed for all {len(files)} active board SVGs.")
+          print("XML validation passed for the four active board SVGs.")
           PY
       - name: Run test suite against built assets
         run: npm test

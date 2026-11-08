@@ -8,7 +8,6 @@ import { progressConfigForState, positionFromStepProgress } from '../src/game-pr
 const modes = [
   { mode:'CLASSIC', players:2, colors:['blue','red'], trackLength:52, maxOuterSteps:50, homeCells:5, finishStep:56 },
   { mode:'HEXA', players:6, trackLength:72, maxOuterSteps:71, homeCells:6, finishStep:78 },
-  { mode:'ROYAL', players:4, trackLength:68, maxOuterSteps:66, homeCells:7, finishStep:74 },
 ];
 
 function makeRoster(spec) {

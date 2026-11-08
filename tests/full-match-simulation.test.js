@@ -9,7 +9,6 @@ import { getPlayableGeometry } from '../src/game-geometries.js';
 const modes = [
   { mode:'CLASSIC', colors:['blue','red','yellow','green'], players:4 },
   { mode:'HEXA', players:6 },
-  { mode:'ROYAL', players:4 },
 ];
 
 function rosterFor(mode, colors) {
@@ -43,7 +42,7 @@ function chooseProgressGreedy(state,playerId,legalTokenIds,dice) {
 for(const spec of modes) {
   test(spec.mode+' full automated match completes with server-legal bot moves only',()=>{
     const state0=createUniversalState(spec.mode,rosterFor(spec.mode,spec.colors));
-    const dice=makeDice(spec.mode==='CLASSIC'?121:spec.mode==='HEXA'?272:368);
+    const dice=makeDice(spec.mode==='CLASSIC'?121:272);
     let state=state0;
     let rolls=0,moves=0,skips=0;
     const maxActions=20_000;

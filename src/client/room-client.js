@@ -43,9 +43,8 @@ export class LudoRoomClient {
     const limits = {
       CLASSIC: { min:2, max:4 },
       HEXA: { min:6, max:6 },
-      ROYAL: { min:4, max:4 },
     }[normalizedBoardType];
-    if (!limits) throw new RangeError('Board type must be CLASSIC, HEXA or ROYAL.');
+    if (!limits) throw new RangeError('Board type must be CLASSIC or HEXA.');
     if (!Number.isInteger(maxPlayers) || maxPlayers < limits.min || maxPlayers > limits.max) {
       throw new RangeError(`${normalizedBoardType} requires ${limits.min === limits.max ? limits.min : `between ${limits.min} and ${limits.max}`} players.`);
     }

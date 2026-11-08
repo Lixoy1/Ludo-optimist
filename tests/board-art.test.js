@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { MAIN_TRACK, PLAYER_CONFIG } from '../src/geometry.js';
 import { gridToImage, BOARD_IMAGE_SIZE, GRID_CELL, BASE_SLOT_POINTS, FINISH_POINTS } from '../src/board-render.js';
-const themes=['classic','neon','elite','marble'];
+const themes=['classic','neon'];
 const asset=theme=>readFileSync(resolve('assets/boards',`optimist-ludo-${theme}.svg`),'utf8');
 const tileMarkup=(svg,col,row)=>svg.match(new RegExp(`<rect data-cell="${col},${row}" x="([^"]+)" y="([^"]+)" width="38.4" height="38.4"`));
 test('all four board artworks share the exact 720x720 logical coordinate plane',()=>{

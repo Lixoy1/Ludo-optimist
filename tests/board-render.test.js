@@ -21,6 +21,10 @@ test('board image grid transform maps the logical board into the 720 square artw
   assert.ok(Math.abs(center.y - 359.99) < 1);
 });
 
+test('Classic pawn pedestal diameter is exactly 64 percent of a logical cell pitch', () => {
+  assert.ok(Math.abs((BOARD_IMAGE_SIZE * PAWN_DIAMETER_RATIO) / GRID_CELL - .64) < 1e-8);
+});
+
 test('all four player bases are rendered at their assigned colored quadrants', () => {
   const state = createClassicState(roster);
   const positions = tokenBoardPositions(state);
@@ -126,7 +130,7 @@ test('all track and home-lane centers stay inside the 720px artwork', () => {
 });
 
 
-for (const mode of ['HEXA', 'ROYAL']) {
+for (const mode of ['HEXA']) {
   test(mode + ' board renderer maps base, track, home and finish tokens to its own SVG geometry', () => {
     const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-render-' + index, username: 'Player ' + index, color: arm.player.id }));
@@ -199,7 +203,7 @@ test('Classic movement path follows the five-cell home lane and maps its finish 
   assert.deepEqual(finish[0], { x: FINISH_POINTS[2][0], y: FINISH_POINTS[2][1] });
 });
 
-for (const mode of ['HEXA', 'ROYAL']) {
+for (const mode of ['HEXA']) {
   test(mode + ' movement path follows every extended outer-track step and the player home lane', () => {
     const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-path-' + index, username: 'Player ' + index, color: arm.player.id }));

@@ -90,7 +90,7 @@ test('players can change character during the room and game without changing the
   assert.throws(() => manager.setCharacter(created.roomId, red.id, 'not-a-character'), /Неизвестный персонаж/);
 });
 
-for (const [boardType, maxPlayers] of [['HEXA',6],['ROYAL',4]]) {
+for (const [boardType, maxPlayers] of [['HEXA',6]]) {
   test(boardType + ' starts with one human and fills every missing seat with a bot', () => {
     const manager = new RoomManager({ dice: () => 1 });
     const host = { id: boardType.toLowerCase() + '-0', username: 'Host' };
@@ -113,7 +113,7 @@ for (const [boardType, maxPlayers] of [['HEXA',6],['ROYAL',4]]) {
 test('extended room types reject invalid capacities and public room list identifies their board', () => {
   const manager = new RoomManager();
   assert.throws(() => manager.createRoom({ id:'bad-hexa', username:'Bad' }, { boardType:'HEXA', maxPlayers:4 }), /HEXA/);
-  assert.throws(() => manager.createRoom({ id:'bad-royal', username:'Bad' }, { boardType:'ROYAL', maxPlayers:5 }), /ROYAL/);
+  assert.throws(() => manager.createRoom({ id:'bad-royal', username:'Bad' }, { boardType:'ROYAL', maxPlayers:4 }), /Неизвестный тип доски/);
   const created = manager.createRoom({ id:'hexa-list', username:'Hexa' }, { boardType:'HEXA', maxPlayers:6 });
   assert.equal(created.boardType, 'HEXA');
   const room = manager.listPublicRooms().find((item) => item.roomId === created.roomId);
@@ -155,7 +155,7 @@ test('Classic player capacity may be filled partly by humans and partly by bots'
 });
 
 
-for (const [boardType, maxPlayers] of [['HEXA',6],['ROYAL',4]]) {
+for (const [boardType, maxPlayers] of [['HEXA',6]]) {
   test(boardType + ' bots roll, release a pawn and complete a legal track move before returning the turn to the human', () => {
     let rollIndex = 0;
     const manager = new RoomManager({ dice: () => ([6, 1][rollIndex++ % 2]) });

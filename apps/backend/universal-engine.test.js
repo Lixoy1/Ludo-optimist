@@ -18,17 +18,17 @@ function setTrack(state, playerId, index, step) {
   state.tokens[token(playerId, index)].stepProgress = step;
 }
 
-for (const mode of ['HEXA', 'ROYAL']) {
+for (const mode of ['HEXA']) {
   const geometry = getPlayableGeometry(mode);
   test(`${mode} has one four-token seat per arm and geometry-aligned route metadata`, () => {
     const state = stateFor(mode);
     assert.equal(state.players.length, geometry.sides);
     assert.equal(Object.keys(state.tokens).length, geometry.sides * 4);
     assert.equal(state.trackLength, geometry.trackLength);
-    assert.equal(state.trackLength, mode === 'HEXA' ? 72 : 68);
-    assert.equal(state.maxOuterSteps, mode === 'HEXA' ? 71 : 66);
-    assert.equal(state.homeCellCount, mode === 'HEXA' ? 6 : 7);
-    assert.equal(state.finishStep, mode === 'HEXA' ? 78 : 74);
+    assert.equal(state.trackLength, 72);
+    assert.equal(state.maxOuterSteps, 71);
+    assert.equal(state.homeCellCount, 6);
+    assert.equal(state.finishStep, 78);
     assert.equal(state.safeTrackIndices.length, 12);
     assert.equal(assertUniversalState(state), true);
   });

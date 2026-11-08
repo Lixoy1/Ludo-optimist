@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "OPTIMIST LUDO 2.0 — Classic, HEXA and ROYAL boards with an authoritative multiplayer engine",
+  "description": "OPTIMIST LUDO 2.0 — Classic and HEXA boards with two visual themes and an authoritative multiplayer engine",
   "scripts": {
     "test": "node --test",
     "start": "npm run build && node --env-file-if-exists=.env apps/backend/server.js",
