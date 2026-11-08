@@ -140,7 +140,7 @@ test('observer clients are read-only in the board UI and can be identified in sh
   assert.match(main, /snapshot\.viewerRole !== 'OBSERVER'/);
   assert.match(main, /snapshot\?\.viewerRole === 'OBSERVER'/);
   assert.match(main, /РЕЖИМ НАБЛЮДЕНИЯ/);
-  assert.match(client, /role: this\.role/);
+  assert.match(client, /role:\s*this\.role/);
   assert.match(client, /message\.senderType === 'OBSERVER'/);
   assert.match(client, /Наблюдатель/);
 });
