@@ -25,6 +25,19 @@ jobs:
           find src apps scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
       - name: Build geometry assets and coordinate map
         run: npm run build
+      - name: Validate all board SVG files as XML
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          files = sorted(Path("assets/boards").glob("optimist-ludo-*.svg"))
+          if len(files) != 12:
+              raise SystemExit(f"Expected 12 active board SVGs, found {len(files)}")
+          for path in files:
+              ET.parse(path)
+          print(f"XML validation passed for all {len(files)} active board SVGs.")
+          PY
       - name: Run test suite against built assets
         run: npm test
       - name: Run local HTTP WebSocket and voice smoke test
