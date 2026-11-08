@@ -176,7 +176,7 @@ for (const [boardType, maxPlayers] of [['HEXA',6],['ROYAL',4]]) {
     assert.equal(bots.length, maxPlayers - 1);
     for (const bot of bots) {
       assert.ok(Object.values(snapshot.state.tokens).some((token) =>
-        token.owner === bot.id && token.position.zone === 'track' && token.position.step === 1
+        token.owner === bot.id && token.stepProgress === 1
       ), `${boardType} bot ${bot.username} should release and move a pawn`);
     }
   });
