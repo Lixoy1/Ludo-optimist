@@ -1,8 +1,11 @@
 import { MAIN_TRACK, PLAYER_CONFIG } from './geometry.js';
-import { LAST_TRACK_STEP, FINISH_STEP } from '../apps/backend/classic-engine.js';
 import { getStackLayout } from './stack-layout.js';
 import { getPlayableGeometry, getPlayableStackLayout } from './game-geometries.js';
-import { positionFromStepProgress, progressToHomeIndex, progressConfigForState } from './game-progress.js';
+import { CLASSIC_PROGRESS_CONFIG, positionFromStepProgress, progressToHomeIndex, progressConfigForState } from './game-progress.js';
+
+// Keep browser modules independent from the private backend source tree.
+const LAST_TRACK_STEP = CLASSIC_PROGRESS_CONFIG.maxOuterSteps;
+const FINISH_STEP = CLASSIC_PROGRESS_CONFIG.finishStep;
 export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=55, GRID_ORIGIN_Y=55, GRID_CELL=43.57, PAWN_DIAMETER_RATIO=.68*128/2304;
 export const BASE_SLOT_POINTS=Object.freeze({blue:[[132,132],[182,132],[132,182],[182,182]],red:[[538,132],[588,132],[538,182],[588,182]],yellow:[[538,538],[588,538],[538,588],[588,588]],green:[[132,538],[182,538],[132,588],[182,588]]});
 export const FINISH_POINTS=Object.freeze([[336,336],[384,336],[336,384],[384,384]]);
