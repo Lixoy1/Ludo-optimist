@@ -15,7 +15,7 @@ function roster(mode) {
 function token(playerId, index = 0) { return `${playerId}:${index}`; }
 function stateFor(mode) { return createExtendedState(mode, roster(mode)); }
 function setTrack(state, playerId, index, step) {
-  state.tokens[token(playerId, index)].position = { zone: 'track', step };
+  state.tokens[token(playerId, index)].stepProgress = step;
 }
 
 for (const mode of ['HEXA', 'ROYAL']) {
@@ -40,7 +40,7 @@ for (const mode of ['HEXA', 'ROYAL']) {
     const rolled = rollUniversalDice(state, 'player-0', 6);
     assert.deepEqual(rolled.legalTokenIds, [token('player-0',0), token('player-0',1), token('player-0',2), token('player-0',3)]);
     const moved = applyUniversalMove(rolled.state, 'player-0', token('player-0',0));
-    assert.deepEqual(moved.state.tokens[token('player-0',0)].position, { zone: 'track', step: 0 });
+    assert.deepEqual(moved.state.tokens[token('player-0',0)].stepProgress, 0);
     assert.equal(extendedGlobalTrackIndex(moved.state, moved.state.players[0], 0), geometry.arms[0].startIndex);
     assert.equal(moved.bonusRoll, true);
   });
@@ -57,7 +57,7 @@ for (const mode of ['HEXA', 'ROYAL']) {
     const roll = rollUniversalDice(state, mover.id, 1);
     const moved = applyUniversalMove(roll.state, mover.id, token(mover.id));
     assert.deepEqual(moved.captured, [token(enemy.id)]);
-    assert.deepEqual(moved.state.tokens[token(enemy.id)].position, { zone: 'base', step: -1 });
+    assert.deepEqual(moved.state.tokens[token(enemy.id)].stepProgress, -1);
     assert.equal(moved.bonusRoll, true);
 
     const safeState = stateFor(mode);
@@ -70,7 +70,7 @@ for (const mode of ['HEXA', 'ROYAL']) {
     const safeRoll = rollUniversalDice(safeState, safeMover.id, 1);
     const safeMove = applyUniversalMove(safeRoll.state, safeMover.id, token(safeMover.id));
     assert.deepEqual(safeMove.captured, []);
-    assert.equal(safeMove.state.tokens[token(safeEnemy.id)].position.zone, 'track');
+    assert.equal(safeMove.state.tokens[token(safeEnemy.id)].stepProgress, safeEnemyStep);
   });
 
   test(`${mode} friendly pairs block opponents from landing and crossing`, () => {
@@ -88,11 +88,11 @@ for (const mode of ['HEXA', 'ROYAL']) {
   test(`${mode} requires an exact roll to enter the center finish`, () => {
     const state = stateFor(mode);
     const id = token('player-0');
-    state.tokens[id].position = { zone: 'home', step: geometry.maxOuterSteps + geometry.homeCells };
+    state.tokens[id].stepProgress = geometry.maxOuterSteps + geometry.homeCells;
     assert.deepEqual(universalLegalMoves(state, 'player-0', 2), []);
     const rolled = rollUniversalDice(state, 'player-0', 1);
     const moved = applyUniversalMove(rolled.state, 'player-0', id);
-    assert.deepEqual(moved.state.tokens[id].position, { zone: 'finished', step: geometry.finishStep });
+    assert.deepEqual(moved.state.tokens[id].stepProgress, geometry.finishStep);
     assert.equal(moved.state.phase, 'playing');
     assert.equal(moved.bonusRoll, true);
   });
@@ -114,7 +114,7 @@ for (const mode of ['HEXA', 'ROYAL']) {
   test(`${mode} accepts only the exact number of players and validates token positions`, () => {
     assert.throws(() => createExtendedState(mode, roster(mode).slice(0, -1)), /exactly/);
     const malformed = stateFor(mode);
-    malformed.tokens[token('player-0')].position = { zone: 'track', step: geometry.trackLength };
-    assert.throws(() => assertUniversalState(malformed), /Invalid extended track step/);
+    malformed.tokens[token('player-0')].stepProgress = geometry.trackLength;
+    assert.throws(() => assertUniversalState(malformed), /stepProgress is outside/);
   });
 }
