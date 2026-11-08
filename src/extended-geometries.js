@@ -594,7 +594,7 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
   parts.push(`<text x="${geometry.center.x}" y="${geometry.center.y+14}" text-anchor="middle" font-family="Arial,sans-serif" font-size="5.8" font-weight="900" letter-spacing="1.1" fill="#f5d18b">LUDO</text>`);
 
   // Small branding sits in the border band and never shifts a logical tile or anchor.
-  parts.push(`<g text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" letter-spacing="2"><text x="360" y="24" font-size="9.5" fill="#080b15" stroke="#05070d" stroke-width="3.5" paint-order="stroke">OPTIMIST LUDO</text><text x="360" y="24" font-size="9.5" fill="url(#gold)">OPTIMIST LUDO</text><text x="360" y="706" font-size="7.2" letter-spacing="1.3" fill="#fff0c4" fill-opacity=".92">${title}  ·  ${geometry.maxPlayers} PLAYERS  ·  ${geometry.trackLength} CELLS  ·  HOME ${geometry.homeCells}</text></g>`);
+  parts.push(`<g text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" letter-spacing="2"><text x="360" y="24" font-size="9.5" fill="#080b15" stroke="#05070d" stroke-width="3.5" paint-order="stroke">OPTIMIST LUDO</text><text x="360" y="24" font-size="9.5" fill="url(#gold)">OPTIMIST LUDO</text></g>`);
   parts.push('</svg>');
   return parts.join('');
 }
