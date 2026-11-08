@@ -38,11 +38,22 @@ export class LudoRoomClient {
   }
 
   static async createRoom({ initData = '', getInitData = null, devUserId = '', devUsername = '', characterId = 'optimist', maxPlayers = 4, boardType = 'CLASSIC', isPublic = true, fetchImpl = globalThis.fetch } = {}) {
+    const normalizedBoardType = String(boardType ?? 'CLASSIC').trim().toUpperCase();
+    const limits = {
+      CLASSIC: { min:2, max:4 },
+      HEXA: { min:6, max:6 },
+      ROYAL: { min:4, max:4 },
+    }[normalizedBoardType];
+    if (!limits) throw new RangeError('Board type must be CLASSIC, HEXA or ROYAL.');
+    if (!Number.isInteger(maxPlayers) || maxPlayers < limits.min || maxPlayers > limits.max) {
+      throw new RangeError(`${normalizedBoardType} requires ${limits.min === limits.max ? limits.min : `between ${limits.min} and ${limits.max}`} players.`);
+    }
+
     const latestInitData = typeof getInitData === 'function' ? getInitData() : initData;
     const headers = { 'content-type': 'application/json' };
     if (latestInitData) headers['x-telegram-init-data'] = latestInitData;
     if (devUserId) { headers['x-dev-user'] = devUserId; headers['x-dev-name'] = devUsername || devUserId; }
-    const response = await fetchImpl('/api/rooms', { method: 'POST', headers, body: JSON.stringify({ maxPlayers, boardType, isPublic, characterId }) });
+    const response = await fetchImpl('/api/rooms', { method: 'POST', headers, body: JSON.stringify({ maxPlayers, boardType:normalizedBoardType, isPublic, characterId }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.message || data.error || 'Не удалось создать игровой стол.');
     return data;
