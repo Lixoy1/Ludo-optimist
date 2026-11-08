@@ -43,10 +43,11 @@ jobs:
           checked = 0
           for path in files:
               svg = path.read_text(encoding="utf-8")
-              images = re.findall(r"data:image/webp;base64,([A-Za-z0-9+/=]+)", svg)
+              references = re.findall(r"data:image/webp;base64,([A-Za-z0-9+/=]+)", svg)
+              images = list(dict.fromkeys(references))
               expected = 6 if "-hexa-" in path.name else 4
               if len(images) != expected:
-                  raise SystemExit(f"{path}: expected {expected} embedded WebP portraits, found {len(images)}")
+                  raise SystemExit(f"{path}: expected {expected} unique embedded WebP portraits, found {len(images)}")
               for index, payload in enumerate(images):
                   raw = base64.b64decode(payload, validate=True)
                   try:
