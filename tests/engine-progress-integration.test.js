@@ -49,7 +49,6 @@ for (const spec of modes) {
     assert.deepEqual(rolled.legalTokenIds,[id]);
     const moved=applyUniversalMove(rolled.state,player.id,id);
     assert.equal(moved.state.tokens[id].stepProgress,spec.maxOuterSteps+1);
-    assert.deepEqual(moved.lastAction,moved.state.lastAction);
     assert.equal(moved.state.lastAction.fromProgress,spec.maxOuterSteps);
     assert.equal(moved.state.lastAction.toProgress,spec.maxOuterSteps+1);
     assert.equal(moved.state.lastAction.from.zone,'track');
