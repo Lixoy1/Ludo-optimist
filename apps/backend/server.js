@@ -9,6 +9,7 @@ import { VoiceStore, VoiceStoreError } from './voice-store.js';
 import { ResumeStore } from './resume-store.js';
 import { AuthError, authenticateHttpRequest, verifyTelegramInitData } from './telegram-auth.js';
 import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
+import { startTelegramBot } from './telegram-bot.js';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const PROJECT_ROOT = resolve(HERE, '../..');
@@ -439,8 +440,12 @@ export function createLudoServer({
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const app = createLudoServer();
   const bootAt = new Date().toISOString();
-  app.listen().then((address) => console.log(`[OPTIMIST LUDO] cold-start ${bootAt}; listening on ${JSON.stringify(address)}`));
-  const shutdown = () => { void app.close().then(() => process.exit(0)); };
+  let telegramBot = null;
+  app.listen().then((address) => {
+    console.log(`[OPTIMIST LUDO] cold-start ${bootAt}; listening on ${JSON.stringify(address)}`);
+    telegramBot = startTelegramBot();
+  }).catch((error) => { console.error('[OPTIMIST LUDO] startup failed:', error); process.exitCode = 1; });
+  const shutdown = () => { void (async () => { await telegramBot?.stop(); await app.close(); process.exit(0); })(); };
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 }
