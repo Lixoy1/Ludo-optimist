@@ -12,8 +12,9 @@ export function tokenBoardPositions(state){
  if(state.mode==='HEXA'||state.mode==='ROYAL')return extendedTokenBoardPositions(state);
  const tokens=Object.values(state.tokens),grouped=new Map(),base=new Map();
  const characters=new Map((state.players||[]).map(p=>[p.id,p.characterId||'optimist']));
+ const progressConfig=progressConfigForState(state);
  for(const token of tokens){
-  const{zone,step}=token.position;
+  const{zone,step}=positionFromStepProgress(token.stepProgress,progressConfig);
   if(zone==='base'){const[x,y]=BASE_SLOT_POINTS[token.color]?.[token.index]??BASE_SLOT_POINTS.blue[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:1,diameter:BOARD_IMAGE_SIZE*PAWN_DIAMETER_RATIO,slot:token.index,stackKey:`base:${token.id}`,stackCount:1,visible:true,overflowCount:0});continue;}
   if(zone==='finished'){const[x,y]=FINISH_POINTS[token.index]??FINISH_POINTS[0];base.set(token.id,{x,y,centerX:x,centerY:y,scale:.8,diameter:BOARD_IMAGE_SIZE*PAWN_DIAMETER_RATIO,slot:token.index,stackKey:`finished:${token.id}`,stackCount:1,visible:true,overflowCount:0});continue;}
   let key,point;
