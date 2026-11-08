@@ -25,6 +25,39 @@ jobs:
           find src apps scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
       - name: Build geometry assets and coordinate map
         run: npm run build
+      - name: Decode every embedded character portrait
+        run: |
+          python3 -m pip install --user --quiet pillow
+          python3 - <<'PY'
+          import base64
+          import io
+          import re
+          from pathlib import Path
+          from PIL import Image
+
+          files = sorted(Path("assets/boards").glob("optimist-ludo-hexa-*.svg"))
+          files += sorted(Path("assets/boards").glob("optimist-ludo-royal-*.svg"))
+          if len(files) != 8:
+              raise SystemExit(f"Expected 8 extended board SVGs, found {len(files)}")
+
+          checked = 0
+          for path in files:
+              svg = path.read_text(encoding="utf-8")
+              images = re.findall(r"data:image/webp;base64,([A-Za-z0-9+/=]+)", svg)
+              expected = 6 if "-hexa-" in path.name else 4
+              if len(images) != expected:
+                  raise SystemExit(f"{path}: expected {expected} embedded WebP portraits, found {len(images)}")
+              for index, payload in enumerate(images):
+                  raw = base64.b64decode(payload, validate=True)
+                  try:
+                      image = Image.open(io.BytesIO(raw))
+                      image.verify()
+                  except Exception as error:
+                      raise SystemExit(f"{path}: embedded portrait {index} is not a decodable WebP: {error}")
+                  checked += 1
+
+          print(f"Successfully decoded {checked} embedded WebP portrait instances in all 8 extended boards.")
+          PY
       - name: Validate all board SVG files as XML
         run: |
           python3 - <<'PY'
