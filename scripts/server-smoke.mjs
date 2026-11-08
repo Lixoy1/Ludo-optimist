@@ -113,9 +113,9 @@ try {
   assert.equal(roll.dice, 6);
   assert.equal(rolledSnapshot.legalTokenIds.length, 4);
 
-  const moved = waitForEvent(hostSocket, 'ROOM_SYNC', (payload) => payload?.state?.tokens?.['smoke-host:0']?.position?.step === 0);
+  const moved = waitForEvent(hostSocket, 'ROOM_SYNC', (payload) => payload?.state?.tokens?.['smoke-host:0']?.stepProgress === 0);
   hostSocket.send(JSON.stringify({ type: 'MOVE_TOKEN', tokenId: 'smoke-host:0' }));
-  assert.equal((await moved).state.tokens['smoke-host:0'].position.step, 0);
+  assert.equal((await moved).state.tokens['smoke-host:0'].stepProgress, 0);
 
   const audio = Buffer.alloc(512, 7);
   const upload = await fetch(`${baseUrl}/api/rooms/${roomId}/voice`, {
@@ -140,7 +140,7 @@ try {
   hostSocket = null;
   const resumed = await openRoomSocket(wsUrl, { roomId, resumeToken });
   hostSocket = resumed.socket;
-  assert.equal(resumed.snapshot.state.tokens['smoke-host:0'].position.step, 0);
+  assert.equal(resumed.snapshot.state.tokens['smoke-host:0'].stepProgress, 0);
   assert.equal(resumed.snapshot.players.find((entry) => entry.id === 'smoke-host').characterId, 'poison');
   assert.equal(resumed.snapshot.chat.length, 1);
 
