@@ -27,3 +27,18 @@ All four SVGs share identical route, lane, safe-cell and spawn coordinates. Only
 - ELITE: dark walnut and gold inlay.
 - MARBLE: cool marble and platinum.
 A visual theme never changes game rules, board geometry or hit targets.
+
+
+## Extended 2.0 boards
+
+HEXA and ROYAL use the same Optimist Ludo visual language as the Classic reference: dark enamel board plate, multi-tone metal frame, player-colour neon wells, ivory marble route tiles, gold safe stars, crowned finish medallion and character pawns. The renderer is `renderExtendedBoardSvg()` in `src/extended-geometries.js`; `scripts/build-extended-boards.js` generates all four themes per geometry.
+
+The renderer reads the canonical route/home/base/finish coordinates and does not recalculate or move them. SVG cells expose `data-track-cell`, `data-home-cell`, `data-center`, `data-base-slot`, `data-finish-slot` and `data-safe-cell` attributes for automated audits. The six character images used by HEXA and ROYAL in `assets/boards/characters/board/` have compact 96×96 WebP board portraits. The build embeds those portraits directly into each generated SVG, so Mini App image rendering does not depend on loading external SVG subresources.
+
+| Board | Players | Outer cells | Home cells per player | Finish progress |
+|---|---:|---:|---:|---:|
+| CLASSIC | 4 | 52 | 5 | 56 |
+| HEXA | 6 | 72 | 6 | 78 |
+| ROYAL | 4 | 68 | 7 | 74 |
+
+Theme palettes vary the metal, glow and marble tones; artwork style, tile footprints, logical centers and player anchors remain shared and geometry-driven.
