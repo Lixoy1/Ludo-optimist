@@ -9,6 +9,7 @@ import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
 const ROOM_TTL_MS = 6 * 60 * 60 * 1000;
 const CHAT_LIMIT = 50;
 const CHAT_MAX_LENGTH = 200;
+const MAX_OBSERVERS_PER_ROOM = 100;
 
 const BOT_CHARACTER_IDS = ['cat', 'owl', 'husky', 'raccoon', 'poison', 'nikita', 'lilya-detective', 'optimist'];
 
@@ -104,6 +105,7 @@ export class RoomManager {
       isPublic: Boolean(options.isPublic ?? true),
       maxPlayers,
       players: [{ id: user.id, username: user.username.slice(0, 40), color: colors[0], characterId: isCharacterId(user.characterId) ? user.characterId : DEFAULT_CHARACTER_ID }],
+      observers: [],
       state: null,
       legalTokenIds: [],
       chat: [],
@@ -126,6 +128,42 @@ export class RoomManager {
     return Boolean(room?.players.some((player) => player.id === userId && !player.isBot));
   }
 
+  isObserver(roomId, userId) {
+    const room = this.rooms.get(roomId);
+    return Boolean(room?.observers?.some((observer) => observer.id === userId));
+  }
+
+  isChatParticipant(roomId, userId) {
+    return this.isMember(roomId, userId) || this.isObserver(roomId, userId);
+  }
+
+  getRole(roomId, userId) {
+    if (this.isMember(roomId, userId)) return 'PLAYER';
+    if (this.isObserver(roomId, userId)) return 'OBSERVER';
+    throw new RoomError('NOT_A_MEMBER', 'Нет доступа к этой игре.', 403);
+  }
+
+  joinAsObserver(roomId, user) {
+    const room = this.getRoom(roomId);
+    if (!user?.id || !user?.username) throw new RoomError('INVALID_USER', 'Не удалось определить наблюдателя.');
+    if (room.players.some((player) => player.id === user.id && player.isBot)) {
+      throw new RoomError('BOT_ID_RESERVED', 'Этот идентификатор принадлежит игровому боту.', 403);
+    }
+    if (this.isMember(roomId, user.id) || this.isObserver(roomId, user.id)) {
+      return this.getSnapshot(roomId, user.id);
+    }
+    if (room.observers.length >= MAX_OBSERVERS_PER_ROOM) {
+      throw new RoomError('OBSERVER_LIMIT', 'В игре слишком много наблюдателей. Попробуй позже.', 503);
+    }
+    room.observers.push({
+      id:user.id,
+      username:String(user.username || user.id).slice(0,40),
+      joinedAt:this.now(),
+    });
+    room.updatedAt = this.now();
+    return this.getSnapshot(roomId, user.id);
+  }
+
   joinRoom(roomId, user) {
     const room = this.getRoom(roomId);
     const existing = room.players.find((player) => player.id === user.id);
@@ -133,6 +171,7 @@ export class RoomManager {
     if (existing) return this.getSnapshot(roomId, user.id);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
     if (room.players.length >= room.maxPlayers) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
+    room.observers = room.observers.filter((observer) => observer.id !== user.id);
     const colors = room.boardType === 'CLASSIC' ? COLORS : getPlayableGeometry(room.boardType).arms.map((arm) => arm.player.id);
     const color = colors.find((candidate) => !room.players.some((player) => player.color === candidate));
     if (!color) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
@@ -245,17 +284,17 @@ export class RoomManager {
 
   sendChat(roomId, userId, text) {
     const room = this.getRoom(roomId);
-    const player = this.assertMember(room, userId);
+    const sender = this.assertChatParticipant(room, userId);
     const clean = typeof text === 'string' ? text.trim() : '';
     if (!clean) throw new RoomError('EMPTY_MESSAGE', 'Сообщение не должно быть пустым.');
     if (clean.length > CHAT_MAX_LENGTH) throw new RoomError('MESSAGE_TOO_LONG', 'Сообщение должно быть не длиннее 200 символов.');
     this.checkChatRate(room, userId, 800);
-    return this.appendChat(room, player, clean, null);
+    return this.appendChat(room, sender, clean, null);
   }
 
   assertVoiceAllowed(roomId, userId) {
     const room = this.getRoom(roomId);
-    this.assertMember(room, userId);
+    this.assertChatParticipant(room, userId);
     const last = room.lastChatAt.get(userId);
     if (last !== undefined && this.now() - last < 1_500) throw new RoomError('RATE_LIMIT', 'Подожди немного перед следующим сообщением.', 429);
     return true;
@@ -263,7 +302,7 @@ export class RoomManager {
 
   sendVoice(roomId, userId, voice) {
     const room = this.getRoom(roomId);
-    const player = this.assertMember(room, userId);
+    const sender = this.assertChatParticipant(room, userId);
     if (!voice || !/^[a-f0-9]{32}$/.test(voice.id) || !Number.isInteger(voice.durationSeconds) ||
         voice.durationSeconds < 1 || voice.durationSeconds > 30 || !Number.isInteger(voice.sizeBytes) ||
         voice.sizeBytes < 256 || voice.sizeBytes > 512 * 1024 ||
@@ -271,7 +310,7 @@ export class RoomManager {
       throw new RoomError('INVALID_VOICE_MESSAGE', 'Голосовое сообщение имеет неподдерживаемый формат.');
     }
     this.checkChatRate(room, userId, 1_500);
-    return this.appendChat(room, player, '🎙️ Голосовое сообщение', { ...voice });
+    return this.appendChat(room, sender, '🎙️ Голосовое сообщение', { ...voice });
   }
 
   checkChatRate(room, userId, intervalMs) {
@@ -281,11 +320,12 @@ export class RoomManager {
     room.lastChatAt.set(userId, now);
   }
 
-  appendChat(room, player, text, voice) {
+  appendChat(room, sender, text, voice) {
     const message = {
       id: randomBytes(8).toString('hex'), roomId: room.id,
-      senderId: player.id, senderName: player.username, text,
-      senderType: 'PLAYER', timestamp: this.now(),
+      senderId: sender.id, senderName: sender.username, text,
+      senderType: sender.role, timestamp: this.now(),
+      ...(sender.color ? { senderColor:sender.color } : {}),
       ...(voice ? { voice } : {}),
     };
     room.chat.push(message);
@@ -300,13 +340,24 @@ export class RoomManager {
     return player;
   }
 
+  assertChatParticipant(room, userId) {
+    const player = room.players.find((entry) => entry.id === userId && !entry.isBot);
+    if (player) return { ...player, role:'PLAYER' };
+    const observer = room.observers.find((entry) => entry.id === userId);
+    if (observer) return { ...observer, role:'OBSERVER' };
+    throw new RoomError('NOT_A_MEMBER', 'Ты не подключён к этой игре.', 403);
+  }
+
   getSnapshot(roomId, viewerId) {
     const room = this.getRoom(roomId);
-    this.assertMember(room, viewerId);
+    const viewerRole = this.getRole(roomId, viewerId);
     return {
       roomId: room.id, hostId: room.hostId, status: room.status,
       boardType: room.boardType, isPublic: room.isPublic, maxPlayers: room.maxPlayers,
+      viewerRole,
       players: room.players.map((player) => ({ ...player })),
+      observers: room.observers.map((observer) => ({ id:observer.id, username:observer.username })),
+      observerCount:room.observers.length,
       state: room.state ? structuredClone(room.state) : null,
       legalTokenIds: [...room.legalTokenIds],
       chat: room.chat.map((message) => structuredClone(message)),
