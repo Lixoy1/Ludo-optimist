@@ -66,6 +66,14 @@ for (const [id, geometry] of Object.entries(EXTENDED_GEOMETRIES)) {
     assert.equal(map.track.length,geometry.trackLength);
     assert.equal(map.arms.length,geometry.maxPlayers);
     assert.deepEqual(map.safeIndices,geometry.safeIndices);
+    assert.equal(map.outline.length,geometry.outline.length);
+    assert.equal(map.finishVertices.length,geometry.finishVertices.length);
+    for(const [key,points] of [['outline',geometry.outline],['finishVertices',geometry.finishVertices]]) {
+      points.forEach((point,index)=>{
+        assert.ok(Math.abs(map[key][index].x-point.x)<1e-4);
+        assert.ok(Math.abs(map[key][index].y-point.y)<1e-4);
+      });
+    }
     geometry.track.forEach((cell,index)=>{
       const mapped=map.track[index];
       assert.equal(mapped.index,index);
