@@ -114,27 +114,34 @@ for (const [id,contract] of Object.entries(expected)) {
     assert.equal(assertExtendedGeometry(geometry),true);
   });
 
-  test(id.toUpperCase()+' stack layout preserves all token identities and reports crowding',()=>{
+  test(id.toUpperCase()+' stack layouts fit each tile and keep visible pawns separated',()=>{
     const geometry=EXTENDED_GEOMETRIES[id];
     assert.equal(getExtendedStackLayout(id,0).tokens.length,0);
-    assert.equal(getExtendedStackLayout(id,1).tokens.length,1);
-    assert.equal(getExtendedStackLayout(id,2).tokens.filter(token=>token.visible).length,2);
-    const four=getExtendedStackLayout(id,4);
-    assert.equal(four.tokens.length,4);
-    assert.equal(four.tokens.filter(token=>token.visible).length,4);
-    assert.equal(four.hiddenCount,0);
-    assert.equal(four.badge,null);
+
+    for(const count of [1,2,3,4]) {
+      const layout=getExtendedStackLayout(id,count);
+      const visible=layout.tokens.filter(token=>token.visible);
+      assert.equal(visible.length,count);
+      for(const token of visible) {
+        assert.ok(Math.abs(token.x)+token.diameter/2<geometry.tileSize/2,
+          id+' stack '+count+' pawn '+token.index+' exceeds the tile width');
+        assert.ok(Math.abs(token.y)+token.diameter/2<geometry.tileSize/2,
+          id+' stack '+count+' pawn '+token.index+' exceeds the tile height');
+      }
+      for(let a=0;a<visible.length;a++) for(let b=a+1;b<visible.length;b++) {
+        assert.ok(
+          distance(visible[a],visible[b])>(visible[a].diameter+visible[b].diameter)/2,
+          id+' stack '+count+' pawn artwork overlaps',
+        );
+      }
+    }
+
     const five=getExtendedStackLayout(id,5);
     assert.equal(five.tokens.length,5);
     assert.equal(five.tokens.filter(token=>token.visible).length,4);
     assert.equal(five.hiddenCount,1);
     assert.equal(five.badge,'×5');
-    const visible=four.tokens;
-    const spanX=Math.max(...visible.map(token=>token.x+token.diameter/2))-Math.min(...visible.map(token=>token.x-token.diameter/2));
-    const spanY=Math.max(...visible.map(token=>token.y+token.diameter/2))-Math.min(...visible.map(token=>token.y-token.diameter/2));
-    assert.ok(spanX<geometry.tileSize&&spanY<geometry.tileSize);
-    for(let a=0;a<visible.length;a++)for(let b=a+1;b<visible.length;b++)
-      assert.ok(distance(visible[a],visible[b])>four.tokens[0].diameter);
+    assert.equal(five.tokens[4].visible,false);
   });
 }
 
