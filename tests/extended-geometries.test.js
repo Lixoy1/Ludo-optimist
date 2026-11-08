@@ -56,6 +56,24 @@ for (const [id,contract] of Object.entries(expected)) {
     }
   });
 
+  test(id.toUpperCase()+' outline and finish polygons stay inside the 720x720 SVG plane',()=>{
+    const geometry=EXTENDED_GEOMETRIES[id];
+    assert.equal(geometry.outline.length,id==='hexa'?6:8);
+    assert.equal(geometry.finishVertices.length,id==='hexa'?6:4);
+    for(const [label,polygon] of [['outline',geometry.outline],['finish',geometry.finishVertices]]) {
+      for(const point of polygon) {
+        assert.ok(point.x>=0&&point.x<=720&&point.y>=0&&point.y<=720,
+          id+' '+label+' polygon escaped viewBox at '+point.x+','+point.y);
+      }
+      const centroid={
+        x:polygon.reduce((sum,point)=>sum+point.x,0)/polygon.length,
+        y:polygon.reduce((sum,point)=>sum+point.y,0)/polygon.length,
+      };
+      assert.ok(Math.abs(centroid.x-geometry.center.x)<.02,id+' '+label+' polygon X centre mismatch');
+      assert.ok(Math.abs(centroid.y-geometry.center.y)<.02,id+' '+label+' polygon Y centre mismatch');
+    }
+  });
+
   test(id.toUpperCase()+' starts, home entries, and home lanes are connected for every seat',()=>{
     const geometry=EXTENDED_GEOMETRIES[id];
     for(const arm of geometry.arms) {
