@@ -114,7 +114,7 @@ for (const mode of ['HEXA', 'ROYAL']) {
   test(`${mode} accepts only the exact number of players and validates token positions`, () => {
     assert.throws(() => createExtendedState(mode, roster(mode).slice(0, -1)), /exactly/);
     const malformed = stateFor(mode);
-    malformed.tokens[token('player-0')].stepProgress = geometry.trackLength;
+    malformed.tokens[token('player-0')].stepProgress = geometry.finishStep + 1;
     assert.throws(() => assertUniversalState(malformed), /stepProgress is outside/);
   });
 }
