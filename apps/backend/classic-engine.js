@@ -61,6 +61,10 @@ export function createClassicState(roster) {
     consecutiveSixes:0,
     winner:null,
     revision:0,
+    trackLength:CLASSIC_PROGRESS_CONFIG.trackLength,
+    homeCellCount:CLASSIC_PROGRESS_CONFIG.homeCells,
+    maxOuterSteps:CLASSIC_PROGRESS_CONFIG.maxOuterSteps,
+    finishStep:CLASSIC_PROGRESS_CONFIG.finishStep,
     lastAction:null,
   };
 }
@@ -184,7 +188,8 @@ export function applyClassicMove(state, playerId, tokenId) {
   const next = clone(state);
   const token = next.tokens[tokenId];
   const dice = next.dice;
-  const from = positionFromStepProgress(token.stepProgress, CLASSIC_PROGRESS_CONFIG);
+  const fromProgress = token.stepProgress;
+  const from = positionFromStepProgress(fromProgress, CLASSIC_PROGRESS_CONFIG);
   const destination = destinationProgress(token, dice);
   const to = positionFromStepProgress(destination, CLASSIC_PROGRESS_CONFIG);
   token.stepProgress = destination;
@@ -218,7 +223,7 @@ export function applyClassicMove(state, playerId, tokenId) {
   const bonusRoll = next.phase !== 'finished' && (dice === 6 || captured.length > 0 || justFinished);
   next.dice = null;
   if (next.phase !== 'finished' && !bonusRoll) next.currentPlayer = nextPlayer(next, playerId);
-  next.lastAction = { type:'MOVE', playerId, tokenId, dice, from, to, captured, bonusRoll };
+  next.lastAction = { type:'MOVE', playerId, tokenId, dice, from, to, fromProgress, toProgress:destination, captured, bonusRoll };
   next.revision += 1;
   return { state:next, captured, bonusRoll, turnAdvanced:!bonusRoll && next.phase !== 'finished' };
 }
@@ -226,6 +231,12 @@ export function applyClassicMove(state, playerId, tokenId) {
 export function assertClassicState(state) {
   if (!state || state.mode !== 'CLASSIC' || !Array.isArray(state.players) || !state.tokens) {
     throw new TypeError('Malformed Classic Ludo state.');
+  }
+  if (state.trackLength !== CLASSIC_PROGRESS_CONFIG.trackLength ||
+      state.homeCellCount !== CLASSIC_PROGRESS_CONFIG.homeCells ||
+      state.maxOuterSteps !== CLASSIC_PROGRESS_CONFIG.maxOuterSteps ||
+      state.finishStep !== CLASSIC_PROGRESS_CONFIG.finishStep) {
+    throw new Error('Classic route metadata does not match its progress configuration.');
   }
   if (state.players.length < 2 || state.players.length > 4) {
     throw new RangeError('Classic requires 2–4 players.');
