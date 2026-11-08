@@ -330,6 +330,9 @@ export function createLudoServer({
 
     const { userId, roomId } = session;
     switch (message.type) {
+      case 'PING':
+        send(ws, 'PONG', { at: now() });
+        return;
       case 'START_GAME':
         rooms.startGame(roomId, userId);
         broadcastRoom(roomId);
