@@ -212,7 +212,7 @@ export function createLudoServer({
             : requestedType === 'HEXA' ? requestedPlayers === 6
               : requestedType === 'ROYAL' ? requestedPlayers === 4 : false;
           if (!validBoardCapacity) {
-            throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, HEXA: ровно 6, ROYAL: ровно 4.');
+            throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, HEXA: ровно 6.');
           }
           if (body.isPublic !== undefined && typeof body.isPublic !== 'boolean') {
             throw new RoomError('INVALID_ROOM_CONFIG', 'isPublic должен быть логическим значением.');
