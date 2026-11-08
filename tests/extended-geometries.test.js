@@ -89,7 +89,17 @@ test('two HEXA theme assets expose identical geometry and empty pawn wells', () 
     assert.doesNotMatch(svg, /data-avatar=|<image id="avatar-/);
     assert.match(svg, /OPTIMIST/);
     assert.match(svg, /LUDO/);
+    assert.doesNotMatch(svg, /PLAYERS|CELLS|HOME\\s+6/);
   }
+});
+
+test('generated coordinate map contains only the two canonical geometries', () => {
+  const map = JSON.parse(readFileSync(resolve('Coordinates_Map.json'), 'utf8'));
+  assert.deepEqual(Object.keys(map.boards).sort(), ['classic', 'hexa']);
+  assert.equal(map.boards.classic.track.length, 52);
+  assert.equal(map.boards.classic.arms.reduce((sum, arm) => sum + arm.homeLane.length, 0), 20);
+  assert.equal(map.boards.hexa.track.length, 72);
+  assert.equal(map.boards.hexa.arms.reduce((sum, arm) => sum + arm.homeLane.length, 0), 36);
 });
 
 test('runtime HEXA art preserves logical cell count and leaves base wells empty', () => {
@@ -101,5 +111,6 @@ test('runtime HEXA art preserves logical cell count and leaves base wells empty'
     assert.doesNotMatch(svg, /data-avatar=|<image id="avatar-/);
     assert.match(svg, /<text[^>]*>OPTIMIST<\/text>/);
     assert.match(svg, /<text[^>]*>LUDO<\/text>/);
+    assert.doesNotMatch(svg, /PLAYERS|CELLS|HOME\\s+6/);
   }
 });
