@@ -18,14 +18,14 @@ function readGeneratedMap() {
   return JSON.parse(readFileSync(mapPath, 'utf8'));
 }
 
-test('Coordinates_Map exports exactly the three approved modes and their progress ranges', () => {
+test('Coordinates_Map exports exactly the two approved modes and their progress ranges', () => {
   const map = readGeneratedMap();
   assert.equal(map.schemaVersion, '2.0.0');
-  assert.deepEqual(Object.keys(map.boards).sort(), ['classic','hexa','royal']);
+  assert.deepEqual(Object.keys(map.boards).sort(), ['classic','hexa']);
   assert.equal(map.progressModel, 'stepProgress is the sole stored token progress; zone/step are derived');
   assert.deepEqual(
     Object.fromEntries(Object.entries(map.boards).map(([id,board])=>[id,[board.trackLength,board.homeCells,board.progress.finished]])),
-    { classic:[52,5,56], hexa:[72,6,78], royal:[68,7,74] },
+    { classic:[52,5,56], hexa:[72,6,78] },
   );
 });
 
