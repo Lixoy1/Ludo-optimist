@@ -520,6 +520,104 @@ const star=(x,y,r)=>Array.from({length:10},(_,index)=>{
 }).join(' ');
 const closedPath=(points)=>points.map((p,index)=>(index?'L':'M')+p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')+' Z';
 
+export const BOARD_AVATARS = Object.freeze({
+  hexa: { blue:'optimist', red:'poison', yellow:'nikita', purple:'lilya-detective', green:'lena', cyan:'elvina' },
+  royal: { blue:'optimist', red:'poison', yellow:'nikita', green:'lena' }
+});
+
+function hexPoints(points) {
+  return points.map((p)=>Number(p.x.toFixed(2))+','+Number(p.y.toFixed(2))).join(' ');
+}
+
+function chevronPath(x,y,size,rotation=0) {
+  const d=`M ${x-size*.22} ${y-size*.16} L ${x+size*.02} ${y} L ${x-size*.22} ${y+size*.16} M ${x+size*.02} ${y-size*.16} L ${x+size*.26} ${y} L ${x+size*.02} ${y+size*.16}`;
+  return `<path d="${d}" transform="rotate(${rotation} ${x} ${y})" fill="none" stroke="#fff7d9" stroke-width="${Math.max(1,size*.055)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+function crownMarkup(x,y,scale,fill='url(#gold)') {
+  return `<g transform="translate(${x} ${y}) scale(${scale})" fill="${fill}" stroke="#4a2d0b" stroke-width=".9" stroke-linejoin="round"><path d="M-12 5L-16-7L-7-2L0-12L7-2L16-7L12 5Z"/><path d="M-12 8H12L10 12H-10Z"/><circle cx="-16" cy="-7" r="2"/><circle cx="0" cy="-12" r="2"/><circle cx="16" cy="-7" r="2"/></g>`;
+}
+
+function renderTextureSpeckles(geometry) {
+  const parts=[];
+  geometry.arms.forEach((arm,index)=>{
+    const color=arm.player.color;
+    const cx=arm.baseCenter.x,cy=arm.baseCenter.y;
+    const points=[[-1.55,-.2],[-1.18,-.92],[-.82,.98],[.86,-1.02],[1.48,.44],[.28,1.45],[-1.68,.78],[1.72,-.36],[-.42,-1.62],[.7,1.72]];
+    parts.push(`<circle cx="${cx}" cy="${cy}" r="${(arm.baseRadius*1.9).toFixed(2)}" fill="url(#splash-${arm.player.id})" opacity=".92"/>`);
+    for(let i=0;i<points.length;i++){
+      const [dx,dy]=points[i];
+      const r=(i%4===0?5.2:i%3===0?3.6:2.15)+(index%2)*.3;
+      const x=cx+dx*arm.baseRadius,y=cy+dy*arm.baseRadius;
+      parts.push(`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${r}" fill="${color}" opacity="${i%3===0?'.34':'.23'}"/>`);
+    }
+    const sprayX=cx+(index%2?1:-1)*arm.baseRadius*1.42;
+    const sprayY=cy+(index%3===0?-1:1)*arm.baseRadius*.96;
+    parts.push(`<path d="M ${(sprayX-9).toFixed(2)} ${(sprayY+7).toFixed(2)} q 9 -12 18 -4 M ${(sprayX-5).toFixed(2)} ${(sprayY+14).toFixed(2)} q 8 -10 17 -8" stroke="${color}" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".3"/>`);
+  });
+  return parts.join('');
+}
+
+function renderTrackCell(cell,geometry,palette) {
+  const size=geometry.tileSize;
+  const half=size/2;
+  const radius=Math.max(2.3,size*.12);
+  const player=cell.startFor?geometry.arms.find((arm)=>arm.player.id===cell.startFor):null;
+  const fill=player?`url(#player-${player.player.id})`:'url(#marble)';
+  const parts=[];
+  parts.push(`<g data-track-cell="${cell.index}" data-center="${cell.x},${cell.y}" transform="rotate(${cell.rotation} ${cell.x} ${cell.y})">`);
+  parts.push(`<rect x="${(cell.x-half+1.5).toFixed(3)}" y="${(cell.y-half+2.1).toFixed(3)}" width="${size}" height="${size}" rx="${radius}" fill="#02030a" opacity=".78"/>`);
+  parts.push(`<rect x="${(cell.x-half).toFixed(3)}" y="${(cell.y-half).toFixed(3)}" width="${size}" height="${size}" rx="${radius}" fill="${fill}" stroke="${palette.gold}" stroke-width="1.35"/>`);
+  parts.push(`<path d="M ${(cell.x-half+3).toFixed(3)} ${(cell.y-half+3).toFixed(3)} H ${(cell.x+half-3).toFixed(3)}" stroke="#ffffff" stroke-opacity=".72" stroke-width=".95" stroke-linecap="round"/>`);
+  parts.push(`<path d="M ${(cell.x-half+3).toFixed(3)} ${(cell.y+half-3).toFixed(3)} H ${(cell.x+half-3).toFixed(3)}" stroke="${palette.ink}" stroke-opacity=".24" stroke-width=".9" stroke-linecap="round"/>`);
+  parts.push(`<path d="M ${(cell.x-half*.55).toFixed(3)} ${(cell.y-half*.24).toFixed(3)} Q ${(cell.x-half*.06).toFixed(3)} ${(cell.y-half*.58).toFixed(3)} ${(cell.x+half*.22).toFixed(3)} ${(cell.y-half*.52).toFixed(3)}" stroke="#ffffff" stroke-opacity=".25" stroke-width=".72" fill="none"/>`);
+  if(!player) {
+    parts.push(`<path d="M ${(cell.x-half*.32).toFixed(3)} ${(cell.y+half*.42).toFixed(3)} Q ${(cell.x-half*.04).toFixed(3)} ${(cell.y+half*.08).toFixed(3)} ${(cell.x+half*.28).toFixed(3)} ${(cell.y+half*.18).toFixed(3)}" stroke="#8e8994" stroke-opacity=".34" stroke-width=".62" fill="none"/>`);
+  }
+  if(player) {
+    parts.push(`<circle cx="${cell.x}" cy="${cell.y}" r="${size*.22}" fill="#080b17" fill-opacity=".55" stroke="${palette.gold}" stroke-width=".9"/>`);
+    parts.push(crownMarkup(cell.x,cell.y+1,size*.027,'#fff0bd'));
+  }
+  if(cell.entryFor) {
+    parts.push(`<circle cx="${cell.x}" cy="${cell.y}" r="${size*.31}" fill="#0b0d18" fill-opacity=".72" stroke="${palette.gold}" stroke-width=".8"/>`);
+    parts.push(chevronPath(cell.x,cell.y,size*.52,cell.rotation));
+  }
+  parts.push('</g>');
+  if(cell.safe) {
+    const markerRadius=size*.22;
+    parts.push(`<g data-safe-cell="${cell.index}" transform="translate(${cell.x} ${cell.y})">`);
+    if(cell.startFor) {
+      parts.push(`<circle r="${size*.29}" fill="#0a0c16" fill-opacity=".55" stroke="${palette.gold}" stroke-width=".75"/>`);
+      parts.push(crownMarkup(0,1,size*.026,'url(#gold)'));
+    } else {
+      parts.push(`<polygon points="${star(0,0,markerRadius)}" fill="url(#gold)" stroke="#402609" stroke-width=".85"/>`);
+      parts.push(`<circle r="${size*.045}" fill="#fff8db"/>`);
+    }
+    parts.push('</g>');
+  }
+  return parts.join('');
+}
+
+function renderHomeCell(cell,arm,index,geometry,palette) {
+  const size=geometry.tileSize,half=size/2;
+  const color=arm.player.color;
+  const last=index===arm.homeLane.length-1;
+  const id=`${arm.index}:${index}`;
+  const parts=[];
+  parts.push(`<g data-home-cell="${id}" data-center="${cell.x},${cell.y}" transform="rotate(${cell.rotation} ${cell.x} ${cell.y})">`);
+  parts.push(`<rect x="${(cell.x-half+1.3).toFixed(3)}" y="${(cell.y-half+2).toFixed(3)}" width="${size}" height="${size}" rx="${size*.12}" fill="#02030a" opacity=".75"/>`);
+  parts.push(`<rect x="${(cell.x-half).toFixed(3)}" y="${(cell.y-half).toFixed(3)}" width="${size}" height="${size}" rx="${size*.12}" fill="url(#player-${arm.player.id})" stroke="${palette.gold}" stroke-width="1.45"/>`);
+  parts.push(`<path d="M ${(cell.x-half+3).toFixed(3)} ${(cell.y-half+3).toFixed(3)} H ${(cell.x+half-3).toFixed(3)}" stroke="#fff" stroke-opacity=".48" stroke-width=".85" stroke-linecap="round"/>`);
+  parts.push(`<path d="M ${(cell.x-half*.52).toFixed(3)} ${(cell.y-half*.28).toFixed(3)} L ${(cell.x+half*.3).toFixed(3)} ${(cell.y-half*.52).toFixed(3)}" stroke="#fff" stroke-opacity=".18" stroke-width=".75"/>`);
+  if(last) {
+    parts.push(`<path d="M ${cell.x-half*.24} ${cell.y+half*.12} L ${cell.x} ${cell.y-half*.12} L ${cell.x+half*.24} ${cell.y+half*.12}" fill="none" stroke="#fff4c9" stroke-width="${Math.max(1,size*.065)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+  } else {
+    parts.push(`<circle cx="${cell.x}" cy="${cell.y}" r="${size*.055}" fill="#fff0bb" opacity=".82"/>`);
+  }
+  parts.push('</g>');
+  return parts.join('');
+}
+
 export function renderExtendedBoardSvg(geometry,theme='neon') {
   if(!BOARD_THEMES[theme]) throw new RangeError('Unknown board theme.');
   assertExtendedGeometry(geometry);
@@ -527,51 +625,84 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
   const parts=[];
   const colors=geometry.arms.map((arm)=>arm.player.color);
   const title=geometry.id.toUpperCase();
-  parts.push('<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" role="img" aria-label="OPTIMIST LUDO '+title+'"><title>OPTIMIST LUDO '+title+' board</title><defs>');
-  parts.push('<linearGradient id="frame" x2="1" y2="1"><stop stop-color="'+palette.glow+'"/><stop offset=".35" stop-color="'+palette.gold+'"/><stop offset="1" stop-color="'+palette.shadow+'"/></linearGradient>');
-  parts.push('<linearGradient id="tile" x2="0" y2="1"><stop stop-color="#fff"/><stop offset=".55" stop-color="'+palette.cell+'"/><stop offset="1" stop-color="'+palette.tile2+'"/></linearGradient>');
-  parts.push('<radialGradient id="well"><stop stop-color="'+palette.baseBg+'"/><stop offset="1" stop-color="#03050a"/></radialGradient></defs>');
-  parts.push('<rect width="720" height="720" rx="32" fill="'+palette.bg+'"/>');
-  parts.push('<path d="'+closedPath(geometry.outline)+'" fill="url(#frame)" stroke="'+palette.gold+'" stroke-width="4"/>');
-  const inner=geometry.outline.map((p)=>({x:360+(p.x-360)*.96,y:360+(p.y-360)*.96}));
-  parts.push('<path d="'+closedPath(inner)+'" fill="'+palette.board+'" stroke="'+palette.shadow+'" stroke-width="5"/>');
+  const view=VIEW;
+  const outlinePath=closedPath(geometry.outline);
+  const innerOutline=geometry.outline.map((p)=>({x:360+(p.x-360)*.972,y:360+(p.y-360)*.972}));
+  const innerPath=closedPath(innerOutline);
+  const tile=geometry.tileSize;
 
+  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="720" height="720" viewBox="0 0 720 720" role="img" aria-label="OPTIMIST LUDO ${title}"><title>OPTIMIST LUDO ${title} board</title><desc>${geometry.maxPlayers} players, ${geometry.trackLength} outer cells, ${geometry.homeCells} home cells per player. Coordinates are generated from the canonical geometry.</desc><defs>`);
+  parts.push(`<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#030711"/><stop offset=".48" stop-color="${palette.bg}"/><stop offset="1" stop-color="#050610"/></linearGradient>`);
+  parts.push(`<radialGradient id="bgGlow"><stop stop-color="${palette.glow}" stop-opacity=".24"/><stop offset="1" stop-color="${palette.glow}" stop-opacity="0"/></radialGradient>`);
+  parts.push(`<linearGradient id="plate" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#172239"/><stop offset=".48" stop-color="#080e1d"/><stop offset="1" stop-color="#1d2431"/></linearGradient>`);
+  parts.push(`<linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b6"/><stop offset=".16" stop-color="${palette.gold}"/><stop offset=".42" stop-color="#73451b"/><stop offset=".62" stop-color="${palette.glow}"/><stop offset=".8" stop-color="#281b24"/><stop offset="1" stop-color="#fff0bc"/></linearGradient>`);
+  parts.push(`<linearGradient id="gold" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#fff7cc"/><stop offset=".25" stop-color="#ffe28a"/><stop offset=".56" stop-color="#cb8624"/><stop offset=".82" stop-color="#704015"/><stop offset="1" stop-color="#ffdf7c"/></linearGradient>`);
+  parts.push(`<linearGradient id="marble" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#fffef8"/><stop offset=".42" stop-color="${palette.cell}"/><stop offset=".8" stop-color="${palette.tile2}"/><stop offset="1" stop-color="#b4a69a"/></linearGradient>`);
+  parts.push(`<radialGradient id="darkWell"><stop stop-color="#27324a"/><stop offset=".72" stop-color="#0d1426"/><stop offset="1" stop-color="#050711"/></radialGradient>`);
+  parts.push(`<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`);
+  parts.push(`<clipPath id="boardClip"><path d="${outlinePath}"/></clipPath>`);
+  geometry.arms.forEach((arm,index)=>{
+    parts.push(`<linearGradient id="player-${arm.player.id}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff" stop-opacity=".32"/><stop offset=".22" stop-color="${arm.player.color}"/><stop offset=".7" stop-color="${arm.player.dark}"/><stop offset="1" stop-color="#080b16"/></linearGradient>`);
+    parts.push(`<radialGradient id="splash-${arm.player.id}"><stop stop-color="${arm.player.color}" stop-opacity=".72"/><stop offset=".52" stop-color="${arm.player.color}" stop-opacity=".2"/><stop offset="1" stop-color="${arm.player.color}" stop-opacity="0"/></radialGradient>`);
+    parts.push(`<radialGradient id="base-${arm.player.id}"><stop stop-color="${arm.player.dark}"/><stop offset=".72" stop-color="#11182a"/><stop offset="1" stop-color="#03050d"/></radialGradient>`);
+  });
+  parts.push('</defs>');
+
+  // Dark, richly textured board plate and atmospheric paint splashes.
+  parts.push(`<rect width="${view}" height="${view}" rx="34" fill="url(#bg)"/>`);
+  parts.push(`<circle cx="360" cy="360" r="360" fill="url(#bgGlow)" opacity=".6"/>`);
+  parts.push(`<path d="${outlinePath}" fill="url(#plate)" stroke="#05070c" stroke-width="15" stroke-linejoin="round"/>`);
+  parts.push(`<path d="${outlinePath}" fill="none" stroke="${palette.glow}" stroke-opacity=".48" stroke-width="13" stroke-linejoin="round" filter="url(#glow)"/>`);
+  parts.push(`<path d="${outlinePath}" fill="none" stroke="url(#metal)" stroke-width="8" stroke-linejoin="round"/>`);
+  parts.push(`<path d="${outlinePath}" fill="none" stroke="#fff1bd" stroke-opacity=".62" stroke-width="1.6" stroke-linejoin="round"/>`);
+  parts.push(`<path d="${innerPath}" fill="none" stroke="${palette.glow}" stroke-opacity=".48" stroke-width="1.8" stroke-linejoin="round"/>`);
+  parts.push(`<g clip-path="url(#boardClip)">${renderTextureSpeckles(geometry)}</g>`);
+
+  // Crowned home bases with their four character artworks. The slot coordinates are the geometry anchors.
   geometry.arms.forEach((arm)=>{
     const color=arm.player.color,base=arm.baseCenter,radius=arm.baseRadius;
-    parts.push('<g data-base="'+arm.player.id+'"><circle cx="'+base.x+'" cy="'+base.y+'" r="'+radius+'" fill="'+palette.shadow+'" fill-opacity=".72" stroke="url(#frame)" stroke-width="5"/>');
-    parts.push('<circle cx="'+base.x+'" cy="'+base.y+'" r="'+radius*.9+'" fill="'+color+'" fill-opacity=".23" stroke="'+color+'" stroke-width="3"/>');
-    arm.baseSlots.forEach((slot,index)=>parts.push('<circle data-base-slot="'+arm.index+':'+index+'" cx="'+slot.x+'" cy="'+slot.y+'" r="'+geometry.pawnDiameter*.54+'" fill="url(#well)" stroke="'+palette.gold+'" stroke-width="2"/>'));
+    const avatar=BOARD_AVATARS[geometry.id][arm.player.id]||'optimist';
+    parts.push(`<g data-base="${arm.player.id}">`);
+    parts.push(`<circle cx="${base.x}" cy="${base.y}" r="${(radius+6).toFixed(2)}" fill="none" stroke="${color}" stroke-opacity=".48" stroke-width="8" filter="url(#glow)"/>`);
+    parts.push(`<circle cx="${base.x}" cy="${base.y}" r="${radius.toFixed(2)}" fill="url(#base-${arm.player.id})" stroke="url(#metal)" stroke-width="4.2"/>`);
+    parts.push(`<circle cx="${base.x}" cy="${base.y}" r="${(radius*.91).toFixed(2)}" fill="none" stroke="${color}" stroke-width="2.6"/>`);
+    parts.push(`<circle cx="${base.x}" cy="${base.y}" r="${(radius*.82).toFixed(2)}" fill="none" stroke="#ffffff" stroke-opacity=".18" stroke-width="1.1"/>`);
+    arm.baseSlots.forEach((slot,index)=>{
+      const d=geometry.pawnDiameter;
+      parts.push(`<g data-base-slot="${arm.index}:${index}">`);
+      parts.push(`<circle cx="${slot.x}" cy="${slot.y}" r="${(d*.78).toFixed(3)}" fill="#02050d" stroke="url(#gold)" stroke-width="1.8"/>`);
+      parts.push(`<circle cx="${slot.x}" cy="${slot.y}" r="${(d*.64).toFixed(3)}" fill="url(#player-${arm.player.id})" stroke="${color}" stroke-width=".95"/>`);
+      parts.push(`<svg data-avatar="${avatar}" x="${(slot.x-d*.9).toFixed(3)}" y="${(slot.y-d*1.23).toFixed(3)}" width="${(d*1.8).toFixed(3)}" height="${(d*1.8).toFixed(3)}" viewBox="0 0 96 96" preserveAspectRatio="xMidYMax meet" overflow="visible"><use href="#avatar-${avatar}" xlink:href="#avatar-${avatar}" x="0" y="0" width="96" height="96"/></svg>`);
+      parts.push('</g>');
+    });
+    parts.push(crownMarkup(base.x,base.y,.78,'url(#gold)'));
     parts.push('</g>');
   });
 
-  geometry.track.forEach((cell)=>{
-    const size=geometry.tileSize;
-    const fill=cell.startFor?geometry.arms.find((arm)=>arm.player.id===cell.startFor).player.color:'url(#tile)';
-    parts.push('<g data-track-cell="'+cell.index+'" data-center="'+cell.x+','+cell.y+'" transform="rotate('+cell.rotation+' '+cell.x+' '+cell.y+')">');
-    parts.push('<rect x="'+(cell.x-size/2+1.5)+'" y="'+(cell.y-size/2+2.5)+'" width="'+size+'" height="'+size+'" rx="'+size*.08+'" fill="'+palette.shadow+'" opacity=".5"/>');
-    parts.push('<rect x="'+(cell.x-size/2)+'" y="'+(cell.y-size/2)+'" width="'+size+'" height="'+size+'" rx="'+size*.08+'" fill="'+fill+'" stroke="'+palette.edge+'" stroke-width="1.5"/></g>');
-    if(cell.safe) parts.push('<polygon data-safe-cell="'+cell.index+'" points="'+star(cell.x,cell.y,size*.22)+'" fill="'+palette.gold+'" stroke="'+palette.ink+'" stroke-width=".7"/>');
-    if(cell.startFor) parts.push('<path d="M'+(cell.x-4)+' '+(cell.y+4)+'l4 -9 4 9h-3v5h-2v-5z" fill="#fff5d8" stroke="'+palette.ink+'" stroke-width=".7"/>');
-  });
+  // Full-footprint marble track tiles and their safe/start emblems.
+  geometry.track.forEach((cell)=>parts.push(renderTrackCell(cell,geometry,palette)));
 
-  geometry.arms.forEach((arm)=>{
-    arm.homeLane.forEach((cell,index)=>{
-      const size=geometry.tileSize,color=arm.player.color;
-      parts.push('<g data-home-cell="'+arm.index+':'+index+'" transform="rotate('+cell.rotation+' '+cell.x+' '+cell.y+')">');
-      parts.push('<rect x="'+(cell.x-size/2)+'" y="'+(cell.y-size/2)+'" width="'+size+'" height="'+size+'" rx="'+size*.08+'" fill="'+color+'" stroke="'+palette.gold+'" stroke-width="2"/>');
-      parts.push('<text x="'+cell.x+'" y="'+(cell.y+3)+'" fill="#fff" text-anchor="middle" font-family="Arial" font-size="9">H'+(index+1)+'</text></g>');
-    });
-  });
+  // Home lanes inherit the exact canonical lane centres and cell pitch.
+  geometry.arms.forEach((arm)=>arm.homeLane.forEach((cell,index)=>parts.push(renderHomeCell(cell,arm,index,geometry,palette))));
 
+  // Colour-coded finish wedges and four exact pawn sockets per player.
   for(let index=0;index<geometry.arms.length;index++) {
     const a=geometry.finishVertices[index],b=geometry.finishVertices[(index+1)%geometry.finishVertices.length];
-    parts.push('<path d="M360 360L'+a.x+' '+a.y+'L'+b.x+' '+b.y+'Z" fill="'+colors[index]+'" fill-opacity=".68" stroke="'+palette.gold+'" stroke-width="2"/>');
+    const arm=geometry.arms[index];
+    parts.push(`<path d="M ${geometry.center.x} ${geometry.center.y} L ${a.x} ${a.y} L ${b.x} ${b.y} Z" fill="url(#player-${arm.player.id})" fill-opacity=".9" stroke="url(#gold)" stroke-width="1.6"/>`);
   }
+  parts.push(`<path d="${closedPath(geometry.finishVertices)}" fill="none" stroke="#fff0b0" stroke-opacity=".72" stroke-width="1.1"/>`);
   geometry.arms.forEach((arm)=>arm.finishSlots.forEach((slot,index)=>{
-    parts.push('<circle data-finish-slot="'+arm.index+':'+index+'" cx="'+slot.x+'" cy="'+slot.y+'" r="'+geometry.pawnDiameter*geometry.finishPawnScale*.48+'" fill="url(#well)" stroke="'+palette.gold+'" stroke-width="1.3"/>');
+    const r=geometry.pawnDiameter*geometry.finishPawnScale*.48;
+    parts.push(`<g data-finish-slot="${arm.index}:${index}"><circle cx="${slot.x}" cy="${slot.y}" r="${r.toFixed(3)}" fill="#070b15" stroke="url(#gold)" stroke-width=".9"/><circle cx="${slot.x}" cy="${slot.y}" r="${(r*.42).toFixed(3)}" fill="${arm.player.color}"/></g>`);
   }));
-  parts.push('<circle cx="360" cy="360" r="12" fill="url(#frame)" stroke="'+palette.gold+'" stroke-width="2"/>');
-  parts.push('<path d="M352 360l3-7 5 4 4-9 4 9 5-4 3 7z" fill="'+palette.accent+'"/>');
-  parts.push('<text x="360" y="24" fill="'+palette.accent+'" font-family="Arial" text-anchor="middle" font-size="10" font-weight="900" letter-spacing="2">OPTIMIST LUDO · '+title+'</text></svg>');
+  const centerRadius=geometry.id==='hexa'?14:18;
+  parts.push(`<circle cx="${geometry.center.x}" cy="${geometry.center.y}" r="${centerRadius+3}" fill="#070b14" stroke="url(#metal)" stroke-width="3"/>`);
+  parts.push(`<circle cx="${geometry.center.x}" cy="${geometry.center.y}" r="${centerRadius}" fill="url(#gold)" stroke="#fff1bf" stroke-width=".9"/>`);
+  parts.push(crownMarkup(geometry.center.x,geometry.center.y+2,geometry.id==='hexa'?.46:.58,'#24170d'));
+
+  // Small branding sits in the border band and never shifts a logical tile or anchor.
+  parts.push(`<g text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" letter-spacing="2"><text x="360" y="24" font-size="9.5" fill="#080b15" stroke="#05070d" stroke-width="3.5" paint-order="stroke">OPTIMIST LUDO</text><text x="360" y="24" font-size="9.5" fill="url(#gold)">OPTIMIST LUDO</text><text x="360" y="706" font-size="7.2" letter-spacing="1.3" fill="#fff0c4" fill-opacity=".92">${title}  ·  ${geometry.maxPlayers} PLAYERS  ·  ${geometry.trackLength} CELLS  ·  HOME ${geometry.homeCells}</text></g>`);
+  parts.push('</svg>');
   return parts.join('');
 }
