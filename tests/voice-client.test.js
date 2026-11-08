@@ -44,19 +44,37 @@ test('room client createRoom sends Telegram initData and room limits', async () 
 });
 
 
-test('room client can create a PENTA table through an explicit board mode', async () => {
+
+test('room client accepts HEXA and ROYAL using canonical board IDs', async () => {
   const { LudoRoomClient } = await import('../src/client/room-client.js');
-  let payload;
-  await LudoRoomClient.createRoom({ maxPlayers: 5, boardType: 'PENTA', fetchImpl: async (_url, options) => { payload = JSON.parse(options.body); return { ok: true, json: async () => ({ roomId: 'penta-room' }) }; } });
-  assert.deepEqual(payload, { maxPlayers: 5, boardType: 'PENTA', isPublic: true, characterId: 'optimist' });
+  for (const [boardType, maxPlayers] of [['HEXA', 6], ['ROYAL', 4]]) {
+    let payload;
+    await LudoRoomClient.createRoom({
+      maxPlayers, boardType:boardType.toLowerCase(),
+      fetchImpl:async (_url, options) => { payload=JSON.parse(options.body); return { ok:true, json:async()=>({roomId:'board-room'}) }; },
+    });
+    assert.equal(payload.boardType, boardType);
+    assert.equal(payload.maxPlayers, maxPlayers);
+  }
 });
 
-
-test('room client sends the DIAMOND board mode without changing four-player capacity', async () => {
+test('room client rejects unsupported board IDs and impossible player capacities before fetch', async () => {
   const { LudoRoomClient } = await import('../src/client/room-client.js');
-  let payload;
-  await LudoRoomClient.createRoom({ maxPlayers: 4, boardType: 'DIAMOND', fetchImpl: async (_url, options) => { payload = JSON.parse(options.body); return { ok: true, json: async () => ({ roomId: 'diamond-room' }) }; } });
-  assert.deepEqual(payload, { maxPlayers: 4, boardType: 'DIAMOND', isPublic: true, characterId: 'optimist' });
+  let fetched=false;
+  const fetchImpl=async()=>{fetched=true;throw new Error('fetch should not run');};
+  for (const boardType of ['UNKNOWN', 'DIAMOND', 'PENTA', 'HEX']) {
+    await assert.rejects(
+      LudoRoomClient.createRoom({boardType,fetchImpl}),
+      /Board type must be CLASSIC, HEXA or ROYAL/,
+    );
+  }
+  for (const [boardType,maxPlayers] of [['CLASSIC',6],['HEXA',4],['ROYAL',6]]) {
+    await assert.rejects(
+      LudoRoomClient.createRoom({boardType,maxPlayers,fetchImpl}),
+      /requires/,
+    );
+  }
+  assert.equal(fetched,false);
 });
 
 test('room client listRooms reads the public lobby using Telegram initData', async () => {
