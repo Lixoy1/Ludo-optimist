@@ -144,6 +144,14 @@ try {
   assert.equal(observer.snapshot.viewerRole, 'OBSERVER');
   assert.equal(observer.snapshot.observerCount, 1);
 
+  const autoObserver = await openRoomSocket(wsUrl, {
+    roomId, devUserId:'smoke-auto-observer', devUsername:'Auto Observer',
+  });
+  assert.equal(autoObserver.authPayload.role,'OBSERVER');
+  assert.equal(autoObserver.snapshot.viewerRole,'OBSERVER');
+  assert.equal(autoObserver.snapshot.observerCount,2);
+  await closeSocket(autoObserver.socket);
+
   const observerChat = waitForEvent(hostSocket, 'CHAT_MESSAGE', (payload) => payload?.senderId === 'smoke-observer');
   observerSocket.send(JSON.stringify({ type:'SEND_CHAT', text:'Привет, смотрю партию!' }));
   const observerMessage = await observerChat;
@@ -182,11 +190,11 @@ try {
   assert.equal(resumed.snapshot.state.tokens['smoke-host:0'].stepProgress, 0);
   assert.equal(resumed.snapshot.players.find((entry) => entry.id === 'smoke-host').characterId, 'poison');
   assert.equal(resumed.snapshot.chat.length, 3);
-  assert.equal(resumed.snapshot.observerCount, 1);
+  assert.equal(resumed.snapshot.observerCount, 2);
 
   const health = await fetch(`${baseUrl}/healthz`).then((response) => response.json());
   assert.equal(health.status, 'ok');
-  assert.equal(health.voice.files, 1);
+  assert.equal(health.voice.files, 2);
   console.log('OPTIMIST LUDO server smoke test: PASS (rooms, character sync, player moves, observer read-only access, observer text/voice chat, voice playback, reconnect snapshot).');
 } finally {
   if (hostSocket) await closeSocket(hostSocket);
