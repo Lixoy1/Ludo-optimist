@@ -150,7 +150,6 @@ assertBoardGeometry();
 const boards={
   classic:buildClassic(),
   hexa:buildExtended(EXTENDED_GEOMETRIES.hexa),
-  royal:buildExtended(EXTENDED_GEOMETRIES.royal),
 };
 const payload={
   schemaVersion:'2.0.0',
@@ -160,4 +159,4 @@ const payload={
   boards,
 };
 await writeFile(new URL('../Coordinates_Map.json',import.meta.url),JSON.stringify(payload,null,2)+'\n','utf8');
-process.stdout.write('Wrote Coordinates_Map.json for CLASSIC, HEXA and ROYAL.\n');
+process.stdout.write('Wrote Coordinates_Map.json for CLASSIC and HEXA.\n');
