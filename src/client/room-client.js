@@ -1,7 +1,7 @@
 import { VoiceChatClient, createVoiceMessagePlayer } from './voice-chat.js';
 
 export class LudoRoomClient {
-  constructor({ roomId, initData = '', getInitData = null, devUserId = '', devUsername = '', characterId = 'optimist', wsUrl, onEvent = () => {}, onSnapshot = () => {}, autoReconnect = true } = {}) {
+  constructor({ roomId, initData = '', getInitData = null, devUserId = '', devUsername = '', characterId = 'optimist', role = 'PLAYER', wsUrl, onEvent = () => {}, onSnapshot = () => {}, autoReconnect = true } = {}) {
     if (!roomId) throw new TypeError('roomId is required.');
     this.roomId = roomId;
     this.initData = initData;
@@ -9,6 +9,7 @@ export class LudoRoomClient {
     this.devUserId = devUserId;
     this.devUsername = devUsername;
     this.characterId = characterId;
+    this.role = role === 'OBSERVER' ? 'OBSERVER' : 'PLAYER';
     this.wsUrl = wsUrl || `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`;
     this.onEvent = onEvent;
     this.onSnapshot = onSnapshot;
@@ -48,7 +49,7 @@ export class LudoRoomClient {
   }
 
   authMessage() {
-    const auth = { type: 'AUTH', roomId: this.roomId, initData: this.getInitData() || '', characterId: this.characterId };
+    const auth = { type: 'AUTH', roomId: this.roomId, initData: this.getInitData() || '', characterId: this.characterId, role:this.role };
     if (this.resumeToken) auth.resumeToken = this.resumeToken;
     if (this.devUserId) { auth.devUserId = this.devUserId; auth.devUsername = this.devUsername; }
     return auth;
