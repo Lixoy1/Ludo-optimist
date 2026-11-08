@@ -15,8 +15,8 @@ export const TOKENS_PER_PLAYER = 4;
 
 function normalizeBoardType(boardType) {
   const value = String(boardType || 'CLASSIC').toUpperCase();
-  if (!['CLASSIC', 'HEXA', 'ROYAL'].includes(value)) {
-    throw new RangeError('Board type must be CLASSIC, HEXA or ROYAL.');
+  if (!['CLASSIC', 'HEXA'].includes(value)) {
+    throw new RangeError('Board type must be CLASSIC or HEXA.');
   }
   return value;
 }
@@ -141,7 +141,7 @@ function canLand(state, token, destinationProgress) {
 
 export function universalLegalMoves(state, playerId, dice = state?.dice) {
   if (state?.mode === 'CLASSIC') return classicLegalMoves(state, playerId, dice);
-  if (!state || !['HEXA', 'ROYAL'].includes(state.mode)) return [];
+  if (!state || !['HEXA'].includes(state.mode)) return [];
   if (state.phase !== 'playing' || state.currentPlayer !== playerId ||
       !playerById(state, playerId) || !Number.isInteger(dice) || dice < 1 || dice > 6) return [];
   return Object.values(state.tokens)
@@ -168,7 +168,7 @@ function copyState(state) {
 
 export function rollUniversalDice(state, playerId, dice) {
   if (state?.mode === 'CLASSIC') return rollClassicDice(state, playerId, dice);
-  if (!state || !['HEXA', 'ROYAL'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
+  if (!state || !['HEXA'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
   if (state.phase !== 'playing' || state.currentPlayer !== playerId || state.dice !== null) {
     throw new Error('Dice cannot be rolled now.');
   }
@@ -201,7 +201,7 @@ export function rollUniversalDice(state, playerId, dice) {
 
 export function applyUniversalMove(state, playerId, tokenId) {
   if (state?.mode === 'CLASSIC') return applyClassicMove(state, playerId, tokenId);
-  if (!state || !['HEXA', 'ROYAL'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
+  if (!state || !['HEXA'].includes(state.mode)) throw new TypeError('Unknown Ludo game mode.');
   if (state.phase !== 'playing' || state.currentPlayer !== playerId || state.dice === null) {
     throw new Error('There is no pending move for this player.');
   }
@@ -263,7 +263,7 @@ export function applyUniversalMove(state, playerId, tokenId) {
 
 export function assertUniversalState(state) {
   if (state?.mode === 'CLASSIC') return assertClassicState(state);
-  if (!state || !['HEXA', 'ROYAL'].includes(state.mode) || !Array.isArray(state.players) || !state.tokens) {
+  if (!state || !['HEXA'].includes(state.mode) || !Array.isArray(state.players) || !state.tokens) {
     throw new TypeError('Malformed extended Ludo state.');
   }
   const geometry = extendedGeometry(state);
