@@ -228,6 +228,18 @@ test('observers can read the game and use text and voice chat but cannot control
   assert.throws(()=>manager.joinRoom(created.roomId,observer),/уже началась/);
 });
 
+test('an observer can rejoin without duplicating their chat identity', () => {
+  const manager=new RoomManager();
+  const created=manager.createRoom(red,{maxPlayers:2});
+  const observer={id:'same-observer',username:'Observer'};
+  manager.joinAsObserver(created.roomId,observer);
+  manager.joinAsObserver(created.roomId,observer);
+  const snapshot=manager.getSnapshot(created.roomId,observer.id);
+  assert.equal(snapshot.observerCount,1);
+  assert.equal(snapshot.observers.length,1);
+  assert.equal(snapshot.viewerRole,'OBSERVER');
+});
+
 test('an observer in the lobby can take an open player seat before the game starts', () => {
   const manager = new RoomManager({ dice:()=>1 });
   const created = manager.createRoom(red,{maxPlayers:4});
