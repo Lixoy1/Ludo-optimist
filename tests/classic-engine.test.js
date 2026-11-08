@@ -127,7 +127,7 @@ test('the fourth finished token ends the match and records the winner', () => {
   const state = createClassicState(roster);
   const playerId = roster[0].id;
   const owned = Object.values(state.tokens).filter((token) => token.owner === playerId);
-  for (const token of owned.slice(0, 3)) token.position = { zone: 'finished', step: FINISH_STEP };
+  for (const token of owned.slice(0, 3)) token.stepProgress = FINISH_STEP;
   owned[3].stepProgress = LAST_HOME_STEP;
   state.currentPlayer = playerId;
   state.dice = 1;
