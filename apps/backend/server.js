@@ -257,7 +257,7 @@ export function createLudoServer({
         '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
         '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
       }[extname(filePath).toLowerCase()] || 'application/octet-stream';
-      res.writeHead(200, { 'content-type': type, 'x-content-type-options': 'nosniff', 'cache-control': extname(filePath) === '.html' ? 'no-cache' : 'public, max-age=86400' });
+      res.writeHead(200, { 'content-type': type, 'x-content-type-options': 'nosniff', 'cache-control': ['.html', '.js', '.css'].includes(extname(filePath).toLowerCase()) ? 'no-cache' : 'public, max-age=86400' });
       res.end(body);
     } catch (error) {
       if (error.code === 'ENOENT' || error.code === 'EISDIR') writeJson(res, 404, { error: 'Not found' });
