@@ -489,28 +489,59 @@ export function assertExtendedGeometry(geometry) {
   return true;
 }
 
-export function getExtendedStackLayout(id,count) {
-  const geometry=getExtendedGeometry(id);
-  if(!Number.isInteger(count)||count<0) throw new RangeError('Stack count must be non-negative.');
-  if(!count) return { tokens:[],hiddenCount:0,badge:null };
-  if(count===1) return {
-    tokens:[{index:0,x:0,y:0,scale:1,diameter:geometry.pawnDiameter,visible:true}],
-    hiddenCount:0,badge:null
-  };
+export function getExtendedStackLayout(id, count) {
+  const geometry = getExtendedGeometry(id);
+  if (!Number.isInteger(count) || count < 0) {
+    throw new RangeError('Stack count must be non-negative.');
+  }
+  if (count === 0) return { tokens: [], hiddenCount: 0, badge: null };
+  if (count === 1) {
+    return {
+      tokens: [{
+        index: 0,
+        x: 0,
+        y: 0,
+        scale: 1,
+        diameter: geometry.pawnDiameter,
+        visible: true,
+      }],
+      hiddenCount: 0,
+      badge: null,
+    };
+  }
 
-  // A four-token stack is laid out as a compact 2x2 group. This keeps all
-  // four character portraits visible without letting them cross the tile.
-  const diameter=.35*C*geometry.artScale;
-  const offset=.22*C*geometry.artScale;
-  const slots=[[-offset,-offset],[offset,-offset],[-offset,offset],[offset,offset]];
-  const visibleCount=Math.min(count,4);
-  const tokens=Array.from({length:count},(_,index)=>{
-    if(index>=visibleCount) return {index,x:0,y:0,scale:0,diameter:0,visible:false};
-    const [x,y]=slots[index];
-    return {index,x,y,scale:diameter/geometry.pawnDiameter,diameter,visible:true};
+  // The SVG tile face is 0.82C wide. Keep each pawn's bounding circle
+  // inside that face while separating the centres by more than its diameter.
+  const diameter = 0.36 * C * geometry.artScale;
+  const offset = (count === 2 ? 0.20 : 0.205) * C * geometry.artScale;
+  const slots = [
+    [-offset, -offset],
+    [offset, -offset],
+    [-offset, offset],
+    [offset, offset],
+  ];
+  const visibleCount = Math.min(count, 4);
+  const tokens = Array.from({ length: count }, (_, index) => {
+    if (index >= visibleCount) {
+      return { index, x: 0, y: 0, scale: 0, diameter: 0, visible: false };
+    }
+    const [x, y] = slots[index];
+    return {
+      index,
+      x,
+      y,
+      scale: diameter / geometry.pawnDiameter,
+      diameter,
+      visible: true,
+    };
   });
-  const hiddenCount=count-visibleCount;
-  return {tokens,hiddenCount,badge:hiddenCount? '×'+count:null};
+  const hiddenCount = count - visibleCount;
+
+  return {
+    tokens,
+    hiddenCount,
+    badge: hiddenCount ? '×' + count : null,
+  };
 }
 
 const star=(x,y,r)=>Array.from({length:10},(_,index)=>{
