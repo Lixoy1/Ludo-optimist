@@ -2,7 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/classic-hexa-royal-board-system, fix/three-board-geometry-validation-2026-11-07]
+    branches:
+      - main
+      - feat/classic-hexa-royal-board-system
+      - fix/three-board-geometry-validation-2026-11-07
+      - integrate/optimist-ludo-unified-2026-11-08
   pull_request:
     branches: [main]
 
@@ -19,12 +23,12 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           find src apps scripts tests -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
-      - name: Run test suite
+      - name: Build geometry assets and coordinate map
+        run: npm run build
+      - name: Run test suite against built assets
         run: npm test
       - name: Run local HTTP WebSocket and voice smoke test
         run: npm run smoke
-      - name: Build board SVG assets
-        run: npm run build
       - name: Package local preview ZIP
         run: |
           zip -qr /tmp/OPTIMIST-LUDO-local.zip . -x ".git/*" "node_modules/*" ".env"
