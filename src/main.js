@@ -1,5 +1,6 @@
 import { LudoRoomClient } from './client/room-client.js';
 import { tokenBoardPositions, tokenMovementPath } from './board-render.js';
+import { positionFromStepProgress, progressConfigForState } from './game-progress.js';
 import { CHARACTERS, DEFAULT_CHARACTER_ID, getCharacter } from './characters.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -459,7 +460,8 @@ function renderTokens(snapshot) {
   }
   const positions = tokenBoardPositions(state);
   const legalIds = new Set(snapshot.legalTokenIds || []);
-  const activeTurn = state.currentPlayer === activeClient?.currentUserId;
+  const activeTurn = snapshot.viewerRole !== 'OBSERVER' && state.currentPlayer === activeClient?.currentUserId;
+  const progressConfig = progressConfigForState(state);
   const groups = new Map();
   positions.forEach((position) => {
     const group = groups.get(position.stackKey) || [];
@@ -492,7 +494,8 @@ function renderTokens(snapshot) {
     let movementRoute = [];
     const action = state.lastAction;
     if (motion.trim() === 'moving' && action?.type === 'MOVE' && action.tokenId === position.tokenId) {
-      const path = tokenMovementPath(state, position.owner, action.from, state.tokens[position.tokenId].position, position.index);
+      const destination = positionFromStepProgress(state.tokens[position.tokenId].stepProgress, progressConfig);
+      const path = tokenMovementPath(state, position.owner, action.from, destination, position.index);
       if (path.length) {
         movementRoute = [{ x: old.left * 7.2, y: old.top * 7.2 }, ...path.slice(0, -1), { x: position.x, y: position.y }];
       }
@@ -580,8 +583,20 @@ function renderTurn(snapshot) {
   turnIndicator.style.setProperty('--turn-color', `var(--${myColor})`);
   turnIndicator.textContent = state ? (state.dice ? String(state.dice) : '♛') : '♛';
   turnMeta.textContent = `${roster.length} / ${snapshot?.maxPlayers || 4}`;
+  const isObserver = snapshot?.viewerRole === 'OBSERVER';
 
   if (!state) {
+    if (isObserver) {
+      turnTitle.textContent = 'РЕЖИМ НАБЛЮДЕНИЯ';
+      turnSub.textContent = 'Ожидаем начала партии. Можно общаться в чате.';
+      diceStatus.textContent = 'ОЖИДАНИЕ ИГРЫ';
+      diceLabel.textContent = 'ПРОСМОТР';
+      setDiceFace(5);
+      rollDiceBtn.disabled = true;
+      startGameBtn.hidden = true;
+      moveHint.textContent = 'Ты наблюдатель — начать игру и управлять фишками могут только игроки.';
+      return;
+    }
     turnTitle.textContent = snapshot?.hostId === activeClient?.currentUserId ? 'Готовы начать?' : 'Ожидание хозяина игры';
     const missingSeats = Math.max(0, (snapshot?.maxPlayers || 4) - roster.length);
     turnSub.textContent = missingSeats ? `${missingSeats} свободных мест займут боты.` : 'Все места заняты. Можно начинать.';
@@ -598,7 +613,17 @@ function renderTurn(snapshot) {
 
   startGameBtn.hidden = true;
   const current = currentPlayerInfo(snapshot);
-  const isMyTurn = state.currentPlayer === activeClient?.currentUserId;
+  if (isObserver && state.phase !== 'finished') {
+    turnTitle.textContent = 'РЕЖИМ НАБЛЮДЕНИЯ';
+    turnSub.textContent = 'Смотри партию и общайся в общем чате.';
+    diceStatus.textContent = state.dice ? `ВЫПАЛО ${state.dice}` : 'ПАРТИЯ ИДЁТ';
+    diceLabel.textContent = 'ПРОСМОТР';
+    setDiceFace(state.dice || state.lastAction?.dice || 5);
+    rollDiceBtn.disabled = true;
+    moveHint.textContent = 'Ходы доступны только игрокам. В чате можно писать и отправлять голосовые.';
+    return;
+  }
+  const isMyTurn = !isObserver && state.currentPlayer === activeClient?.currentUserId;
   const canRoll = isMyTurn && state.dice === null && state.phase === 'playing';
   const canMove = isMyTurn && state.dice !== null && (snapshot.legalTokenIds || []).length > 0;
 
