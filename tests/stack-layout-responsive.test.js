@@ -5,12 +5,12 @@ import { getStackLayout } from '../src/stack-layout.js';
 const CELL = 43.57;
 const PAWN_DIAMETER = CELL * 0.875;
 
-function assertStackFits(layout, cellSize, pawnDiameter) {
+function assertStackFits(layout, cellSize, pawnDiameter, tileFaceSize = 38.4) {
   const visible = layout.positions.filter((position) => position.visible);
   const diameter = pawnDiameter * layout.scale;
   for (const position of visible) {
-    assert.ok(Math.abs(position.x) + diameter / 2 < cellSize / 2);
-    assert.ok(Math.abs(position.y) + diameter / 2 < cellSize / 2);
+    assert.ok(Math.abs(position.x) + diameter / 2 < tileFaceSize / 2);
+    assert.ok(Math.abs(position.y) + diameter / 2 < tileFaceSize / 2);
   }
   for (let first = 0; first < visible.length; first += 1) {
     for (let second = first + 1; second < visible.length; second += 1) {
