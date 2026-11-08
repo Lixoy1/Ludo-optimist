@@ -102,50 +102,6 @@
         66
       ],
       "routeTopology": "two parallel rails traversed sequentially as one continuous 72-cell path"
-    },
-    {
-      "boardId": "royal",
-      "canvasSize": [
-        2816,
-        2816
-      ],
-      "cellSize": 128,
-      "playerCount": 4,
-      "playerCapacity": [
-        4,
-        4
-      ],
-      "piecesPerPlayer": 4,
-      "outerTrackLength": 68,
-      "maxOuterSteps": 66,
-      "homePathLength": 7,
-      "totalStepsToFinish": 74,
-      "startIndices": {
-        "blue": 0,
-        "red": 17,
-        "yellow": 34,
-        "green": 51
-      },
-      "homeEntryIndices": {
-        "blue": 66,
-        "red": 15,
-        "yellow": 32,
-        "green": 49
-      },
-      "safeIndices": [
-        0,
-        6,
-        12,
-        17,
-        23,
-        29,
-        34,
-        40,
-        46,
-        51,
-        57,
-        63
-      ]
     }
   ]
 }
