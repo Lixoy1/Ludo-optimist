@@ -3,6 +3,13 @@ import {
   applyClassicMove, assertClassicState,
 } from './classic-engine.js';
 import { getPlayableGeometry } from '../../src/game-geometries.js';
+import {
+  BASE_STEP_PROGRESS,
+  calculateDestinationProgress,
+  isOuterTrackProgress,
+  positionFromStepProgress,
+  progressConfigForState,
+} from '../../src/game-progress.js';
 
 export const TOKENS_PER_PLAYER = 4;
 
@@ -36,14 +43,14 @@ export function createExtendedState(boardType, roster) {
       throw new TypeError(`${mode} seat ${index + 1} must use ${arm.player.id}.`);
     }
     return {
-      id: player.id,
-      color: arm.player.id,
-      armIndex: arm.index,
-      startIndex: arm.startIndex,
-      username: String(player.username ?? player.id).slice(0, 40),
-      characterId: String(player.characterId || 'optimist'),
-      status: 'playing',
-      finishedAt: null,
+      id:player.id,
+      color:arm.player.id,
+      armIndex:arm.index,
+      startIndex:arm.startIndex,
+      username:String(player.username ?? player.id).slice(0,40),
+      characterId:String(player.characterId || 'optimist'),
+      status:'playing',
+      finishedAt:null,
     };
   });
 
@@ -52,61 +59,55 @@ export function createExtendedState(boardType, roster) {
     for (let index = 0; index < TOKENS_PER_PLAYER; index += 1) {
       const id = `${player.id}:${index}`;
       tokens[id] = {
-        id, owner: player.id, color: player.color, index,
-        position: { zone: 'base', step: -1 },
+        id,
+        owner:player.id,
+        color:player.color,
+        index,
+        stepProgress:BASE_STEP_PROGRESS,
       };
     }
   }
   return {
     mode,
-    phase: 'playing',
+    phase:'playing',
     players,
     tokens,
-    currentPlayer: players[0].id,
-    dice: null,
-    consecutiveSixes: 0,
-    winner: null,
-    revision: 0,
-    trackLength: geometry.trackLength,
-    homeCellCount: geometry.homeCells,
-    maxOuterSteps: geometry.maxOuterSteps,
-    finishStep: geometry.finishStep,
-    safeTrackIndices: [...geometry.safeIndices],
-    lastAction: null,
+    currentPlayer:players[0].id,
+    dice:null,
+    consecutiveSixes:0,
+    winner:null,
+    revision:0,
+    trackLength:geometry.trackLength,
+    homeCellCount:geometry.homeCells,
+    maxOuterSteps:geometry.maxOuterSteps,
+    finishStep:geometry.finishStep,
+    safeTrackIndices:[...geometry.safeIndices],
+    lastAction:null,
   };
 }
 
-export function extendedGlobalTrackIndex(state, player, step) {
+export function extendedGlobalTrackIndex(state, player, stepProgress) {
   const geometry = extendedGeometry(state);
-  if (!player || !Number.isInteger(step) || step < 0 || step > geometry.maxOuterSteps) {
+  if (!player || !isOuterTrackProgress(stepProgress, progressConfigForState(state))) {
     throw new RangeError('Invalid extended outer-track position.');
   }
-  return (player.startIndex + step) % geometry.trackLength;
+  return (player.startIndex + stepProgress) % geometry.trackLength;
 }
 
 function playerById(state, playerId) {
   return state.players.find((player) => player.id === playerId) ?? null;
 }
 
-function tokenDestination(state, token, dice) {
-  const maxOuterSteps = state.maxOuterSteps;
-  const homeEnd = maxOuterSteps + state.homeCellCount;
-  if (token.position.zone === 'base') {
-    return dice === 6 ? { zone: 'track', step: 0 } : null;
-  }
-  if (token.position.zone === 'finished') return null;
-  const nextStep = token.position.step + dice;
-  if (nextStep <= maxOuterSteps) return { zone: 'track', step: nextStep };
-  if (nextStep <= homeEnd) return { zone: 'home', step: nextStep };
-  if (nextStep === state.finishStep) return { zone: 'finished', step: state.finishStep };
-  return null;
+function tokenDestinationProgress(state, token, dice) {
+  return calculateDestinationProgress(token.stepProgress, dice, progressConfigForState(state));
 }
 
 function trackTokensAt(state, globalIndex, exceptTokenId = null) {
+  const config = progressConfigForState(state);
   return Object.values(state.tokens).filter((token) => {
-    if (token.id === exceptTokenId || token.position.zone !== 'track') return false;
+    if (token.id === exceptTokenId || !isOuterTrackProgress(token.stepProgress, config)) return false;
     const owner = playerById(state, token.owner);
-    return owner && extendedGlobalTrackIndex(state, owner, token.position.step) === globalIndex;
+    return owner && extendedGlobalTrackIndex(state, owner, token.stepProgress) === globalIndex;
   });
 }
 
@@ -118,20 +119,23 @@ function isBlockedAt(state, globalIndex, exceptTokenId = null) {
   return [...owners.values()].some((count) => count >= 2);
 }
 
-function pathIsClear(state, token, destination) {
-  if (token.position.zone !== 'track') return true;
+function pathIsClear(state, token, destinationProgress) {
+  const config = progressConfigForState(state);
+  if (!isOuterTrackProgress(token.stepProgress, config)) return true;
   const owner = playerById(state, token.owner);
-  const lastOuterStep = Math.min(destination.step, state.maxOuterSteps);
-  for (let step = token.position.step + 1; step <= lastOuterStep; step += 1) {
-    if (isBlockedAt(state, extendedGlobalTrackIndex(state, owner, step), token.id)) return false;
+  const lastOuterProgress = Math.min(destinationProgress, config.maxOuterSteps);
+  for (let progress = token.stepProgress + 1; progress <= lastOuterProgress; progress += 1) {
+    if (isBlockedAt(state, extendedGlobalTrackIndex(state, owner, progress), token.id)) return false;
   }
   return true;
 }
 
-function canLand(state, token, destination) {
+function canLand(state, token, destinationProgress) {
+  const config = progressConfigForState(state);
+  const destination = positionFromStepProgress(destinationProgress, config);
   if (destination.zone !== 'track') return true;
   const owner = playerById(state, token.owner);
-  const globalIndex = extendedGlobalTrackIndex(state, owner, destination.step);
+  const globalIndex = extendedGlobalTrackIndex(state, owner, destinationProgress);
   return !isBlockedAt(state, globalIndex, token.id);
 }
 
@@ -143,8 +147,8 @@ export function universalLegalMoves(state, playerId, dice = state?.dice) {
   return Object.values(state.tokens)
     .filter((token) => token.owner === playerId)
     .filter((token) => {
-      const destination = tokenDestination(state, token, dice);
-      return Boolean(destination && pathIsClear(state, token, destination) && canLand(state, token, destination));
+      const destination = tokenDestinationProgress(state, token, dice);
+      return destination !== null && pathIsClear(state, token, destination) && canLand(state, token, destination);
     })
     .map((token) => token.id);
 }
@@ -174,14 +178,14 @@ export function rollUniversalDice(state, playerId, dice) {
 
   const next = copyState(state);
   next.consecutiveSixes = dice === 6 ? next.consecutiveSixes + 1 : 0;
-  next.lastAction = { type: 'ROLL', playerId, dice };
+  next.lastAction = { type:'ROLL', playerId, dice };
   next.revision += 1;
 
   if (next.consecutiveSixes === 3) {
     next.consecutiveSixes = 0;
     next.currentPlayer = nextActivePlayer(next, playerId);
     next.lastAction.skipped = true;
-    return { state: next, legalTokenIds: [], skipped: true, bonusRoll: false, turnAdvanced: true };
+    return { state:next, legalTokenIds:[], skipped:true, bonusRoll:false, turnAdvanced:true };
   }
 
   next.dice = dice;
@@ -190,9 +194,9 @@ export function rollUniversalDice(state, playerId, dice) {
     next.dice = null;
     const bonusRoll = dice === 6;
     if (!bonusRoll) next.currentPlayer = nextActivePlayer(next, playerId);
-    return { state: next, legalTokenIds: [], skipped: false, bonusRoll, turnAdvanced: !bonusRoll };
+    return { state:next, legalTokenIds:[], skipped:false, bonusRoll, turnAdvanced:!bonusRoll };
   }
-  return { state: next, legalTokenIds: moves, skipped: false, bonusRoll: false, turnAdvanced: false };
+  return { state:next, legalTokenIds:moves, skipped:false, bonusRoll:false, turnAdvanced:false };
 }
 
 export function applyUniversalMove(state, playerId, tokenId) {
@@ -208,21 +212,23 @@ export function applyUniversalMove(state, playerId, tokenId) {
   const next = copyState(state);
   const token = next.tokens[tokenId];
   const dice = next.dice;
-  const from = structuredClone(token.position);
-  const destination = tokenDestination(next, token, dice);
-  token.position = destination;
+  const config = progressConfigForState(next);
+  const from = positionFromStepProgress(token.stepProgress, config);
+  const destinationProgress = tokenDestinationProgress(next, token, dice);
+  const to = positionFromStepProgress(destinationProgress, config);
+  token.stepProgress = destinationProgress;
   const captured = [];
 
-  if (destination.zone === 'track') {
+  if (to.zone === 'track') {
     const owner = playerById(next, playerId);
-    const globalIndex = extendedGlobalTrackIndex(next, owner, destination.step);
+    const globalIndex = extendedGlobalTrackIndex(next, owner, destinationProgress);
     const safe = new Set(next.safeTrackIndices);
     if (!safe.has(globalIndex)) {
       for (const enemy of Object.values(next.tokens)) {
-        if (enemy.owner === playerId || enemy.position.zone !== 'track') continue;
+        if (enemy.owner === playerId || !isOuterTrackProgress(enemy.stepProgress, config)) continue;
         const enemyOwner = playerById(next, enemy.owner);
-        if (extendedGlobalTrackIndex(next, enemyOwner, enemy.position.step) === globalIndex) {
-          enemy.position = { zone: 'base', step: -1 };
+        if (extendedGlobalTrackIndex(next, enemyOwner, enemy.stepProgress) === globalIndex) {
+          enemy.stepProgress = BASE_STEP_PROGRESS;
           captured.push(enemy.id);
         }
       }
@@ -230,8 +236,9 @@ export function applyUniversalMove(state, playerId, tokenId) {
   }
 
   const finishedCount = Object.values(next.tokens).filter((item) =>
-    item.owner === playerId && item.position.zone === 'finished').length;
-  const justFinished = destination.zone === 'finished';
+    item.owner === playerId && item.stepProgress === config.finishStep
+  ).length;
+  const justFinished = to.zone === 'finished';
   if (finishedCount === TOKENS_PER_PLAYER) {
     const player = playerById(next, playerId);
     player.status = 'finished';
@@ -244,11 +251,13 @@ export function applyUniversalMove(state, playerId, tokenId) {
   next.dice = null;
   if (next.phase !== 'finished' && !bonusRoll) next.currentPlayer = nextActivePlayer(next, playerId);
   next.lastAction = {
-    type: 'MOVE', playerId, tokenId, dice, from,
-    to: structuredClone(destination), captured, bonusRoll,
+    type:'MOVE', playerId, tokenId, dice, from, to,
+    fromProgress:from.zone === 'base' ? BASE_STEP_PROGRESS : token.stepProgress-dice,
+    toProgress:destinationProgress,
+    captured, bonusRoll,
   };
   next.revision += 1;
-  return { state: next, captured, bonusRoll, turnAdvanced: !bonusRoll && next.phase !== 'finished' };
+  return { state:next, captured, bonusRoll, turnAdvanced:!bonusRoll && next.phase !== 'finished' };
 }
 
 export function assertUniversalState(state) {
@@ -257,6 +266,7 @@ export function assertUniversalState(state) {
     throw new TypeError('Malformed extended Ludo state.');
   }
   const geometry = extendedGeometry(state);
+  const config = progressConfigForState(state);
   if (state.players.length !== geometry.maxPlayers) {
     throw new RangeError(`${state.mode} requires exactly ${geometry.maxPlayers} players.`);
   }
@@ -276,16 +286,8 @@ export function assertUniversalState(state) {
     const owned = Object.values(state.tokens).filter((token) => token.owner === player.id);
     if (owned.length !== TOKENS_PER_PLAYER) throw new Error(`Player ${player.id} must own exactly four tokens.`);
     for (const token of owned) {
-      const { zone, step } = token.position;
       if (token.color !== player.color) throw new Error('Token color must match its owner.');
-      if (zone === 'base' && step !== -1) throw new Error('Base token must have step -1.');
-      if (zone === 'track' && (!Number.isInteger(step) || step < 0 || step > geometry.maxOuterSteps)) {
-        throw new Error('Invalid extended track step.');
-      }
-      if (zone === 'home' && (!Number.isInteger(step) || step < geometry.maxOuterSteps + 1 ||
-          step > geometry.maxOuterSteps + geometry.homeCells)) throw new Error('Invalid extended home step.');
-      if (zone === 'finished' && step !== state.finishStep) throw new Error('Invalid extended finish position.');
-      if (!['base', 'track', 'home', 'finished'].includes(zone)) throw new Error('Invalid token zone.');
+      positionFromStepProgress(token.stepProgress, config);
     }
   }
   return true;
