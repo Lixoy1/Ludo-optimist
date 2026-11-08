@@ -6,13 +6,13 @@ import { CLASSIC_PROGRESS_CONFIG, positionFromStepProgress, progressToHomeIndex,
 // Keep browser modules independent from the private backend source tree.
 const LAST_TRACK_STEP = CLASSIC_PROGRESS_CONFIG.maxOuterSteps;
 const FINISH_STEP = CLASSIC_PROGRESS_CONFIG.finishStep;
-export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=55, GRID_ORIGIN_Y=55, GRID_CELL=43.57, PAWN_DIAMETER_RATIO=.68*128/2304;
+export const BOARD_IMAGE_SIZE=720, GRID_ORIGIN_X=55, GRID_ORIGIN_Y=55, GRID_CELL=43.57, PAWN_DIAMETER_RATIO=.64*GRID_CELL/BOARD_IMAGE_SIZE;
 export const BASE_SLOT_POINTS=Object.freeze({blue:[[132,132],[182,132],[132,182],[182,182]],red:[[538,132],[588,132],[538,182],[588,182]],yellow:[[538,538],[588,538],[538,588],[588,588]],green:[[132,538],[182,538],[132,588],[182,588]]});
 export const FINISH_POINTS=Object.freeze([[336,336],[384,336],[336,384],[384,384]]);
 export function gridToImage(col,row){if(!Number.isFinite(col)||!Number.isFinite(row))throw new TypeError('Grid coordinates must be finite numbers.');return{x:GRID_ORIGIN_X+col*GRID_CELL,y:GRID_ORIGIN_Y+row*GRID_CELL};}
 export function tokenBoardPositions(state){
  if(!state?.tokens||!state?.players)return[];
- if(state.mode==='HEXA'||state.mode==='ROYAL')return extendedTokenBoardPositions(state);
+ if(state.mode==='HEXA')return extendedTokenBoardPositions(state);
  const tokens=Object.values(state.tokens),grouped=new Map(),base=new Map();
  const characters=new Map((state.players||[]).map(p=>[p.id,p.characterId||'optimist']));
  const progressConfig=progressConfigForState(state);
@@ -87,7 +87,7 @@ export function tokenMovementPath(state, playerId, from, to, tokenIndex) {
  if(!state||!from||!to)return[];
  const player=state.players?.find(item=>item.id===playerId);
  if(!player)return[];
- const extended=state.mode==='HEXA'||state.mode==='ROYAL';
+ const extended=state.mode==='HEXA';
  const geometry=extended?getPlayableGeometry(state.mode):null;
  const config=extended?null:PLAYER_CONFIG[player.color];
  const trackLength=extended?geometry.trackLength:MAIN_TRACK.length;
