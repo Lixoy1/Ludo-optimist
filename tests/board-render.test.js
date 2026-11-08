@@ -85,13 +85,13 @@ test('all four pawns on one square shrink into a separated 2x2 stack inside the 
     .filter((item) => item.zone === 'track')
     .sort((a, b) => a.index - b.index);
   assert.equal(positions.length, 4);
-  assert.ok(positions.every((item) => item.scale === 0.44));
+  assert.ok(positions.every((item) => item.scale === 0.42));
   assert.equal(new Set(positions.map((item) => `${item.left.toFixed(4)}:${item.top.toFixed(4)}`)).size, 4);
 
   const globalIndex = (PLAYER_CONFIG.green.start + 5) % MAIN_TRACK.length;
   const center = gridToImage(MAIN_TRACK[globalIndex].col, MAIN_TRACK[globalIndex].row);
-  const pawnDiameter = BOARD_IMAGE_SIZE * PAWN_DIAMETER_RATIO * 0.44;
-  const halfCell = 43.57 / 2;
+  const pawnDiameter = BOARD_IMAGE_SIZE * PAWN_DIAMETER_RATIO * 0.42;
+  const halfCell = 38.4 / 2;
   for (const item of positions) {
     assert.ok(Math.abs(item.x - center.x) + pawnDiameter / 2 <= halfCell);
     assert.ok(Math.abs(item.y - center.y) + pawnDiameter / 2 <= halfCell);
