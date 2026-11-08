@@ -189,7 +189,7 @@ test('server-controlled bots cannot authenticate as real room members', () => {
   const bot = started.players.find((player) => player.isBot);
   assert.ok(bot);
   assert.equal(manager.isMember(created.roomId, bot.id), false);
-  assert.throws(() => manager.getSnapshot(created.roomId, bot.id), /не участник/);
+  assert.throws(() => manager.getSnapshot(created.roomId, bot.id), /Нет доступа/);
   assert.throws(() => manager.roll(created.roomId, bot.id), /не участник/);
 });
 
