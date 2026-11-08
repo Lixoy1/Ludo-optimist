@@ -35,6 +35,8 @@ test('board image and client modules are present in the integrated page', async 
 
   assert.match(html, /data-board-choice="HEXA"/);
   assert.match(html, /data-theme-choice="neon"/);
+  assert.doesNotMatch(html, /ROYAL|ELITE|MARBLE/);
+  assert.match(html, />OPTIMIST<\/button>/);
   assert.match(html, /id="startSummaryText"/);
   for (const svg of [board, hexa]) assert.match(svg, /viewBox="0 0 720 720"/);
 });
@@ -99,7 +101,7 @@ test('mobile secondary controls and chooser close have accessible touch dimensio
 });
 
 
-test('lobby previews all three real SVG board types and four material themes before starting', () => {
+test('lobby offers only Classic and Hexa boards with Optimist and Classic designs', () => {
   for (const mode of ['CLASSIC','HEXA']) {
     assert.match(html, new RegExp(`data-board-preview="${mode}"`));
     assert.match(html, new RegExp(`data-board-choice="${mode}"`));
