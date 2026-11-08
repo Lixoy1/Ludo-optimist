@@ -213,7 +213,8 @@ export function applyUniversalMove(state, playerId, tokenId) {
   const token = next.tokens[tokenId];
   const dice = next.dice;
   const config = progressConfigForState(next);
-  const from = positionFromStepProgress(token.stepProgress, config);
+  const fromProgress = token.stepProgress;
+  const from = positionFromStepProgress(fromProgress, config);
   const destinationProgress = tokenDestinationProgress(next, token, dice);
   const to = positionFromStepProgress(destinationProgress, config);
   token.stepProgress = destinationProgress;
@@ -252,7 +253,7 @@ export function applyUniversalMove(state, playerId, tokenId) {
   if (next.phase !== 'finished' && !bonusRoll) next.currentPlayer = nextActivePlayer(next, playerId);
   next.lastAction = {
     type:'MOVE', playerId, tokenId, dice, from, to,
-    fromProgress:from.zone === 'base' ? BASE_STEP_PROGRESS : token.stepProgress-dice,
+    fromProgress,
     toProgress:destinationProgress,
     captured, bonusRoll,
   };
