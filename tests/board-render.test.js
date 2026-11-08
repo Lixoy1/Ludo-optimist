@@ -53,8 +53,8 @@ test('all four player bases are rendered at their assigned colored quadrants', (
 
 test('outer track and home-lane positions are derived from the server token state', () => {
   const state = createClassicState(roster);
-  state.tokens[tokenId('render-green')].position = { zone: 'track', step: 0 };
-  state.tokens[tokenId('render-green', 1)].position = { zone: 'home', step: 54 };
+  state.tokens[tokenId('render-green')].stepProgress = 0;
+  state.tokens[tokenId('render-green', 1)].stepProgress = 54;
   const positions = tokenBoardPositions(state);
   const start = positions.find((item) => item.tokenId === tokenId('render-green'));
   const home = positions.find((item) => item.tokenId === tokenId('render-green', 1));
@@ -66,8 +66,8 @@ test('outer track and home-lane positions are derived from the server token stat
 
 test('tokens sharing a route cell receive distinct, non-overlapping scaled positions', () => {
   const state = createClassicState(roster);
-  state.tokens[tokenId('render-green')].position = { zone: 'track', step: 5 };
-  state.tokens[tokenId('render-green', 1)].position = { zone: 'track', step: 5 };
+  state.tokens[tokenId('render-green')].stepProgress = 5;
+  state.tokens[tokenId('render-green', 1)].stepProgress = 5;
   const positions = tokenBoardPositions(state).filter((item) => item.zone === 'track');
   assert.equal(positions.length, 2);
   assert.notEqual(positions[0].left, positions[1].left);
@@ -79,7 +79,7 @@ test('tokens sharing a route cell receive distinct, non-overlapping scaled posit
 test('all four pawns on one square shrink into a separated 2x2 stack inside the cell', () => {
   const state = createClassicState(roster);
   for (let index = 0; index < 4; index += 1) {
-    state.tokens[tokenId('render-green', index)].position = { zone: 'track', step: 5 };
+    state.tokens[tokenId('render-green', index)].stepProgress = 5;
   }
   const positions = tokenBoardPositions(state)
     .filter((item) => item.zone === 'track')
@@ -133,9 +133,9 @@ for (const mode of ['HEXA', 'ROYAL']) {
     const state = createExtendedState(mode, roster);
     const first = state.players[0];
     const ids = index => first.id + ':' + index;
-    state.tokens[ids(0)].position = { zone: 'track', step: 0 };
-    state.tokens[ids(1)].position = { zone: 'home', step: geometry.maxOuterSteps + 1 + 2 };
-    state.tokens[ids(2)].position = { zone: 'finished', step: geometry.finishStep };
+    state.tokens[ids(0)].stepProgress = 0;
+    state.tokens[ids(1)].stepProgress = geometry.maxOuterSteps + 1 + 2;
+    state.tokens[ids(2)].stepProgress = geometry.finishStep;
     const positions = tokenBoardPositions(state);
     const start = positions.find(item => item.tokenId === ids(0));
     const home = positions.find(item => item.tokenId === ids(1));
@@ -160,7 +160,7 @@ for (const mode of ['HEXA', 'ROYAL']) {
     const state = createExtendedState(mode, roster);
     const owner = state.players[0];
     for (let index = 0; index < 4; index += 1) {
-      state.tokens[owner.id + ':' + index].position = { zone: 'track', step: 5 };
+      state.tokens[owner.id + ':' + index].stepProgress = 5;
     }
     const positions = tokenBoardPositions(state).filter(item => item.zone === 'track');
     assert.equal(positions.length, 4);
