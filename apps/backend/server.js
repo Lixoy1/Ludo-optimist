@@ -301,16 +301,28 @@ export function createLudoServer({
         user = { id: message.devUserId, username: String(message.devUsername || message.devUserId).slice(0, 40) };
       } else user = verifyTelegramInitData(message.initData, botToken);
       const requestedCharacter = isCharacterId(message.characterId) ? message.characterId : DEFAULT_CHARACTER_ID;
-      if (!rooms.isMember(message.roomId, user.id)) rooms.joinRoom(message.roomId, { ...user, characterId: requestedCharacter });
-      else if (isCharacterId(message.characterId)) rooms.setCharacter(message.roomId, user.id, requestedCharacter);
+      const requestedObserver = message.role === 'OBSERVER' || message.observer === true;
+      if (requestedObserver) {
+        rooms.joinAsObserver(message.roomId, user);
+      } else if (!rooms.isMember(message.roomId, user.id)) {
+        try {
+          rooms.joinRoom(message.roomId, { ...user, characterId: requestedCharacter });
+        } catch (error) {
+          if (error?.code !== 'GAME_ALREADY_STARTED' && error?.code !== 'ROOM_FULL') throw error;
+          rooms.joinAsObserver(message.roomId, user);
+        }
+      } else if (isCharacterId(message.characterId)) {
+        rooms.setCharacter(message.roomId, user.id, requestedCharacter);
+      }
       session.userId = user.id;
       session.username = user.username;
+      session.role = rooms.getRole(message.roomId, user.id);
       session.roomId = message.roomId;
       session.voiceToken = randomBytes(32).toString('hex');
-      voiceSessions.set(session.voiceToken, { userId: user.id, roomId: message.roomId });
+      voiceSessions.set(session.voiceToken, { userId: user.id, roomId: message.roomId, role:session.role });
       session.resumeToken = resumes.issue({ userId: user.id, username: user.username, roomId: message.roomId }).token;
       socketsFor(message.roomId).add(ws);
-      send(ws, 'AUTH_OK', { userId: user.id, username: user.username, roomId: message.roomId, voiceSessionToken: session.voiceToken, resumeToken: session.resumeToken });
+      send(ws, 'AUTH_OK', { userId: user.id, username: user.username, role:session.role, roomId: message.roomId, voiceSessionToken: session.voiceToken, resumeToken: session.resumeToken });
       send(ws, 'ROOM_SYNC', rooms.getSnapshot(message.roomId, user.id));
       broadcastRoom(message.roomId);
       return;
@@ -351,7 +363,7 @@ export function createLudoServer({
       ws.close(1013, 'Server is busy');
       return;
     }
-    const session = { userId: null, roomId: null, voiceToken: null, resumeToken: null, alive: true, frameTimes: [], authTimer: null, connectedAt: now() };
+    const session = { userId: null, username:null, role:null, roomId: null, voiceToken: null, resumeToken: null, alive: true, frameTimes: [], authTimer: null, connectedAt: now() };
     console.info('[ws] connected');
     session.authTimer = setTimeout(() => ws.close(4401, 'Authentication timeout'), WS_AUTH_TIMEOUT_MS);
     session.authTimer.unref?.();
