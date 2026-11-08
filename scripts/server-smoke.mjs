@@ -25,6 +25,11 @@ function waitForEvent(socket, eventName, predicate = () => true, timeoutMs = 5_0
       let data;
       try { data = JSON.parse(raw.toString()); } catch { return; }
       if (data.event === 'ERROR') {
+        if (eventName === 'ERROR' && predicate(data.payload, data)) {
+          cleanup();
+          resolve(data.payload);
+          return;
+        }
         cleanup();
         reject(new Error(data.payload?.message || data.message || 'WebSocket returned ERROR.'));
         return;
@@ -160,7 +165,7 @@ try {
 
   const observerDenied = waitForEvent(observerSocket, 'ERROR', (payload) => payload?.code === 'NOT_A_MEMBER');
   observerSocket.send(JSON.stringify({ type:'ROLL_DICE' }));
-  await observerDenied;
+  assert.equal((await observerDenied).code,'NOT_A_MEMBER');
 
   await new Promise((resolve) => setTimeout(resolve, 1_600));
   const observerAudio = Buffer.alloc(512, 9);
