@@ -1,6 +1,7 @@
 import { randomBytes, randomInt } from 'node:crypto';
-import { rollUniversalDice, applyUniversalMove, assertUniversalState, createUniversalState } from './universal-engine.js';
-import { LAST_TRACK_STEP as CLASSIC_LAST_TRACK_STEP, FINISH_STEP as CLASSIC_FINISH_STEP } from './classic-engine.js';
+import { rollUniversalDice, applyUniversalMove, assertUniversalState, createUniversalState, extendedGlobalTrackIndex } from './universal-engine.js';
+import { globalTrackIndex as classicGlobalTrackIndex } from './classic-engine.js';
+import { calculateDestinationProgress, isOuterTrackProgress, positionFromStepProgress, progressConfigForState } from '../../src/game-progress.js';
 import { COLORS, PLAYER_CONFIG, SAFE_TRACK_INDICES, CELL_COUNT } from '../../src/geometry.js';
 import { getPlayableGeometry } from '../../src/game-geometries.js';
 import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
@@ -12,33 +13,27 @@ const CHAT_MAX_LENGTH = 200;
 const BOT_CHARACTER_IDS = ['cat', 'owl', 'husky', 'raccoon', 'poison', 'nikita', 'lilya-detective', 'optimist'];
 
 function botDestination(state, token, dice) {
-  const maxOuterSteps = state.mode === 'CLASSIC' ? CLASSIC_LAST_TRACK_STEP : state.maxOuterSteps;
-  const finishStep = state.mode === 'CLASSIC' ? CLASSIC_FINISH_STEP : state.finishStep;
-  if (token.position.zone === 'base') return dice === 6 ? { zone: 'track', step: 0 } : null;
-  if (token.position.zone === 'finished') return null;
-  const next = token.position.step + dice;
-  if (next <= maxOuterSteps) return { zone: 'track', step: next };
-  if (next < finishStep) return { zone: 'home', step: next };
-  if (next === finishStep) return { zone: 'finished', step: finishStep };
-  return null;
+  const config = progressConfigForState(state);
+  const destination = calculateDestinationProgress(token.stepProgress, dice, config);
+  return destination === null ? null : positionFromStepProgress(destination, config);
 }
 
-function botGlobalTrackIndex(state, player, step) {
+function botGlobalTrackIndex(state, player, stepProgress) {
   return state.mode === 'CLASSIC'
-    ? (PLAYER_CONFIG[player.color].start + step) % CELL_COUNT
-    : (player.startIndex + step) % state.trackLength;
+    ? classicGlobalTrackIndex(player.color, stepProgress)
+    : extendedGlobalTrackIndex(state, player, stepProgress);
 }
 
 function chooseBotMove(state, playerId, legalTokenIds, dice) {
   const player = state.players.find((item) => item.id === playerId);
   if (!player) throw new Error('Bot player is missing from the current state.');
-  const trackLength = state.mode === 'CLASSIC' ? CELL_COUNT : state.trackLength;
+  const config = progressConfigForState(state);
   const safe = new Set(state.mode === 'CLASSIC' ? SAFE_TRACK_INDICES : state.safeTrackIndices);
-  const opponents = state.players.filter((item) => item.id !== playerId);
   const tokens = Object.values(state.tokens);
   let best = null;
   for (const tokenId of legalTokenIds) {
     const token = state.tokens[tokenId];
+    const position = positionFromStepProgress(token.stepProgress, config);
     const destination = botDestination(state, token, dice);
     if (!destination) continue;
     let score = 0;
@@ -47,21 +42,21 @@ function chooseBotMove(state, playerId, legalTokenIds, dice) {
     else if (destination.zone === 'track') {
       const target = botGlobalTrackIndex(state, player, destination.step);
       score += 300 + destination.step * 12;
-      if (token.position.zone === 'base') score += 450;
+      if (position.zone === 'base') score += 450;
       if (!safe.has(target)) {
         const captures = tokens.filter((enemy) => {
-          if (enemy.owner === playerId || enemy.position.zone !== 'track') return false;
+          if (enemy.owner === playerId || !isOuterTrackProgress(enemy.stepProgress, config)) return false;
           const owner = state.players.find((item) => item.id === enemy.owner);
-          return owner && botGlobalTrackIndex(state, owner, enemy.position.step) === target;
+          return owner && botGlobalTrackIndex(state, owner, enemy.stepProgress) === target;
         });
         score += captures.length * 12_000;
       } else score += 80;
     }
-    if (token.position.zone === 'track' && destination.zone === 'track') {
-      score += (destination.step - token.position.step) * 4;
+    if (position.zone === 'track' && destination.zone === 'track') {
+      score += (destination.step - token.stepProgress) * 4;
     }
-    if (token.position.zone === 'home' && destination.zone === 'home') {
-      score += (destination.step - token.position.step) * 8;
+    if (position.zone === 'home' && destination.zone === 'home') {
+      score += (destination.step - token.stepProgress) * 8;
     }
     score += (3 - token.index) * 0.01;
     if (!best || score > best.score) best = { tokenId, score };
