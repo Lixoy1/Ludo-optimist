@@ -184,8 +184,8 @@ function makeHexa() {
     };
   });
 
-  const outline = polygon(6,9.55*C,cx,cy);
-  const finishVertices = polygon(6,1.42*C,cx,cy);
+  const outline = polygon(6,9.55*C,cx,cy).map((p)=>scaled(p,scale));
+  const finishVertices = polygon(6,1.42*C,cx,cy).map((p)=>scaled(p,scale));
   const routeLinkDistances = track.map((cell,index)=>fmt(distance(cell,track[(index+1)%72])/ (C*scale)));
   return {
     id:'hexa', boardId:'hexa', shape:'six-rail-star', sides:6, maxPlayers:6, tokensPerPlayer:4,
@@ -279,8 +279,8 @@ function makeRoyal() {
     };
   });
 
-  const outline=polygon(8,10.35*C,cx,cy, -67.5);
-  const finishVertices=polygon(4,3.5*C,cx,cy,-45);
+  const outline=polygon(8,10.35*C,cx,cy, -67.5).map((p)=>scaled(p,scale));
+  const finishVertices=polygon(4,3.5*C,cx,cy,-45).map((p)=>scaled(p,scale));
   const routeLinkDistances=track.map((cell,index)=>fmt(distance(cell,track[(index+1)%68])/(C*scale)));
   return {
     id:'royal',boardId:'royal',shape:'royal-square-loop',sides:4,maxPlayers:4,tokensPerPlayer:4,
@@ -386,6 +386,15 @@ export function assertExtendedGeometry(geometry) {
   if(geometry.safeIndices.length!==12 || new Set(geometry.safeIndices).size!==12) {
     throw new Error('Each board must expose exactly twelve unique safe cells.');
   }
+  const expectedOutlineVertices=geometry.id==='hexa'?6:8;
+  const expectedFinishVertices=geometry.id==='hexa'?6:4;
+  if(geometry.outline.length!==expectedOutlineVertices ||
+     geometry.finishVertices.length!==expectedFinishVertices) {
+    throw new Error('Board outline or finish polygon has the wrong vertex count.');
+  }
+  assertPolygonInsideCanvas(geometry.outline,'Board outline');
+  assertPolygonInsideCanvas(geometry.finishVertices,'Finish polygon');
+
   const pitch=geometry.cellPitch;
   for(let index=0;index<geometry.trackLength;index++) {
     const current=geometry.track[index],next=geometry.track[(index+1)%geometry.trackLength];
