@@ -1,337 +1,577 @@
-/**
- * Classic radial Ludo geometries for OPTIMIST LUDO.
- * Each arm is the classic 3-column x 6-row construction:
- * 12 flank squares + 1 outer connector = 13 shared route cells;
- * the centre column's remaining five cells form the private home lane.
- * Original geometry and artwork; only the high-level game topology follows public Ludo rules.
- */
-export const EXTENDED_THEMES = Object.freeze({
-  classic: { bg:'#090912', outer:'#60412a', board:'#9b7045', cell:'#f7ecd7', tile2:'#ead8b8', edge:'#a67a47', gold:'#e7c47a', shadow:'#09080b', ink:'#392517', accent:'#f2dba8', glow:'#f1c96d', baseBg:'#6f4428' },
-  neon: { bg:'#080a13', outer:'#0f1123', board:'#151a30', cell:'#f4efe4', tile2:'#d9d0c0', edge:'#b79b70', gold:'#edc879', shadow:'#04050b', ink:'#281c16', accent:'#f9e5b3', glow:'#65d8ff', baseBg:'#0e1328' },
-  elite: { bg:'#080708', outer:'#21120d', board:'#382116', cell:'#efe0c1', tile2:'#d5bd92', edge:'#956c3d', gold:'#e6c276', shadow:'#080504', ink:'#3a2415', accent:'#ffebbd', glow:'#d9a74c', baseBg:'#32180f' },
-  marble: { bg:'#09111a', outer:'#1e3340', board:'#2d4350', cell:'#f6fbfd', tile2:'#d7e4ea', edge:'#91aab7', gold:'#c2dce7', shadow:'#050a10', ink:'#263f4d', accent:'#edfaff', glow:'#92d9ef', baseBg:'#203746' },
+/** Canonical HEXA and ROYAL geometry. Logical routes are independent of SVG painting. */
+export const BASE_CELL_SIZE = 128;
+export const BOARD_THEMES = Object.freeze({
+  classic: { bg:'#10131b', outer:'#4c3828', board:'#80603e', cell:'#fff8e8', tile2:'#ead8b8', edge:'#98734c', gold:'#d9ae60', shadow:'#08090d', ink:'#302417', accent:'#f2dba8', glow:'#f1c96d', baseBg:'#34271d' },
+  neon: { bg:'#070a14', outer:'#11182a', board:'#141c2f', cell:'#fff9ed', tile2:'#e7d9bf', edge:'#9e8a67', gold:'#f2c66f', shadow:'#03050b', ink:'#1e2430', accent:'#fff0c8', glow:'#64dfff', baseBg:'#11182a' },
+  elite: { bg:'#090807', outer:'#29180f', board:'#3a2418', cell:'#f4e4c7', tile2:'#d8bf94', edge:'#997144', gold:'#e8c278', shadow:'#080504', ink:'#342317', accent:'#ffebbd', glow:'#d9a74c', baseBg:'#32180f' },
+  marble: { bg:'#09111a', outer:'#1e3340', board:'#2d4350', cell:'#f8fcff', tile2:'#d7e4ea', edge:'#91aab7', gold:'#c2dce7', shadow:'#050a10', ink:'#263f4d', accent:'#edfaff', glow:'#92d9ef', baseBg:'#203746' }
 });
-export const EXTENDED_PLAYER_COLORS = Object.freeze({
-  penta: [
-    { id:'blue', label:'BLUE', color:'#19a8ea', dark:'#075a8e' },
-    { id:'red', label:'RED', color:'#f0445b', dark:'#851a2b' },
-    { id:'yellow', label:'YELLOW', color:'#f5bb35', dark:'#8c5a09' },
-    { id:'green', label:'GREEN', color:'#39b86b', dark:'#12623b' },
-    { id:'purple', label:'PURPLE', color:'#a16de9', dark:'#51268d' },
+export const BOARD_PLAYER_COLORS = Object.freeze({
+  hexa: [
+    { id:'blue', label:'BLUE', color:'#168BFF', dark:'#075A8E' },
+    { id:'red', label:'RED', color:'#F02D3A', dark:'#851A2B' },
+    { id:'yellow', label:'YELLOW', color:'#F5B51B', dark:'#8C5A09' },
+    { id:'purple', label:'PURPLE', color:'#A52BEA', dark:'#51268D' },
+    { id:'green', label:'GREEN', color:'#18B94B', dark:'#12623B' },
+    { id:'cyan', label:'CYAN', color:'#13C9D8', dark:'#08727D' }
   ],
-  hex: [
-    { id:'blue', label:'BLUE', color:'#19a8ea', dark:'#075a8e' },
-    { id:'red', label:'RED', color:'#f0445b', dark:'#851a2b' },
-    { id:'yellow', label:'YELLOW', color:'#f5bb35', dark:'#8c5a09' },
-    { id:'green', label:'GREEN', color:'#39b86b', dark:'#12623b' },
-    { id:'purple', label:'PURPLE', color:'#a16de9', dark:'#51268d' },
-    { id:'orange', label:'ORANGE', color:'#f18440', dark:'#883e17' },
-  ],
+  royal: [
+    { id:'blue', label:'BLUE', color:'#168BFF', dark:'#075A8E' },
+    { id:'red', label:'RED', color:'#F02D3A', dark:'#851A2B' },
+    { id:'yellow', label:'YELLOW', color:'#F5B51B', dark:'#8C5A09' },
+    { id:'green', label:'GREEN', color:'#18B94B', dark:'#12623B' }
+  ]
 });
-const TAU = Math.PI * 2;
-const CENTER = Object.freeze({ x:360, y:360 });
-const point = (x,y) => ({ x:Number(x.toFixed(3)), y:Number(y.toFixed(3)) });
-const unit = (x,y) => { const length=Math.hypot(x,y)||1; return { x:x/length, y:y/length }; };
-const add = (a,b,scale=1) => point(a.x+b.x*scale, a.y+b.y*scale);
-const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
-function regularVertices(sides,radius,offset=-Math.PI/2) {
-  return Array.from({length:sides},(_,i)=>{
-    const angle=offset+i*TAU/sides;
-    return point(CENTER.x+Math.cos(angle)*radius,CENTER.y+Math.sin(angle)*radius);
+
+const VIEW = 720;
+const C = BASE_CELL_SIZE;
+const fmt = (n) => Number(n.toFixed(4));
+const point = (x, y) => ({ x:fmt(x), y:fmt(y) });
+const nativePoint = (x, y, cx, cy) => ({ x:cx+x, y:cy+y });
+
+function rotate(x, y, cx, cy, degrees) {
+  const a = degrees * Math.PI / 180;
+  const co = Math.cos(a);
+  const si = Math.sin(a);
+  const dx = x - cx;
+  const dy = y - cy;
+  return { x:cx + dx*co - dy*si, y:cy + dx*si + dy*co };
+}
+function scaled(p, scale) {
+  return point(p.x * scale, p.y * scale);
+}
+function polygon(sides, radius, cx, cy, offset = -90) {
+  return Array.from({ length:sides }, (_, index) => {
+    const angle = (offset + index * 360 / sides) * Math.PI / 180;
+    return point(cx + Math.cos(angle)*radius, cy + Math.sin(angle)*radius);
   });
 }
-function makeGeometry(id,sides) {
-  const h=Math.PI/sides;
-  const routeToInnerRatio=(Math.cos(h)+.5)/Math.sin(h);
-  const boardRadius=260;
-  const cellPitch=boardRadius/(5+routeToInnerRatio);
-  const innerRadius=routeToInnerRatio*cellPitch;
-  const frameRadius=348;
-  const baseAngles=Array.from({length:sides},(_,i)=>-Math.PI/2+i*TAU/sides);
-  const armAngles=Array.from({length:sides},(_,i)=>-Math.PI/2+(i+.5)*TAU/sides);
-  const track=[];
-  const arms=[];
-  const colors=EXTENDED_PLAYER_COLORS[id];
-  for(let armIndex=0;armIndex<sides;armIndex+=1) {
-    const angle=armAngles[armIndex];
-    const outward={x:Math.cos(angle),y:Math.sin(angle)};
-    const tangent={x:-Math.sin(angle),y:Math.cos(angle)};
-    const sideCells=new Map();
-    const centerCells=new Map();
-    for(let row=0;row<6;row+=1) {
-      const radial=boardRadius-row*cellPitch;
-      for(const column of [-1,1]) {
-        sideCells.set(column+':'+row,point(
-          CENTER.x+outward.x*radial+tangent.x*column*cellPitch,
-          CENTER.y+outward.y*radial+tangent.y*column*cellPitch
-        ));
-      }
-      centerCells.set(row,point(CENTER.x+outward.x*radial,CENTER.y+outward.y*radial));
-    }
-    const armTrackStart=track.length;
-    for(let row=5;row>=0;row-=1) {
-      const p=sideCells.get('-1:'+row);
-      track.push({index:track.length,arm:armIndex,column:-1,row,x:p.x,y:p.y,kind:'flank'});
-    }
-    const connector=centerCells.get(0);
-    track.push({index:track.length,arm:armIndex,column:0,row:0,x:connector.x,y:connector.y,kind:'connector'});
-    for(let row=0;row<6;row+=1) {
-      const p=sideCells.get('1:'+row);
-      track.push({index:track.length,arm:armIndex,column:1,row,x:p.x,y:p.y,kind:'flank'});
-    }
-    const startIndex=armTrackStart+5;
-    const starIndex=(startIndex+8)%(sides*13);
-    const homeLane=Array.from({length:5},(_,index)=>centerCells.get(index+1));
-    const baseAngle=baseAngles[armIndex];
-    const baseOutward={x:Math.cos(baseAngle),y:Math.sin(baseAngle)};
-    const baseTangent={x:-Math.sin(baseAngle),y:Math.cos(baseAngle)};
-    const baseApothem=frameRadius*Math.cos(h);
-    const cornerOffset=frameRadius*Math.sin(h);
-    const apexRadius=sides===5?162:178;
-    const apex=add(CENTER,baseOutward,apexRadius);
-    const left=point(CENTER.x+baseOutward.x*baseApothem-baseTangent.x*cornerOffset,
-                     CENTER.y+baseOutward.y*baseApothem-baseTangent.y*cornerOffset);
-    const right=point(CENTER.x+baseOutward.x*baseApothem+baseTangent.x*cornerOffset,
-                      CENTER.y+baseOutward.y*baseApothem+baseTangent.y*cornerOffset);
-    const rowOneRadius=apexRadius+(baseApothem-apexRadius)*.35;
-    const rowTwoRadius=apexRadius+(baseApothem-apexRadius)*.68;
-    const baseOffset=cellPitch*.52;
-    const baseSlots=[
-      add(add(CENTER,baseOutward,rowOneRadius),baseTangent,-baseOffset),
-      add(add(CENTER,baseOutward,rowOneRadius),baseTangent,baseOffset),
-      add(add(CENTER,baseOutward,rowTwoRadius),baseTangent,-baseOffset),
-      add(add(CENTER,baseOutward,rowTwoRadius),baseTangent,baseOffset),
-    ];
-    const finishSlots=[];
-    for(const radius of [31,53]) {
-      finishSlots.push(add(add(CENTER,outward,radius),tangent,-9));
-      finishSlots.push(add(add(CENTER,outward,radius),tangent,9));
-    }
-    arms.push({
-      index:armIndex,
-      player:colors[armIndex],
-      angle,
-      outward,
-      tangent,
-      baseAngle,
-      triangle:[apex,left,right],
-      baseSlots,
-      startIndex,
-      homeEntryIndex:(startIndex-1)%(sides*13),
-      starIndex,
-      homeLane,
-      finishSlots,
-      cellPitch,
-      tileSize:cellPitch*.87,
-      pawnDiameter:cellPitch*.82,
-    });
+function pawnSlots(center, angle, scale) {
+  const offset = .8 * C;
+  const a = angle * Math.PI / 180;
+  const co = Math.cos(a);
+  const si = Math.sin(a);
+  return [[-offset,-offset],[offset,-offset],[-offset,offset],[offset,offset]].map(([x,y], slotIndex) => ({
+    ...scaled({ x:center.x + x*co - y*si, y:center.y + x*si + y*co }, scale),
+    slotIndex
+  }));
+}
+function makeFinishSlots(center, direction, scale, mode) {
+  const tangent = { x:-direction.y, y:direction.x };
+  if (mode === 'hexa') {
+    const offsets = [-.27, -.09, .09, .27];
+    return offsets.map((offset, slotIndex) => ({
+      ...scaled({
+        x:center.x + direction.x*C + tangent.x*offset*C,
+        y:center.y + direction.y*C + tangent.y*offset*C
+      }, scale),
+      slotIndex
+    }));
   }
-  const safeIndices=[...new Set(arms.flatMap(arm=>[arm.startIndex,arm.starIndex]))].sort((a,b)=>a-b);
-  const allPoints=[
-    ...track.map(cell=>({x:cell.x,y:cell.y})),
-    ...arms.flatMap(arm=>[...arm.baseSlots,...arm.homeLane,...arm.finishSlots]),
-    ...arms.flatMap(arm=>arm.triangle),
+  const result = [];
+  for (const radial of [-.28, .28]) {
+    for (const lateral of [-.28, .28]) {
+      result.push({
+        ...scaled({
+          x:center.x + direction.x*C + direction.x*radial*C + tangent.x*lateral*C,
+          y:center.y + direction.y*C + direction.y*radial*C + tangent.y*lateral*C
+        }, scale),
+        slotIndex:result.length
+      });
+    }
+  }
+  return result;
+}
+function unitTowardCenter(p, cx, cy) {
+  const dx = cx - p.x;
+  const dy = cy - p.y;
+  const length = Math.hypot(dx, dy);
+  if (!length) throw new Error('Cannot create a home lane from the board center.');
+  return { x:dx/length, y:dy/length };
+}
+function rotateVector(vector, degrees) {
+  const a = degrees * Math.PI / 180;
+  return { x:vector.x*Math.cos(a)-vector.y*Math.sin(a), y:vector.x*Math.sin(a)+vector.y*Math.cos(a) };
+}
+function distance(a, b) {
+  return Math.hypot(a.x-b.x, a.y-b.y);
+}
+
+function makeHexa() {
+  const nativeSize = 2560;
+  const cx = nativeSize/2;
+  const cy = nativeSize/2;
+  const scale = VIEW/nativeSize;
+  const colors = BOARD_PLAYER_COLORS.hexa;
+  const track = [];
+  const starts = Object.fromEntries(colors.map((player, index) => [player.id, index*12]));
+  const entries = Object.fromEntries(colors.map((player) => [player.id, (starts[player.id]+71)%72]));
+  const safe = [...new Set(colors.flatMap((player) => [starts[player.id], (starts[player.id]+6)%72]))].sort((a,b)=>a-b);
+
+  // Each 60-degree sector is a 12-step U-shaped rail. Two bridge cells
+  // replace the old diagonal/2-cell jumps, so every outer move is one pitch.
+  const innerRadius = 2.5;
+  const rightInner = { x:1, y:-(innerRadius+1) };
+  const leftInner = rotate(-1, -(innerRadius+1), 0, 0, 60);
+  const dx = leftInner.x-rightInner.x;
+  const dy = leftInner.y-rightInner.y;
+  const chord = Math.hypot(dx,dy);
+  const midpoint = { x:(rightInner.x+leftInner.x)/2, y:(rightInner.y+leftInner.y)/2 };
+  const height = Math.sqrt(1-(chord/2)**2);
+  const perpendicular = { x:-dy/chord, y:dx/chord };
+  const candidates = [
+    { x:midpoint.x+perpendicular.x*height, y:midpoint.y+perpendicular.y*height },
+    { x:midpoint.x-perpendicular.x*height, y:midpoint.y-perpendicular.y*height }
   ];
-  const hubRadius=(innerRadius-cellPitch*.5)/Math.cos(h);
+  // Choose the outer intersection: it keeps each square bridge tile separated
+  // from both rail tiles in their local axes (the inner solution overlaps).
+  const innerBridge = candidates.sort((a,b)=>Math.hypot(b.x,b.y)-Math.hypot(a.x,a.y))[0];
+
+  const push = (xUnits, yUnits, positionRotation, sector, lane, row, tileRotation = positionRotation) => {
+    const native = rotate(cx+xUnits*C, cy+yUnits*C, cx, cy, positionRotation);
+    track.push({
+      index:track.length, sector, lane, row, rotation:tileRotation,
+      nativeX:fmt(native.x), nativeY:fmt(native.y),
+      ...scaled(native, scale)
+    });
+  };
+
+  for (let sector=0; sector<6; sector++) {
+    const angle = sector*60;
+    for (let row=5; row>=1; row--) push(1, -(innerRadius+row), angle, sector, 'right-rail', row);
+    push(innerBridge.x, innerBridge.y, angle, sector, 'inner-bridge', 0, angle+30);
+    for (let row=1; row<=5; row++) push(-1, -(innerRadius+row), angle+60, sector, 'left-rail', row);
+    push(0, -(innerRadius+5), angle+60, sector, 'outer-bridge', 6);
+  }
+
+  track.forEach((cell) => {
+    cell.safe = safe.includes(cell.index);
+    cell.startFor = colors.find((player)=>starts[player.id]===cell.index)?.id || null;
+    cell.entryFor = colors.find((player)=>entries[player.id]===cell.index)?.id || null;
+  });
+
+  const arms = colors.map((player, index) => {
+    const startIndex = starts[player.id];
+    const homeEntryIndex = entries[player.id];
+    const entry = track[homeEntryIndex];
+    const direction = unitTowardCenter({x:entry.nativeX,y:entry.nativeY},cx,cy);
+    const homeLane = Array.from({length:6},(_,homeIndex)=>{
+      const native = {
+        x:entry.nativeX + direction.x*C*(homeIndex+1),
+        y:entry.nativeY + direction.y*C*(homeIndex+1)
+      };
+      return {
+        ...scaled(native,scale),
+        nativeX:fmt(native.x), nativeY:fmt(native.y),
+        homeIndex:homeIndex+1,
+        rotation:Math.atan2(direction.y,direction.x)*180/Math.PI
+      };
+    });
+    const baseAngle = -60 + index*60;
+    const baseCenter = {
+      x:cx + Math.cos(baseAngle*Math.PI/180)*7*C,
+      y:cy + Math.sin(baseAngle*Math.PI/180)*7*C
+    };
+    return {
+      index, player, angle:baseAngle, startIndex, homeEntryIndex,
+      starIndex:(startIndex+6)%72,
+      homeLane, baseCenter:scaled(baseCenter,scale),
+      baseSlots:pawnSlots(baseCenter,baseAngle,scale),
+      baseRadius:1.9*C*scale,
+      baseRotation:baseAngle,
+      finishSlots:makeFinishSlots({x:cx,y:cy},direction,scale,'hexa'),
+      homeDirection:direction
+    };
+  });
+
+  const outline = polygon(6,9.55*C,cx,cy).map((p)=>scaled(p,scale));
+  const finishVertices = polygon(6,1.42*C,cx,cy).map((p)=>scaled(p,scale));
+  const routeLinkDistances = track.map((cell,index)=>fmt(distance(cell,track[(index+1)%72])/ (C*scale)));
   return {
-    id,
-    sides,
-    maxPlayers:sides,
-    tokensPerPlayer:4,
-    cellsPerArm:13,
-    gridColumns:3,
-    gridRows:6,
-    homeCells:5,
-    trackLength:sides*13,
-    boardRadius,
-    frameRadius,
-    cellPitch,
-    tileSize:cellPitch*.87,
-    pawnDiameter:cellPitch*.82,
-    innerRadius,
-    hubRadius,
-    center:CENTER,
-    baseAngles,
-    armAngles,
-    players:arms,
-    arms,
-    track,
-    safeIndices,
-    homeVertices:regularVertices(sides,hubRadius),
-    pawnDiameterRatio:.82,
-    stackLayout:{
-      1:{scale:1,offsets:[[0,0]]},
-      2:{scale:.68,offsets:[[-.15,0],[.15,0]]},
-      3:{scale:.64,offsets:[[0,-.16],[-.16,.16],[.16,.16]]},
-      4:{scale:.61,offsets:[[-.17,-.17],[.17,-.17],[-.17,.17],[.17,.17]]},
-    },
-    touchTargetCssPx:48,
-    bounds:{
-      minX:Math.min(...allPoints.map(p=>p.x)),
-      maxX:Math.max(...allPoints.map(p=>p.x)),
-      minY:Math.min(...allPoints.map(p=>p.y)),
-      maxY:Math.max(...allPoints.map(p=>p.y)),
-    },
+    id:'hexa', boardId:'hexa', shape:'six-rail-star', sides:6, maxPlayers:6, tokensPerPlayer:4,
+    canvasSize:nativeSize, cellSize:C, artScale:scale,
+    trackLength:72, maxOuterSteps:71, homeCells:6, finishStep:78,
+    startIndices:starts, homeEntryIndices:entries, safeIndices:safe,
+    cellPitch:C*scale, tileSize:.82*C*scale, safeAreaSize:.72*C*scale,
+    pawnDiameter:.64*C*scale, pawnMaxWidth:.82*C*scale, pawnDiameterRatio:.64,
+    finishPawnScale:.24, touchTargetCssPx:48,
+    center:scaled({x:cx,y:cy},scale), track, arms, outline, finishVertices,
+    routeLinkDistances:[...new Set(routeLinkDistances)].sort((a,b)=>a-b)
   };
 }
-export const EXTENDED_GEOMETRIES=Object.freeze({
-  penta:makeGeometry('penta',5),
-  hex:makeGeometry('hex',6),
-});
-export const EXTENDED_GEOMETRY_IDS=Object.freeze(['penta','hex']);
+
+function makeRoyal() {
+  const nativeSize = 2816;
+  const cx = nativeSize/2;
+  const cy = nativeSize/2;
+  const scale = VIEW/nativeSize;
+  const colors = BOARD_PLAYER_COLORS.royal;
+  const halfSide = 8.5;
+  const starts = { blue:0, red:17, yellow:34, green:51 };
+  const entries = Object.fromEntries(colors.map((player)=>[player.id,(starts[player.id]+66)%68]));
+  const safe = [...new Set(colors.flatMap((player)=>[starts[player.id],starts[player.id]+6,starts[player.id]+12]))].sort((a,b)=>a-b);
+  const track = [];
+
+  // 17 cells per side, with half-cell corner margins: the 68-cell square
+  // loop is continuous and remains inside the 19x19 board footprint.
+  for (let side=0; side<4; side++) {
+    for (let step=0; step<17; step++) {
+      const x = cx + (-halfSide+step)*C;
+      const y = cy - halfSide*C;
+      const native = rotate(x,y,cx,cy,side*90);
+      track.push({
+        index:track.length, sector:side, lane:'perimeter', row:step,
+        rotation:side*90,
+        nativeX:fmt(native.x), nativeY:fmt(native.y),
+        ...scaled(native,scale)
+      });
+    }
+  }
+  track.forEach((cell)=>{
+    cell.safe=safe.includes(cell.index);
+    cell.startFor=colors.find((player)=>starts[player.id]===cell.index)?.id || null;
+    cell.entryFor=colors.find((player)=>entries[player.id]===cell.index)?.id || null;
+  });
+
+  const arms = colors.map((player,index)=>{
+    const startIndex=starts[player.id];
+    const homeEntryIndex=entries[player.id];
+    const entry=track[homeEntryIndex];
+    // First step leaves the perimeter at a right angle; the remaining six
+    // steps turn gradually toward the central finish without touching the
+    // neighbouring perimeter tile.
+    const inwardNormal=rotateVector({x:1,y:0},index*90);
+    const firstNative={
+      x:entry.nativeX+inwardNormal.x*C,
+      y:entry.nativeY+inwardNormal.y*C
+    };
+    const direction=unitTowardCenter(firstNative,cx,cy);
+    const homeLane=[{
+      ...scaled(firstNative,scale),
+      nativeX:fmt(firstNative.x),nativeY:fmt(firstNative.y),
+      homeIndex:1,
+      rotation:Math.atan2(inwardNormal.y,inwardNormal.x)*180/Math.PI
+    }];
+    for(let homeIndex=1;homeIndex<7;homeIndex++) {
+      const native={
+        x:firstNative.x+direction.x*C*homeIndex,
+        y:firstNative.y+direction.y*C*homeIndex
+      };
+      homeLane.push({
+        ...scaled(native,scale),
+        nativeX:fmt(native.x),nativeY:fmt(native.y),
+        homeIndex:homeIndex+1,
+        rotation:Math.atan2(direction.y,direction.x)*180/Math.PI
+      });
+    }
+    const baseNative=rotate(cx-6*C,cy-1.5*C,cx,cy,index*90);
+    return {
+      index,player,angle:index*90,startIndex,homeEntryIndex,
+      starIndex:startIndex+6,royalSafeIndex:startIndex+12,
+      homeLane,baseCenter:scaled(baseNative,scale),
+      baseSlots:pawnSlots(baseNative,index*90,scale),
+      baseRadius:1.9*C*scale,baseRotation:index*90,
+      finishSlots:makeFinishSlots(homeLane[homeLane.length-1] && {
+        x:homeLane[homeLane.length-1].nativeX,
+        y:homeLane[homeLane.length-1].nativeY
+      },direction,scale,'royal'),
+      homeDirection:direction
+    };
+  });
+
+  const outline=polygon(8,10.35*C,cx,cy, -67.5).map((p)=>scaled(p,scale));
+  const finishVertices=polygon(4,3.5*C,cx,cy,-45).map((p)=>scaled(p,scale));
+  const routeLinkDistances=track.map((cell,index)=>fmt(distance(cell,track[(index+1)%68])/(C*scale)));
+  return {
+    id:'royal',boardId:'royal',shape:'royal-square-loop',sides:4,maxPlayers:4,tokensPerPlayer:4,
+    canvasSize:nativeSize,cellSize:C,artScale:scale,
+    trackLength:68,maxOuterSteps:66,homeCells:7,finishStep:74,
+    startIndices:starts,homeEntryIndices:entries,safeIndices:safe,
+    cellPitch:C*scale,tileSize:.82*C*scale,safeAreaSize:.8*C*scale,
+    pawnDiameter:.68*C*scale,pawnMaxWidth:.82*C*scale,pawnDiameterRatio:.68,
+    finishPawnScale:.68,touchTargetCssPx:48,
+    center:scaled({x:cx,y:cy},scale),track,arms,outline,finishVertices,
+    routeLinkDistances:[...new Set(routeLinkDistances)].sort((a,b)=>a-b)
+  };
+}
+
+export const EXTENDED_GEOMETRIES = Object.freeze({ hexa:makeHexa(), royal:makeRoyal() });
+export const EXTENDED_GEOMETRY_IDS = Object.freeze(['hexa','royal']);
 export function getExtendedGeometry(id) {
   const geometry=EXTENDED_GEOMETRIES[String(id||'').toLowerCase()];
-  if(!geometry) throw new RangeError('Unknown extended board geometry.');
+  if(!geometry) throw new RangeError('Unknown HEXA/ROYAL geometry.');
   return geometry;
 }
-export function distance(a,b) { return Math.hypot(a.x-b.x,a.y-b.y); }
-export function pointInTriangle(p,triangle,epsilon=.001) {
-  const [a,b,c]=triangle;
-  const v0={x:b.x-a.x,y:b.y-a.y},v1={x:c.x-a.x,y:c.y-a.y},v2={x:p.x-a.x,y:p.y-a.y};
-  const den=v0.x*v1.y-v1.x*v0.y;
-  const u=(v2.x*v1.y-v1.x*v2.y)/den;
-  const v=(v0.x*v2.y-v0.y*v2.x)/den;
-  const w=1-u-v;
-  return u>=-epsilon&&v>=-epsilon&&w>=-epsilon;
+export { distance };
+
+function tileCorners(cell,size) {
+  const angle=(cell.rotation||0)*Math.PI/180;
+  const co=Math.cos(angle),si=Math.sin(angle),half=size/2;
+  return [[-half,-half],[half,-half],[half,half],[-half,half]].map(([x,y])=>({
+    x:cell.x+x*co-y*si,y:cell.y+x*si+y*co
+  }));
 }
-export function getExtendedStackLayout(geometryId,count) {
-  const geometry=getExtendedGeometry(geometryId);
-  if(!Number.isInteger(count)||count<0) throw new RangeError('Token count must be a non-negative integer.');
-  if(count===0) return {tokens:[],hiddenCount:0};
-  const visible=Math.min(count,4);
-  const config=geometry.stackLayout[visible];
-  return {
-    hiddenCount:Math.max(0,count-visible),
-    tokens:Array.from({length:count},(_,index)=>{
-      if(index>=visible) return {index,x:0,y:0,scale:0,diameter:0,visible:false};
-      const offset=config.offsets[index];
-      return {index,x:offset[0]*geometry.cellPitch,y:offset[1]*geometry.cellPitch,scale:config.scale,
-        diameter:geometry.pawnDiameter*config.scale,visible:true};
-    }),
-  };
+function circleOverlapsTile(center,radius,cell,size) {
+  const angle=-(cell.rotation||0)*Math.PI/180;
+  const dx=center.x-cell.x,dy=center.y-cell.y;
+  const localX=dx*Math.cos(angle)-dy*Math.sin(angle);
+  const localY=dx*Math.sin(angle)+dy*Math.cos(angle);
+  const half=size/2;
+  const nearestX=Math.max(-half,Math.min(half,localX));
+  const nearestY=Math.max(-half,Math.min(half,localY));
+  return Math.hypot(localX-nearestX,localY-nearestY)<radius-1e-5;
 }
-export function assertExtendedGeometry(geometry) {
-  if(!geometry||![5,6].includes(geometry.sides)) throw new TypeError('Only PENTA and HEX are supported.');
-  if(geometry.track.length!==geometry.sides*13) throw new Error('Shared track must have 13 cells per arm.');
-  if(geometry.arms.length!==geometry.sides) throw new Error('Every player must have one classic three-column arm.');
-  if(geometry.safeIndices.length!==geometry.sides*2) throw new Error('Every player must have two safe squares.');
-  const keys=new Set(geometry.track.map(cell=>cell.x.toFixed(3)+','+cell.y.toFixed(3)));
-  if(keys.size!==geometry.trackLength) throw new Error('Route cell centers must be unique.');
-  const pitch=geometry.cellPitch;
-  for(let i=0;i<geometry.track.length;i+=1) {
-    const next=geometry.track[(i+1)%geometry.track.length];
-    if(Math.abs(distance(geometry.track[i],next)-pitch)>.02) throw new Error('Shared route has a broken cell-to-cell connection.');
+function circlesOverlap(a,radiusA,b,radiusB) {
+  return distance(a,b)<radiusA+radiusB-1e-5;
+}
+function assertNoPolygonOverlaps(items,label) {
+  for(let i=0;i<items.length;i++) {
+    for(let j=i+1;j<items.length;j++) {
+      if(polygonsOverlap(items[i].polygon,items[j].polygon)) {
+        throw new Error(label+' overlap: '+items[i].id+' / '+items[j].id+'.');
+      }
+    }
   }
-  for(const arm of geometry.arms) {
-    if(arm.homeLane.length!==5||arm.baseSlots.length!==4||arm.finishSlots.length!==4) throw new Error('Every player must have 4 base slots, 5 home cells and 4 finish slots.');
-    if(arm.starIndex!==(arm.startIndex+8)%geometry.trackLength) throw new Error('Star safety position must be eight route steps after start.');
-    if(!arm.baseSlots.every(p=>pointInTriangle(p,arm.triangle))) throw new Error('A pawn well lies outside its triangular base.');
-    if(arm.baseSlots.some(p=>p.x<0||p.y<0||p.x>720||p.y>720)) throw new Error('Base slot outside board art.');
+}
+function assertCirclesOutsidePolygons(circles,polygons,label) {
+  for(const circle of circles) for(const item of polygons) {
+    if(circleOverlapsTile(circle.center,circle.radius,item.cell,item.size)) {
+      throw new Error(label+' overlaps '+item.id+'.');
+    }
+  }
+}
+function assertCirclesDoNotOverlap(circles,label) {
+  for(let i=0;i<circles.length;i++) for(let j=i+1;j<circles.length;j++) {
+    if(circlesOverlap(circles[i].center,circles[i].radius,circles[j].center,circles[j].radius)) {
+      throw new Error(label+' overlap: '+circles[i].id+' / '+circles[j].id+'.');
+    }
+  }
+}
+function assertPolygonInsideCanvas(polygon,label) {
+  for(const p of polygon) {
+    if(p.x<0||p.x>VIEW||p.y<0||p.y>VIEW) {
+      throw new Error(label+' falls outside the 720x720 artwork.');
+    }
+  }
+}
+
+function polygonsOverlap(a,b) {
+  for(const polygon of [a,b]) {
+    for(let index=0;index<polygon.length;index++) {
+      const p=polygon[index],q=polygon[(index+1)%polygon.length];
+      const axis={x:-(q.y-p.y),y:q.x-p.x};
+      const project=(points)=>points.map((item)=>item.x*axis.x+item.y*axis.y);
+      const pa=project(a),pb=project(b);
+      if(Math.max(...pa)<=Math.min(...pb)+1e-5 || Math.max(...pb)<=Math.min(...pa)+1e-5) return false;
+    }
   }
   return true;
 }
-function poly(points) {
-  return points.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')+' Z';
+
+export function assertExtendedGeometry(geometry) {
+  if(!geometry || !['hexa','royal'].includes(geometry.id)) throw new TypeError('Expected HEXA or ROYAL geometry.');
+  const expected=geometry.id==='hexa'
+    ? { sides:6,track:72,outer:71,home:6,finish:78 }
+    : { sides:4,track:68,outer:66,home:7,finish:74 };
+  if(geometry.sides!==expected.sides || geometry.trackLength!==expected.track ||
+     geometry.maxOuterSteps!==expected.outer || geometry.homeCells!==expected.home ||
+     geometry.finishStep!==expected.finish || geometry.arms.length!==expected.sides ||
+     geometry.track.length!==expected.track) {
+    throw new Error('Track/seat/finish counts do not match the board specification.');
+  }
+  if(new Set(geometry.track.map((cell)=>cell.index)).size!==geometry.trackLength ||
+     new Set(geometry.track.map((cell)=>cell.nativeX+','+cell.nativeY)).size!==geometry.trackLength) {
+    throw new Error('Track indices or route centres are duplicated.');
+  }
+  if(geometry.safeIndices.length!==12 || new Set(geometry.safeIndices).size!==12) {
+    throw new Error('Each board must expose exactly twelve unique safe cells.');
+  }
+  const expectedOutlineVertices=geometry.id==='hexa'?6:8;
+  const expectedFinishVertices=geometry.id==='hexa'?6:4;
+  if(geometry.outline.length!==expectedOutlineVertices ||
+     geometry.finishVertices.length!==expectedFinishVertices) {
+    throw new Error('Board outline or finish polygon has the wrong vertex count.');
+  }
+  assertPolygonInsideCanvas(geometry.outline,'Board outline');
+  assertPolygonInsideCanvas(geometry.finishVertices,'Finish polygon');
+
+  const pitch=geometry.cellPitch;
+  for(let index=0;index<geometry.trackLength;index++) {
+    const current=geometry.track[index],next=geometry.track[(index+1)%geometry.trackLength];
+    if(Math.abs(distance(current,next)-pitch)>.03) {
+      throw new Error('Outer route is discontinuous at '+index+' -> '+((index+1)%geometry.trackLength)+'.');
+    }
+  }
+
+  const allHome=[];
+  const allBase=[];
+  const allFinish=[];
+  for(const [armIndex,arm] of geometry.arms.entries()) {
+    if(arm.index!==armIndex || arm.homeLane.length!==geometry.homeCells ||
+       arm.baseSlots.length!==4 || arm.finishSlots.length!==4) {
+      throw new Error('Incomplete player geometry for seat '+armIndex+'.');
+    }
+    if(arm.homeEntryIndex!==(arm.startIndex+geometry.maxOuterSteps)%geometry.trackLength) {
+      throw new Error('Home-entry index mismatch for '+arm.player.id+'.');
+    }
+    if(!geometry.safeIndices.includes(arm.startIndex) || !geometry.safeIndices.includes(arm.starIndex)) {
+      throw new Error('Start and star squares must both be safe for '+arm.player.id+'.');
+    }
+    const entry=geometry.track[arm.homeEntryIndex];
+    const lane=[{x:entry.x,y:entry.y},...arm.homeLane];
+    for(let index=0;index<lane.length-1;index++) {
+      if(Math.abs(distance(lane[index],lane[index+1])-pitch)>.03) {
+        throw new Error('Home lane is disconnected for '+arm.player.id+' at step '+(index+1)+'.');
+      }
+    }
+    allHome.push(...arm.homeLane.map((cell)=>({ ...cell, armIndex })));
+    allBase.push(...arm.baseSlots.map((cell)=>({ ...cell, armIndex })));
+    allFinish.push(...arm.finishSlots.map((cell)=>({ ...cell, armIndex })));
+  }
+
+  // Check the actual rotated square footprints, not just distances between
+  // their centres. SAT detects overlap even when two rotated cells are
+  // diagonally offset and their centre distance exceeds one tile width.
+  const trackTiles=geometry.track.map((cell)=>({
+    id:'track '+cell.index,cell,size:geometry.tileSize,
+    polygon:tileCorners(cell,geometry.tileSize)
+  }));
+  const homeTiles=allHome.map((cell)=>({
+    id:'home '+cell.armIndex+':'+cell.homeIndex,cell,size:geometry.tileSize,
+    polygon:tileCorners(cell,geometry.tileSize)
+  }));
+  assertNoPolygonOverlaps(trackTiles,'Outer route tiles');
+  assertNoPolygonOverlaps(homeTiles,'Home-lane tiles');
+  // Check every outer-route tile against every home-lane tile.
+  for(const track of trackTiles) for(const home of homeTiles) {
+    if(polygonsOverlap(track.polygon,home.polygon)) {
+      throw new Error('Home-lane tile overlaps outer route: '+home.id+' / '+track.id+'.');
+    }
+  }
+
+  const baseCircles=allBase.map((slot)=>({
+    id:'base '+slot.armIndex+':'+slot.slotIndex,
+    center:slot,radius:geometry.pawnDiameter*.54
+  }));
+  const finishRadius=geometry.pawnDiameter*geometry.finishPawnScale*.48;
+  const finishCircles=allFinish.map((slot)=>({
+    id:'finish '+slot.armIndex+':'+slot.slotIndex,
+    center:slot,radius:finishRadius
+  }));
+  const baseZones=geometry.arms.map((arm)=>({
+    id:'base zone '+arm.player.id,center:arm.baseCenter,radius:arm.baseRadius
+  }));
+  assertCirclesDoNotOverlap(baseZones,'Base zones');
+  assertCirclesOutsidePolygons(baseZones,[...trackTiles,...homeTiles],'Base zone');
+  assertCirclesDoNotOverlap(baseCircles,'Base pawn wells');
+  assertCirclesDoNotOverlap(finishCircles,'Finish pawn sockets');
+  assertCirclesOutsidePolygons(baseCircles,[...trackTiles,...homeTiles],'Base pawn well');
+  assertCirclesOutsidePolygons(finishCircles,[...trackTiles,...homeTiles],'Finish pawn socket');
+  for(const base of baseCircles) for(const finish of finishCircles) {
+    if(circlesOverlap(base.center,base.radius,finish.center,finish.radius)) {
+      throw new Error('Base pawn well overlaps finish socket: '+base.id+' / '+finish.id+'.');
+    }
+  }
+
+  for(const item of [...trackTiles,...homeTiles]) assertPolygonInsideCanvas(item.polygon,item.id);
+  for(const circle of [...baseCircles,...finishCircles]) {
+    if(circle.center.x-circle.radius<0||circle.center.x+circle.radius>VIEW||
+       circle.center.y-circle.radius<0||circle.center.y+circle.radius>VIEW) {
+      throw new Error(circle.id+' falls outside the 720x720 artwork.');
+    }
+  }
+  for(const arm of geometry.arms) {
+    if(arm.baseCenter.x-arm.baseRadius<0||arm.baseCenter.x+arm.baseRadius>VIEW||
+       arm.baseCenter.y-arm.baseRadius<0||arm.baseCenter.y+arm.baseRadius>VIEW) {
+      throw new Error('Base zone '+arm.player.id+' falls outside the 720x720 artwork.');
+    }
+  }
+  return true;
 }
-function starPoints(x,y,r) {
-  return Array.from({length:10},(_,i)=>{
-    const angle=-Math.PI/2+i*Math.PI/5;
-    const radius=i%2?r*.42:r;
-    return (x+Math.cos(angle)*radius).toFixed(2)+','+(y+Math.sin(angle)*radius).toFixed(2);
-  }).join(' ');
-}
-export function renderExtendedBoardSvg(geometry,theme='neon') {
-  if(!EXTENDED_THEMES[theme]) throw new RangeError('Unknown board theme.');
-  if(!geometry||![5,6].includes(geometry.sides)) throw new TypeError('Expected PENTA or HEX geometry.');
-  const s=EXTENDED_THEMES[theme],n=geometry.sides,parts=[],safeStarIndices=new Set(geometry.arms.map(arm=>arm.starIndex));
-  const fmt=v=>Number(v).toFixed(2);
-  const polygon=pts=>poly(pts);
-  const square=(x,y,size,fill,stroke,extra='')=>{
-    const half=size/2;
-    return '<g '+extra+'><rect x="'+fmt(x-half+1.8)+'" y="'+fmt(y-half+3)+'" width="'+fmt(size)+'" height="'+fmt(size)+'" rx="3.5" fill="'+s.shadow+'" opacity=".52"/>'+
-      '<rect x="'+fmt(x-half)+'" y="'+fmt(y-half)+'" width="'+fmt(size)+'" height="'+fmt(size)+'" rx="3.5" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.7"/>'+
-      '<rect x="'+fmt(x-half+2.2)+'" y="'+fmt(y-half+2.2)+'" width="'+fmt(size-4.4)+'" height="'+fmt(size-4.4)+'" rx="2.2" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width=".8"/>'+
-      '<path d="M'+fmt(x-half+4)+' '+fmt(y-half+3)+'h'+fmt(size-8)+'" stroke="#fff" stroke-opacity=".28" stroke-width="1.2"/></g>';
+
+export function getExtendedStackLayout(id,count) {
+  const geometry=getExtendedGeometry(id);
+  if(!Number.isInteger(count)||count<0) throw new RangeError('Stack count must be non-negative.');
+  if(!count) return { tokens:[],hiddenCount:0,badge:null };
+  if(count===1) return {
+    tokens:[{index:0,x:0,y:0,scale:1,diameter:geometry.pawnDiameter,visible:true}],
+    hiddenCount:0,badge:null
   };
-  const frame=regularVertices(n,348),inner=regularVertices(n,337);
-  parts.push('<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" role="img" aria-label="OPTIMIST LUDO '+n+' players '+theme+'"><title>OPTIMIST LUDO — '+(n===5?'PENTA':'HEX')+' — '+theme.toUpperCase()+'</title><defs>');
-  parts.push('<linearGradient id="frame" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+s.glow+'"/><stop offset=".2" stop-color="'+s.gold+'"/><stop offset=".52" stop-color="'+s.outer+'"/><stop offset=".8" stop-color="'+s.gold+'"/><stop offset="1" stop-color="'+s.shadow+'"/></linearGradient>');
-  parts.push('<linearGradient id="surface" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+s.board+'"/><stop offset=".52" stop-color="'+s.bg+'"/><stop offset="1" stop-color="'+s.outer+'"/></linearGradient>');
-  parts.push('<linearGradient id="tile" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#fff"/><stop offset=".55" stop-color="'+s.cell+'"/><stop offset="1" stop-color="'+s.tile2+'"/></linearGradient>');
-  parts.push('<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff4cf"/><stop offset=".48" stop-color="'+s.gold+'"/><stop offset="1" stop-color="#76502b"/></linearGradient>');
-  parts.push('<radialGradient id="well" cx=".28" cy=".2" r=".95"><stop stop-color="#8793a5"/><stop offset=".25" stop-color="'+s.baseBg+'"/><stop offset="1" stop-color="#03050a"/></radialGradient>');
-  parts.push('<filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>');
-  parts.push('<pattern id="grain" width="66" height="66" patternUnits="userSpaceOnUse"><path d="M-4 14Q22 4 70 18M-8 43Q24 32 74 46M5 63Q32 54 72 64" fill="none" stroke="'+s.accent+'" stroke-opacity=".085" stroke-width="2"/></pattern>');
-  parts.push('<pattern id="marble" width="124" height="124" patternUnits="userSpaceOnUse"><path d="M-12 32Q25 1 59 34T137 26M-10 91Q27 65 62 96T138 85" fill="none" stroke="'+s.accent+'" stroke-opacity=".16" stroke-width="3"/><path d="M-12 36Q25 5 59 38T137 30" fill="none" stroke="'+s.glow+'" stroke-opacity=".11" stroke-width="1"/></pattern>');
-  parts.push('</defs>');
-  parts.push('<rect width="720" height="720" rx="34" fill="'+s.bg+'"/><path d="'+polygon(frame)+'" fill="url(#frame)" stroke="'+s.gold+'" stroke-width="2.2"/><path d="'+polygon(inner)+'" fill="url(#surface)" stroke="'+s.shadow+'" stroke-width="5"/>');
-  if(theme==='classic') parts.push('<path d="'+polygon(inner)+'" fill="url(#grain)" opacity=".8"/>');
-  if(theme==='marble') parts.push('<path d="'+polygon(inner)+'" fill="url(#marble)" opacity=".9"/>');
-  if(theme==='neon') parts.push('<g opacity=".24" filter="url(#softShadow)" fill="none" stroke-linecap="round"><path d="M55 100Q125 42 188 76T280 50M442 62Q540 20 665 105M52 602Q140 668 232 626M488 648Q585 690 672 590" stroke="#a64dff" stroke-width="8"/><path d="M48 150Q105 105 164 138M558 132Q624 88 674 150" stroke="#32d8ff" stroke-width="5"/></g>');
-  parts.push('<path d="'+polygon(frame)+'" fill="none" stroke="'+s.accent+'" stroke-opacity=".35" stroke-width="1.2"/>');
 
-  // The whole 3×6 arm plate is visible: two shared-track columns and the five-cell private home column.
-  for(const arm of geometry.arms) {
-    const o=arm.outward,t=arm.tangent,p=geometry.cellPitch;
-    const corners=[
-      {x:360+o.x*(geometry.boardRadius+p*.55)+t.x*(-1.5*p),y:360+o.y*(geometry.boardRadius+p*.55)+t.y*(-1.5*p)},
-      {x:360+o.x*(geometry.boardRadius+p*.55)+t.x*(1.5*p),y:360+o.y*(geometry.boardRadius+p*.55)+t.y*(1.5*p)},
-      {x:360+o.x*(geometry.boardRadius-5.5*p)+t.x*(1.5*p),y:360+o.y*(geometry.boardRadius-5.5*p)+t.y*(1.5*p)},
-      {x:360+o.x*(geometry.boardRadius-5.5*p)+t.x*(-1.5*p),y:360+o.y*(geometry.boardRadius-5.5*p)+t.y*(-1.5*p)}
-    ];
-    parts.push('<path d="'+polygon(corners)+'" fill="'+s.outer+'" fill-opacity=".32" stroke="'+s.gold+'" stroke-opacity=".3" stroke-width="1.3"/>');
-  }
+  // A four-token stack is laid out as a compact 2x2 group. This keeps all
+  // four character portraits visible without letting them cross the tile.
+  const diameter=.35*C*geometry.artScale;
+  const offset=.22*C*geometry.artScale;
+  const slots=[[-offset,-offset],[offset,-offset],[-offset,offset],[offset,offset]];
+  const visibleCount=Math.min(count,4);
+  const tokens=Array.from({length:count},(_,index)=>{
+    if(index>=visibleCount) return {index,x:0,y:0,scale:0,diameter:0,visible:false};
+    const [x,y]=slots[index];
+    return {index,x,y,scale:diameter/geometry.pawnDiameter,diameter,visible:true};
+  });
+  const hiddenCount=count-visibleCount;
+  return {tokens,hiddenCount,badge:hiddenCount? '×'+count:null};
+}
 
-  // Triangular yards sit between the radial arms, not in square corner boxes.
-  for(const arm of geometry.arms) {
-    const color=arm.player.color,tri=arm.triangle;
-    parts.push('<path d="'+polygon(tri)+'" fill="'+color+'" fill-opacity=".32" stroke="url(#gold)" stroke-width="4" stroke-linejoin="round"/>');
-    const [apex,left,right]=tri;
-    const inset=[{x:apex.x*.91+(left.x+right.x)*.045,y:apex.y*.91+(left.y+right.y)*.045},
-      {x:left.x*.91+apex.x*.09,y:left.y*.91+apex.y*.09},
-      {x:right.x*.91+apex.x*.09,y:right.y*.91+apex.y*.09}];
-    parts.push('<path d="'+polygon(inset)+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-opacity=".95"/>');
-    const mid={x:(left.x+right.x)/2,y:(left.y+right.y)/2};
-    parts.push('<text x="'+fmt(mid.x)+'" y="'+fmt(mid.y-5)+'" text-anchor="middle" fill="#fff4d8" font-family="Arial,sans-serif" font-size="10" font-weight="900" letter-spacing="1.5">'+arm.player.label+'</text>');
-    arm.baseSlots.forEach((q,i)=>{
-      parts.push('<circle data-base-slot="'+arm.index+':'+i+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.48)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.2"/>');
-      parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.43)+'" fill="url(#well)" stroke="'+color+'" stroke-width="1.8"/>');
-      parts.push('<circle cx="'+fmt(q.x-geometry.cellPitch*.07)+'" cy="'+fmt(q.y-geometry.cellPitch*.07)+'" r="'+fmt(geometry.cellPitch*.045)+'" fill="#fff" fill-opacity=".35"/>');
-    });
-  }
+const star=(x,y,r)=>Array.from({length:10},(_,index)=>{
+  const angle=-Math.PI/2+index*Math.PI/5;
+  const radius=index%2?r*.42:r;
+  return (x+Math.cos(angle)*radius).toFixed(2)+','+(y+Math.sin(angle)*radius).toFixed(2);
+}).join(' ');
+const closedPath=(points)=>points.map((p,index)=>(index?'L':'M')+p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')+' Z';
 
-  // Shared loop cells: 13 per arm. The 3-column grid is retained exactly.
-  for(const cell of geometry.track) {
-    const arm=geometry.arms[cell.arm],isStart=cell.index===arm.startIndex,isStar=safeStarIndices.has(cell.index);
-    const size=geometry.tileSize,rot=arm.angle*180/Math.PI,fill=isStart?arm.player.color:'url(#tile)',stroke=isStart?'url(#gold)':s.edge;
-    parts.push(square(cell.x,cell.y,size,fill,stroke,'data-track-cell="'+cell.index+'" transform="rotate('+fmt(rot)+' '+fmt(cell.x)+' '+fmt(cell.y)+')"'));
-    if(isStart) parts.push('<path d="M'+fmt(cell.x-4)+' '+fmt(cell.y+2)+'l4 -8 4 8h-2v5h-4v-5z" fill="#fff4d5" stroke="'+s.shadow+'" stroke-width=".65" transform="rotate('+fmt(rot)+' '+fmt(cell.x)+' '+fmt(cell.y)+')"/>');
-    if(isStar) parts.push('<polygon data-safe-cell="'+cell.index+'" points="'+starPoints(cell.x,cell.y,size*.22)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width=".7"/>');
-  }
+export function renderExtendedBoardSvg(geometry,theme='neon') {
+  if(!BOARD_THEMES[theme]) throw new RangeError('Unknown board theme.');
+  assertExtendedGeometry(geometry);
+  const palette=BOARD_THEMES[theme];
+  const parts=[];
+  const colors=geometry.arms.map((arm)=>arm.player.color);
+  const title=geometry.id.toUpperCase();
+  parts.push('<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" role="img" aria-label="OPTIMIST LUDO '+title+'"><title>OPTIMIST LUDO '+title+' board</title><defs>');
+  parts.push('<linearGradient id="frame" x2="1" y2="1"><stop stop-color="'+palette.glow+'"/><stop offset=".35" stop-color="'+palette.gold+'"/><stop offset="1" stop-color="'+palette.shadow+'"/></linearGradient>');
+  parts.push('<linearGradient id="tile" x2="0" y2="1"><stop stop-color="#fff"/><stop offset=".55" stop-color="'+palette.cell+'"/><stop offset="1" stop-color="'+palette.tile2+'"/></linearGradient>');
+  parts.push('<radialGradient id="well"><stop stop-color="'+palette.baseBg+'"/><stop offset="1" stop-color="#03050a"/></radialGradient></defs>');
+  parts.push('<rect width="720" height="720" rx="32" fill="'+palette.bg+'"/>');
+  parts.push('<path d="'+closedPath(geometry.outline)+'" fill="url(#frame)" stroke="'+palette.gold+'" stroke-width="4"/>');
+  const inner=geometry.outline.map((p)=>({x:360+(p.x-360)*.96,y:360+(p.y-360)*.96}));
+  parts.push('<path d="'+closedPath(inner)+'" fill="'+palette.board+'" stroke="'+palette.shadow+'" stroke-width="5"/>');
 
-  // Private five-cell home lane, in the centre column of each classic arm.
-  for(const arm of geometry.arms) arm.homeLane.forEach((q,index)=>{
-    const size=geometry.tileSize,rot=arm.angle*180/Math.PI,color=arm.player.color;
-    parts.push(square(q.x,q.y,size,color,'url(#gold)','data-home-cell="'+arm.index+':'+index+'" transform="rotate('+fmt(rot)+' '+fmt(q.x)+' '+fmt(q.y)+')"'));
-    parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(size*.09)+'" fill="#fff4d0" fill-opacity=".58"/>');
+  geometry.arms.forEach((arm)=>{
+    const color=arm.player.color,base=arm.baseCenter,radius=arm.baseRadius;
+    parts.push('<g data-base="'+arm.player.id+'"><circle cx="'+base.x+'" cy="'+base.y+'" r="'+radius+'" fill="'+palette.shadow+'" fill-opacity=".72" stroke="url(#frame)" stroke-width="5"/>');
+    parts.push('<circle cx="'+base.x+'" cy="'+base.y+'" r="'+radius*.9+'" fill="'+color+'" fill-opacity=".23" stroke="'+color+'" stroke-width="3"/>');
+    arm.baseSlots.forEach((slot,index)=>parts.push('<circle data-base-slot="'+arm.index+':'+index+'" cx="'+slot.x+'" cy="'+slot.y+'" r="'+geometry.pawnDiameter*.54+'" fill="url(#well)" stroke="'+palette.gold+'" stroke-width="2"/>'));
+    parts.push('</g>');
   });
 
-  // The finish is a true polygonal home divided into one coloured wedge per player.
-  for(let i=0;i<n;i++) {
-    const a=geometry.homeVertices[i],b=geometry.homeVertices[(i+1)%n],arm=geometry.arms[i],color=arm.player.color;
-    parts.push('<path d="M360 360L'+fmt(a.x)+' '+fmt(a.y)+'L'+fmt(b.x)+' '+fmt(b.y)+'Z" fill="'+color+'" fill-opacity=".88" stroke="url(#gold)" stroke-width="2.2" stroke-linejoin="round"/>');
-    arm.finishSlots.forEach((q,index)=>{
-      parts.push('<circle data-finish-slot="'+arm.index+':'+index+'" cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.19)+'" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1.1"/>');
-      parts.push('<circle cx="'+fmt(q.x)+'" cy="'+fmt(q.y)+'" r="'+fmt(geometry.cellPitch*.125)+'" fill="url(#well)" stroke="'+s.accent+'" stroke-opacity=".8" stroke-width=".8"/>');
+  geometry.track.forEach((cell)=>{
+    const size=geometry.tileSize;
+    const fill=cell.startFor?geometry.arms.find((arm)=>arm.player.id===cell.startFor).player.color:'url(#tile)';
+    parts.push('<g data-track-cell="'+cell.index+'" data-center="'+cell.x+','+cell.y+'" transform="rotate('+cell.rotation+' '+cell.x+' '+cell.y+')">');
+    parts.push('<rect x="'+(cell.x-size/2+1.5)+'" y="'+(cell.y-size/2+2.5)+'" width="'+size+'" height="'+size+'" rx="'+size*.08+'" fill="'+palette.shadow+'" opacity=".5"/>');
+    parts.push('<rect x="'+(cell.x-size/2)+'" y="'+(cell.y-size/2)+'" width="'+size+'" height="'+size+'" rx="'+size*.08+'" fill="'+fill+'" stroke="'+palette.edge+'" stroke-width="1.5"/></g>');
+    if(cell.safe) parts.push('<polygon data-safe-cell="'+cell.index+'" points="'+star(cell.x,cell.y,size*.22)+'" fill="'+palette.gold+'" stroke="'+palette.ink+'" stroke-width=".7"/>');
+    if(cell.startFor) parts.push('<path d="M'+(cell.x-4)+' '+(cell.y+4)+'l4 -9 4 9h-3v5h-2v-5z" fill="#fff5d8" stroke="'+palette.ink+'" stroke-width=".7"/>');
+  });
+
+  geometry.arms.forEach((arm)=>{
+    arm.homeLane.forEach((cell,index)=>{
+      const size=geometry.tileSize,color=arm.player.color;
+      parts.push('<g data-home-cell="'+arm.index+':'+index+'" transform="rotate('+cell.rotation+' '+cell.x+' '+cell.y+')">');
+      parts.push('<rect x="'+(cell.x-size/2)+'" y="'+(cell.y-size/2)+'" width="'+size+'" height="'+size+'" rx="'+size*.08+'" fill="'+color+'" stroke="'+palette.gold+'" stroke-width="2"/>');
+      parts.push('<text x="'+cell.x+'" y="'+(cell.y+3)+'" fill="#fff" text-anchor="middle" font-family="Arial" font-size="9">H'+(index+1)+'</text></g>');
     });
+  });
+
+  for(let index=0;index<geometry.arms.length;index++) {
+    const a=geometry.finishVertices[index],b=geometry.finishVertices[(index+1)%geometry.finishVertices.length];
+    parts.push('<path d="M360 360L'+a.x+' '+a.y+'L'+b.x+' '+b.y+'Z" fill="'+colors[index]+'" fill-opacity=".68" stroke="'+palette.gold+'" stroke-width="2"/>');
   }
-  const hub=n===5?17:19;
-  parts.push('<circle cx="360" cy="360" r="'+(hub+5)+'" fill="url(#frame)" stroke="'+s.gold+'" stroke-width="1.8"/><circle cx="360" cy="360" r="'+hub+'" fill="'+s.bg+'" stroke="'+s.accent+'" stroke-opacity=".55" stroke-width="1"/>');
-  parts.push('<path d="M348 362l3-9 6 5 3-12 4 12 6-5 3 9z" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width=".8"/>');
-  parts.push('<text x="360" y="379" text-anchor="middle" fill="'+s.accent+'" font-family="Arial,sans-serif" font-size="5.5" font-weight="900" letter-spacing=".8">OPTIMIST</text>');
-  parts.push('<text x="360" y="31" text-anchor="middle" fill="'+s.accent+'" font-family="Arial,sans-serif" font-size="10" font-weight="900" letter-spacing="2.4">OPTIMIST LUDO · '+(n===5?'PENTA':'HEX')+'</text>');
-  parts.push('<text x="360" y="692" text-anchor="middle" fill="'+s.accent+'" font-family="Arial,sans-serif" font-size="8" font-weight="800" letter-spacing="2">PLAY BRIGHT · MOVE SMART</text>');
-  for(const [x,y] of [[31,31],[689,31],[31,689],[689,689]]) parts.push('<circle cx="'+x+'" cy="'+y+'" r="5.5" fill="url(#gold)" stroke="'+s.shadow+'" stroke-width="1"/>');
-  parts.push('</svg>');
+  geometry.arms.forEach((arm)=>arm.finishSlots.forEach((slot,index)=>{
+    parts.push('<circle data-finish-slot="'+arm.index+':'+index+'" cx="'+slot.x+'" cy="'+slot.y+'" r="'+geometry.pawnDiameter*geometry.finishPawnScale*.48+'" fill="url(#well)" stroke="'+palette.gold+'" stroke-width="1.3"/>');
+  }));
+  parts.push('<circle cx="360" cy="360" r="12" fill="url(#frame)" stroke="'+palette.gold+'" stroke-width="2"/>');
+  parts.push('<path d="M352 360l3-7 5 4 4-9 4 9 5-4 3 7z" fill="'+palette.accent+'"/>');
+  parts.push('<text x="360" y="24" fill="'+palette.accent+'" font-family="Arial" text-anchor="middle" font-size="10" font-weight="900" letter-spacing="2">OPTIMIST LUDO · '+title+'</text></svg>');
   return parts.join('');
 }

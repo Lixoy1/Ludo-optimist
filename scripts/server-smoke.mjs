@@ -25,6 +25,11 @@ function waitForEvent(socket, eventName, predicate = () => true, timeoutMs = 5_0
       let data;
       try { data = JSON.parse(raw.toString()); } catch { return; }
       if (data.event === 'ERROR') {
+        if (eventName === 'ERROR' && predicate(data.payload, data)) {
+          cleanup();
+          resolve(data.payload);
+          return;
+        }
         cleanup();
         reject(new Error(data.payload?.message || data.message || 'WebSocket returned ERROR.'));
         return;
@@ -70,6 +75,7 @@ async function closeSocket(socket) {
 
 let hostSocket;
 let playerSocket;
+let observerSocket;
 try {
   const address = await app.listen();
   const baseUrl = `http://127.0.0.1:${address.port}`;
@@ -113,9 +119,9 @@ try {
   assert.equal(roll.dice, 6);
   assert.equal(rolledSnapshot.legalTokenIds.length, 4);
 
-  const moved = waitForEvent(hostSocket, 'ROOM_SYNC', (payload) => payload?.state?.tokens?.['smoke-host:0']?.position?.step === 0);
+  const moved = waitForEvent(hostSocket, 'ROOM_SYNC', (payload) => payload?.state?.tokens?.['smoke-host:0']?.stepProgress === 0);
   hostSocket.send(JSON.stringify({ type: 'MOVE_TOKEN', tokenId: 'smoke-host:0' }));
-  assert.equal((await moved).state.tokens['smoke-host:0'].position.step, 0);
+  assert.equal((await moved).state.tokens['smoke-host:0'].stepProgress, 0);
 
   const audio = Buffer.alloc(512, 7);
   const upload = await fetch(`${baseUrl}/api/rooms/${roomId}/voice`, {
@@ -135,21 +141,69 @@ try {
   assert.equal(playback.status, 200);
   assert.equal(Buffer.from(await playback.arrayBuffer()).length, 512);
 
+  const observer = await openRoomSocket(wsUrl, {
+    roomId, devUserId: 'smoke-observer', devUsername: 'Smoke Observer', role: 'OBSERVER',
+  });
+  observerSocket = observer.socket;
+  assert.equal(observer.authPayload.role, 'OBSERVER');
+  assert.equal(observer.snapshot.viewerRole, 'OBSERVER');
+  assert.equal(observer.snapshot.observerCount, 1);
+
+  const autoObserver = await openRoomSocket(wsUrl, {
+    roomId, devUserId:'smoke-auto-observer', devUsername:'Auto Observer',
+  });
+  assert.equal(autoObserver.authPayload.role,'OBSERVER');
+  assert.equal(autoObserver.snapshot.viewerRole,'OBSERVER');
+  assert.equal(autoObserver.snapshot.observerCount,2);
+  await closeSocket(autoObserver.socket);
+
+  const observerChat = waitForEvent(hostSocket, 'CHAT_MESSAGE', (payload) => payload?.senderId === 'smoke-observer');
+  observerSocket.send(JSON.stringify({ type:'SEND_CHAT', text:'Привет, смотрю партию!' }));
+  const observerMessage = await observerChat;
+  assert.equal(observerMessage.senderType, 'OBSERVER');
+  assert.equal(observerMessage.text, 'Привет, смотрю партию!');
+
+  const observerDenied = waitForEvent(observerSocket, 'ERROR', (payload) => payload?.code === 'NOT_A_MEMBER');
+  observerSocket.send(JSON.stringify({ type:'ROLL_DICE' }));
+  assert.equal((await observerDenied).code,'NOT_A_MEMBER');
+
+  await new Promise((resolve) => setTimeout(resolve, 1_600));
+  const observerAudio = Buffer.alloc(512, 9);
+  const observerUpload = await fetch(`${baseUrl}/api/rooms/${roomId}/voice`, {
+    method:'POST',
+    headers:{
+      'content-type':'audio/webm',
+      'x-room-session':observer.authPayload.voiceSessionToken,
+      'x-voice-duration':'2',
+    },
+    body:observerAudio,
+  });
+  assert.equal(observerUpload.status,201);
+  const observerVoice = await observerUpload.json();
+  assert.equal(observerVoice.message.senderType,'OBSERVER');
+  const observerPlayback = await fetch(`${baseUrl}/api/rooms/${roomId}/voice/${observerVoice.voiceId}`,{
+    headers:{'x-room-session':observer.authPayload.voiceSessionToken},
+  });
+  assert.equal(observerPlayback.status,200);
+  assert.equal(Buffer.from(await observerPlayback.arrayBuffer()).length,512);
+
   const resumeToken = host.authPayload.resumeToken;
   await closeSocket(hostSocket);
   hostSocket = null;
   const resumed = await openRoomSocket(wsUrl, { roomId, resumeToken });
   hostSocket = resumed.socket;
-  assert.equal(resumed.snapshot.state.tokens['smoke-host:0'].position.step, 0);
+  assert.equal(resumed.snapshot.state.tokens['smoke-host:0'].stepProgress, 0);
   assert.equal(resumed.snapshot.players.find((entry) => entry.id === 'smoke-host').characterId, 'poison');
-  assert.equal(resumed.snapshot.chat.length, 1);
+  assert.equal(resumed.snapshot.chat.length, 3);
+  assert.equal(resumed.snapshot.observerCount, 2);
 
   const health = await fetch(`${baseUrl}/healthz`).then((response) => response.json());
   assert.equal(health.status, 'ok');
-  assert.equal(health.voice.files, 1);
-  console.log('OPTIMIST LUDO server smoke test: PASS (rooms, character sync, websocket moves, voice upload/playback, reconnect snapshot).');
+  assert.equal(health.voice.files, 2);
+  console.log('OPTIMIST LUDO server smoke test: PASS (rooms, character sync, player moves, observer read-only access, observer text/voice chat, voice playback, reconnect snapshot).');
 } finally {
   if (hostSocket) await closeSocket(hostSocket);
   if (playerSocket) await closeSocket(playerSocket);
+  if (observerSocket) await closeSocket(observerSocket);
   await app.close();
 }

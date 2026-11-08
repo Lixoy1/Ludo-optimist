@@ -1,5 +1,7 @@
 import { randomBytes, randomInt } from 'node:crypto';
-import { rollUniversalDice, applyUniversalMove, assertUniversalState, createUniversalState } from './universal-engine.js';
+import { rollUniversalDice, applyUniversalMove, assertUniversalState, createUniversalState, extendedGlobalTrackIndex } from './universal-engine.js';
+import { globalTrackIndex as classicGlobalTrackIndex } from './classic-engine.js';
+import { calculateDestinationProgress, isOuterTrackProgress, positionFromStepProgress, progressConfigForState } from '../../src/game-progress.js';
 import { COLORS, PLAYER_CONFIG, SAFE_TRACK_INDICES, CELL_COUNT } from '../../src/geometry.js';
 import { getPlayableGeometry } from '../../src/game-geometries.js';
 import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
@@ -7,37 +9,32 @@ import { DEFAULT_CHARACTER_ID, isCharacterId } from '../../src/characters.js';
 const ROOM_TTL_MS = 6 * 60 * 60 * 1000;
 const CHAT_LIMIT = 50;
 const CHAT_MAX_LENGTH = 200;
+const MAX_OBSERVERS_PER_ROOM = 100;
 
 const BOT_CHARACTER_IDS = ['cat', 'owl', 'husky', 'raccoon', 'poison', 'nikita', 'lilya-detective', 'optimist'];
 
 function botDestination(state, token, dice) {
-  const trackLength = state.mode === 'CLASSIC' ? CELL_COUNT : state.trackLength;
-  const finishStep = state.mode === 'CLASSIC' ? 57 : state.finishStep;
-  if (token.position.zone === 'base') return dice === 6 ? { zone: 'track', step: 0 } : null;
-  if (token.position.zone === 'finished') return null;
-  const next = token.position.step + dice;
-  if (next < trackLength) return { zone: 'track', step: next };
-  if (next < finishStep) return { zone: 'home', step: next };
-  if (next === finishStep) return { zone: 'finished', step: finishStep };
-  return null;
+  const config = progressConfigForState(state);
+  const destination = calculateDestinationProgress(token.stepProgress, dice, config);
+  return destination === null ? null : positionFromStepProgress(destination, config);
 }
 
-function botGlobalTrackIndex(state, player, step) {
+function botGlobalTrackIndex(state, player, stepProgress) {
   return state.mode === 'CLASSIC'
-    ? (PLAYER_CONFIG[player.color].start + step) % CELL_COUNT
-    : (player.startIndex + step) % state.trackLength;
+    ? classicGlobalTrackIndex(player.color, stepProgress)
+    : extendedGlobalTrackIndex(state, player, stepProgress);
 }
 
 function chooseBotMove(state, playerId, legalTokenIds, dice) {
   const player = state.players.find((item) => item.id === playerId);
   if (!player) throw new Error('Bot player is missing from the current state.');
-  const trackLength = state.mode === 'CLASSIC' ? CELL_COUNT : state.trackLength;
+  const config = progressConfigForState(state);
   const safe = new Set(state.mode === 'CLASSIC' ? SAFE_TRACK_INDICES : state.safeTrackIndices);
-  const opponents = state.players.filter((item) => item.id !== playerId);
   const tokens = Object.values(state.tokens);
   let best = null;
   for (const tokenId of legalTokenIds) {
     const token = state.tokens[tokenId];
+    const position = positionFromStepProgress(token.stepProgress, config);
     const destination = botDestination(state, token, dice);
     if (!destination) continue;
     let score = 0;
@@ -46,21 +43,21 @@ function chooseBotMove(state, playerId, legalTokenIds, dice) {
     else if (destination.zone === 'track') {
       const target = botGlobalTrackIndex(state, player, destination.step);
       score += 300 + destination.step * 12;
-      if (token.position.zone === 'base') score += 450;
+      if (position.zone === 'base') score += 450;
       if (!safe.has(target)) {
         const captures = tokens.filter((enemy) => {
-          if (enemy.owner === playerId || enemy.position.zone !== 'track') return false;
+          if (enemy.owner === playerId || !isOuterTrackProgress(enemy.stepProgress, config)) return false;
           const owner = state.players.find((item) => item.id === enemy.owner);
-          return owner && botGlobalTrackIndex(state, owner, enemy.position.step) === target;
+          return owner && botGlobalTrackIndex(state, owner, enemy.stepProgress) === target;
         });
         score += captures.length * 12_000;
       } else score += 80;
     }
-    if (token.position.zone === 'track' && destination.zone === 'track') {
-      score += (destination.step - token.position.step) * 4;
+    if (position.zone === 'track' && destination.zone === 'track') {
+      score += (destination.step - token.stepProgress) * 4;
     }
-    if (token.position.zone === 'home' && destination.zone === 'home') {
-      score += (destination.step - token.position.step) * 8;
+    if (position.zone === 'home' && destination.zone === 'home') {
+      score += (destination.step - token.stepProgress) * 8;
     }
     score += (3 - token.index) * 0.01;
     if (!best || score > best.score) best = { tokenId, score };
@@ -88,13 +85,13 @@ export class RoomManager {
 
   createRoom(user, options = {}) {
     const requestedPlayers = options.maxPlayers;
-    const requestedType = String(options.boardType || (requestedPlayers === 5 ? 'PENTA' : requestedPlayers === 6 ? 'HEX' : 'CLASSIC')).toUpperCase();
-    if (!['CLASSIC', 'PENTA', 'HEX'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
-    const maxPlayers = requestedPlayers ?? (requestedType === 'PENTA' ? 5 : requestedType === 'HEX' ? 6 : 4);
+    const requestedType = String(options.boardType || (requestedPlayers === 6 ? 'HEXA' : 'CLASSIC')).toUpperCase();
+    if (!['CLASSIC', 'HEXA', 'ROYAL'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
+    const maxPlayers = requestedPlayers ?? (requestedType === 'HEXA' ? 6 : 4);
     const validCapacity = requestedType === 'CLASSIC'
       ? Number.isInteger(maxPlayers) && maxPlayers >= 2 && maxPlayers <= 4
-      : requestedType === 'PENTA' ? maxPlayers === 5 : requestedType === 'HEX' ? maxPlayers === 6 : false;
-    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, PENTA: ровно 5, HEX: ровно 6.');
+      : requestedType === 'HEXA' ? maxPlayers === 6 : requestedType === 'ROYAL' ? maxPlayers === 4 : false;
+    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, HEXA: ровно 6, ROYAL: ровно 4.');
     this.pruneIdleRooms();
     if (this.rooms.size >= this.maxRooms) throw new RoomError('ROOM_LIMIT', 'Сейчас все игровые столы заняты. Попробуй позже.', 503);
     if (!user?.id || !user?.username) throw new RoomError('INVALID_USER', 'Не удалось определить игрока.');
@@ -108,6 +105,7 @@ export class RoomManager {
       isPublic: Boolean(options.isPublic ?? true),
       maxPlayers,
       players: [{ id: user.id, username: user.username.slice(0, 40), color: colors[0], characterId: isCharacterId(user.characterId) ? user.characterId : DEFAULT_CHARACTER_ID }],
+      observers: [],
       state: null,
       legalTokenIds: [],
       chat: [],
@@ -130,6 +128,42 @@ export class RoomManager {
     return Boolean(room?.players.some((player) => player.id === userId && !player.isBot));
   }
 
+  isObserver(roomId, userId) {
+    const room = this.rooms.get(roomId);
+    return Boolean(room?.observers?.some((observer) => observer.id === userId));
+  }
+
+  isChatParticipant(roomId, userId) {
+    return this.isMember(roomId, userId) || this.isObserver(roomId, userId);
+  }
+
+  getRole(roomId, userId) {
+    if (this.isMember(roomId, userId)) return 'PLAYER';
+    if (this.isObserver(roomId, userId)) return 'OBSERVER';
+    throw new RoomError('NOT_A_MEMBER', 'Нет доступа к этой игре.', 403);
+  }
+
+  joinAsObserver(roomId, user) {
+    const room = this.getRoom(roomId);
+    if (!user?.id || !user?.username) throw new RoomError('INVALID_USER', 'Не удалось определить наблюдателя.');
+    if (room.players.some((player) => player.id === user.id && player.isBot)) {
+      throw new RoomError('BOT_ID_RESERVED', 'Этот идентификатор принадлежит игровому боту.', 403);
+    }
+    if (this.isMember(roomId, user.id) || this.isObserver(roomId, user.id)) {
+      return this.getSnapshot(roomId, user.id);
+    }
+    if (room.observers.length >= MAX_OBSERVERS_PER_ROOM) {
+      throw new RoomError('OBSERVER_LIMIT', 'В игре слишком много наблюдателей. Попробуй позже.', 503);
+    }
+    room.observers.push({
+      id:user.id,
+      username:String(user.username || user.id).slice(0,40),
+      joinedAt:this.now(),
+    });
+    room.updatedAt = this.now();
+    return this.getSnapshot(roomId, user.id);
+  }
+
   joinRoom(roomId, user) {
     const room = this.getRoom(roomId);
     const existing = room.players.find((player) => player.id === user.id);
@@ -137,6 +171,7 @@ export class RoomManager {
     if (existing) return this.getSnapshot(roomId, user.id);
     if (room.status !== 'lobby') throw new RoomError('GAME_ALREADY_STARTED', 'Партия уже началась.');
     if (room.players.length >= room.maxPlayers) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
+    room.observers = room.observers.filter((observer) => observer.id !== user.id);
     const colors = room.boardType === 'CLASSIC' ? COLORS : getPlayableGeometry(room.boardType).arms.map((arm) => arm.player.id);
     const color = colors.find((candidate) => !room.players.some((player) => player.color === candidate));
     if (!color) throw new RoomError('ROOM_FULL', 'В этом столе уже нет свободных мест.');
@@ -249,17 +284,17 @@ export class RoomManager {
 
   sendChat(roomId, userId, text) {
     const room = this.getRoom(roomId);
-    const player = this.assertMember(room, userId);
+    const sender = this.assertChatParticipant(room, userId);
     const clean = typeof text === 'string' ? text.trim() : '';
     if (!clean) throw new RoomError('EMPTY_MESSAGE', 'Сообщение не должно быть пустым.');
     if (clean.length > CHAT_MAX_LENGTH) throw new RoomError('MESSAGE_TOO_LONG', 'Сообщение должно быть не длиннее 200 символов.');
     this.checkChatRate(room, userId, 800);
-    return this.appendChat(room, player, clean, null);
+    return this.appendChat(room, sender, clean, null);
   }
 
   assertVoiceAllowed(roomId, userId) {
     const room = this.getRoom(roomId);
-    this.assertMember(room, userId);
+    this.assertChatParticipant(room, userId);
     const last = room.lastChatAt.get(userId);
     if (last !== undefined && this.now() - last < 1_500) throw new RoomError('RATE_LIMIT', 'Подожди немного перед следующим сообщением.', 429);
     return true;
@@ -267,7 +302,7 @@ export class RoomManager {
 
   sendVoice(roomId, userId, voice) {
     const room = this.getRoom(roomId);
-    const player = this.assertMember(room, userId);
+    const sender = this.assertChatParticipant(room, userId);
     if (!voice || !/^[a-f0-9]{32}$/.test(voice.id) || !Number.isInteger(voice.durationSeconds) ||
         voice.durationSeconds < 1 || voice.durationSeconds > 30 || !Number.isInteger(voice.sizeBytes) ||
         voice.sizeBytes < 256 || voice.sizeBytes > 512 * 1024 ||
@@ -275,7 +310,7 @@ export class RoomManager {
       throw new RoomError('INVALID_VOICE_MESSAGE', 'Голосовое сообщение имеет неподдерживаемый формат.');
     }
     this.checkChatRate(room, userId, 1_500);
-    return this.appendChat(room, player, '🎙️ Голосовое сообщение', { ...voice });
+    return this.appendChat(room, sender, '🎙️ Голосовое сообщение', { ...voice });
   }
 
   checkChatRate(room, userId, intervalMs) {
@@ -285,11 +320,12 @@ export class RoomManager {
     room.lastChatAt.set(userId, now);
   }
 
-  appendChat(room, player, text, voice) {
+  appendChat(room, sender, text, voice) {
     const message = {
       id: randomBytes(8).toString('hex'), roomId: room.id,
-      senderId: player.id, senderName: player.username, text,
-      senderType: 'PLAYER', timestamp: this.now(),
+      senderId: sender.id, senderName: sender.username, text,
+      senderType: sender.role, timestamp: this.now(),
+      ...(sender.color ? { senderColor:sender.color } : {}),
       ...(voice ? { voice } : {}),
     };
     room.chat.push(message);
@@ -304,13 +340,24 @@ export class RoomManager {
     return player;
   }
 
+  assertChatParticipant(room, userId) {
+    const player = room.players.find((entry) => entry.id === userId && !entry.isBot);
+    if (player) return { ...player, role:'PLAYER' };
+    const observer = room.observers.find((entry) => entry.id === userId);
+    if (observer) return { ...observer, role:'OBSERVER' };
+    throw new RoomError('NOT_A_MEMBER', 'Ты не подключён к этой игре.', 403);
+  }
+
   getSnapshot(roomId, viewerId) {
     const room = this.getRoom(roomId);
-    this.assertMember(room, viewerId);
+    const viewerRole = this.getRole(roomId, viewerId);
     return {
       roomId: room.id, hostId: room.hostId, status: room.status,
       boardType: room.boardType, isPublic: room.isPublic, maxPlayers: room.maxPlayers,
+      viewerRole,
       players: room.players.map((player) => ({ ...player })),
+      observers: room.observers.map((observer) => ({ id:observer.id, username:observer.username })),
+      observerCount:room.observers.length,
       state: room.state ? structuredClone(room.state) : null,
       legalTokenIds: [...room.legalTokenIds],
       chat: room.chat.map((message) => structuredClone(message)),

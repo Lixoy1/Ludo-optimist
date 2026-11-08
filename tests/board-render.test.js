@@ -53,8 +53,8 @@ test('all four player bases are rendered at their assigned colored quadrants', (
 
 test('outer track and home-lane positions are derived from the server token state', () => {
   const state = createClassicState(roster);
-  state.tokens[tokenId('render-green')].position = { zone: 'track', step: 0 };
-  state.tokens[tokenId('render-green', 1)].position = { zone: 'home', step: 54 };
+  state.tokens[tokenId('render-green')].stepProgress = 0;
+  state.tokens[tokenId('render-green', 1)].stepProgress = 54;
   const positions = tokenBoardPositions(state);
   const start = positions.find((item) => item.tokenId === tokenId('render-green'));
   const home = positions.find((item) => item.tokenId === tokenId('render-green', 1));
@@ -66,8 +66,8 @@ test('outer track and home-lane positions are derived from the server token stat
 
 test('tokens sharing a route cell receive distinct, non-overlapping scaled positions', () => {
   const state = createClassicState(roster);
-  state.tokens[tokenId('render-green')].position = { zone: 'track', step: 5 };
-  state.tokens[tokenId('render-green', 1)].position = { zone: 'track', step: 5 };
+  state.tokens[tokenId('render-green')].stepProgress = 5;
+  state.tokens[tokenId('render-green', 1)].stepProgress = 5;
   const positions = tokenBoardPositions(state).filter((item) => item.zone === 'track');
   assert.equal(positions.length, 2);
   assert.notEqual(positions[0].left, positions[1].left);
@@ -79,7 +79,7 @@ test('tokens sharing a route cell receive distinct, non-overlapping scaled posit
 test('all four pawns on one square shrink into a separated 2x2 stack inside the cell', () => {
   const state = createClassicState(roster);
   for (let index = 0; index < 4; index += 1) {
-    state.tokens[tokenId('render-green', index)].position = { zone: 'track', step: 5 };
+    state.tokens[tokenId('render-green', index)].stepProgress = 5;
   }
   const positions = tokenBoardPositions(state)
     .filter((item) => item.zone === 'track')
@@ -88,7 +88,8 @@ test('all four pawns on one square shrink into a separated 2x2 stack inside the 
   assert.ok(positions.every((item) => item.scale === 0.44));
   assert.equal(new Set(positions.map((item) => `${item.left.toFixed(4)}:${item.top.toFixed(4)}`)).size, 4);
 
-  const center = gridToImage(MAIN_TRACK[5].col, MAIN_TRACK[5].row);
+  const globalIndex = (PLAYER_CONFIG.green.start + 5) % MAIN_TRACK.length;
+  const center = gridToImage(MAIN_TRACK[globalIndex].col, MAIN_TRACK[globalIndex].row);
   const pawnDiameter = BOARD_IMAGE_SIZE * PAWN_DIAMETER_RATIO * 0.44;
   const halfCell = 43.57 / 2;
   for (const item of positions) {
@@ -125,16 +126,16 @@ test('all track and home-lane centers stay inside the 720px artwork', () => {
 });
 
 
-for (const mode of ['PENTA', 'HEX']) {
+for (const mode of ['HEXA', 'ROYAL']) {
   test(mode + ' board renderer maps base, track, home and finish tokens to its own SVG geometry', () => {
     const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-render-' + index, username: 'Player ' + index, color: arm.player.id }));
     const state = createExtendedState(mode, roster);
     const first = state.players[0];
     const ids = index => first.id + ':' + index;
-    state.tokens[ids(0)].position = { zone: 'track', step: 0 };
-    state.tokens[ids(1)].position = { zone: 'home', step: geometry.trackLength + 2 };
-    state.tokens[ids(2)].position = { zone: 'finished', step: geometry.trackLength + 5 };
+    state.tokens[ids(0)].stepProgress = 0;
+    state.tokens[ids(1)].stepProgress = geometry.maxOuterSteps + 1 + 2;
+    state.tokens[ids(2)].stepProgress = geometry.finishStep;
     const positions = tokenBoardPositions(state);
     const start = positions.find(item => item.tokenId === ids(0));
     const home = positions.find(item => item.tokenId === ids(1));
@@ -159,7 +160,7 @@ for (const mode of ['PENTA', 'HEX']) {
     const state = createExtendedState(mode, roster);
     const owner = state.players[0];
     for (let index = 0; index < 4; index += 1) {
-      state.tokens[owner.id + ':' + index].position = { zone: 'track', step: 5 };
+      state.tokens[owner.id + ':' + index].stepProgress = 5;
     }
     const positions = tokenBoardPositions(state).filter(item => item.zone === 'track');
     assert.equal(positions.length, 4);
@@ -189,16 +190,16 @@ test('Classic movement path visits every intervening route cell before entering 
 test('Classic movement path follows the five-cell home lane and maps its finish socket', () => {
   const state = createClassicState(roster);
   const player = state.players.find(item => item.id === 'render-green');
-  const lanePath = tokenMovementPath(state, player.id, { zone: 'track', step: 51 }, { zone: 'home', step: 54 }, 2);
+  const lanePath = tokenMovementPath(state, player.id, { zone: 'track', step: 50 }, { zone: 'home', step: 53 }, 2);
   assert.equal(lanePath.length, 3);
   assert.deepEqual(lanePath[0], gridToImage(PLAYER_CONFIG.green.lane[0][0], PLAYER_CONFIG.green.lane[0][1]));
   assert.deepEqual(lanePath[2], gridToImage(PLAYER_CONFIG.green.lane[2][0], PLAYER_CONFIG.green.lane[2][1]));
-  const finish = tokenMovementPath(state, player.id, { zone: 'home', step: 56 }, { zone: 'finished', step: 57 }, 2);
+  const finish = tokenMovementPath(state, player.id, { zone: 'home', step: 55 }, { zone: 'finished', step: 56 }, 2);
   assert.equal(finish.length, 1);
   assert.deepEqual(finish[0], { x: FINISH_POINTS[2][0], y: FINISH_POINTS[2][1] });
 });
 
-for (const mode of ['PENTA', 'HEX']) {
+for (const mode of ['HEXA', 'ROYAL']) {
   test(mode + ' movement path follows every extended outer-track step and the player home lane', () => {
     const geometry = getPlayableGeometry(mode);
     const roster = geometry.arms.map((arm, index) => ({ id: mode + '-path-' + index, username: 'Player ' + index, color: arm.player.id }));
@@ -211,8 +212,8 @@ for (const mode of ['PENTA', 'HEX']) {
       assert.deepEqual(path[index], { x: point.x, y: point.y });
     }
     const home = tokenMovementPath(state, player.id,
-      { zone: 'track', step: geometry.trackLength - 1 },
-      { zone: 'home', step: geometry.trackLength + 2 }, 1);
+      { zone: 'track', step: geometry.maxOuterSteps },
+      { zone: 'home', step: geometry.maxOuterSteps + 1 + 2 }, 1);
     assert.equal(home.length, 3);
     assert.deepEqual(home[2], { x: geometry.arms[0].homeLane[2].x, y: geometry.arms[0].homeLane[2].y });
   });

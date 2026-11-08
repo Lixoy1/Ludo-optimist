@@ -22,27 +22,27 @@ async function createRoom(origin, userId, boardType, maxPlayers) {
   });
 }
 
-test('HTTP room API creates PENTA and HEX rooms with exact board type and capacity', async () => {
+test('HTTP room API creates HEXA and ROYAL rooms with exact board type and capacity', async () => {
   await withServer(async (origin) => {
-    const pentaResponse = await createRoom(origin, 'api-penta-host', 'PENTA', 5);
-    assert.equal(pentaResponse.status, 201);
-    const penta = await pentaResponse.json();
-    assert.equal(penta.snapshot.boardType, 'PENTA');
-    assert.equal(penta.snapshot.maxPlayers, 5);
-    assert.equal(penta.snapshot.players.length, 1);
+    const hexaResponse = await createRoom(origin, 'api-hexa-host', 'HEXA', 6);
+    assert.equal(hexaResponse.status, 201);
+    const hexa = await hexaResponse.json();
+    assert.equal(hexa.snapshot.boardType, 'HEXA');
+    assert.equal(hexa.snapshot.maxPlayers, 6);
+    assert.equal(hexa.snapshot.players.length, 1);
 
-    const hexResponse = await createRoom(origin, 'api-hex-host', 'HEX', 6);
-    assert.equal(hexResponse.status, 201);
-    const hex = await hexResponse.json();
-    assert.equal(hex.snapshot.boardType, 'HEX');
-    assert.equal(hex.snapshot.maxPlayers, 6);
-    assert.equal(hex.snapshot.players.length, 1);
+    const royalResponse = await createRoom(origin, 'api-royal-host', 'ROYAL', 4);
+    assert.equal(royalResponse.status, 201);
+    const royal = await royalResponse.json();
+    assert.equal(royal.snapshot.boardType, 'ROYAL');
+    assert.equal(royal.snapshot.maxPlayers, 4);
+    assert.equal(royal.snapshot.players.length, 1);
   });
 });
 
 test('HTTP room API rejects mixed board and seat counts without creating an invalid room', async () => {
   await withServer(async (origin) => {
-    const invalid = await createRoom(origin, 'api-invalid-host', 'PENTA', 4);
+    const invalid = await createRoom(origin, 'api-invalid-host', 'HEXA', 4);
     assert.equal(invalid.status, 400);
     const body = await invalid.json();
     assert.equal(body.code, 'INVALID_ROOM_CONFIG');

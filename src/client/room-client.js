@@ -1,7 +1,7 @@
 import { VoiceChatClient, createVoiceMessagePlayer } from './voice-chat.js';
 
 export class LudoRoomClient {
-  constructor({ roomId, initData = '', getInitData = null, devUserId = '', devUsername = '', characterId = 'optimist', wsUrl, onEvent = () => {}, onSnapshot = () => {}, autoReconnect = true } = {}) {
+  constructor({ roomId, initData = '', getInitData = null, devUserId = '', devUsername = '', characterId = 'optimist', role = 'PLAYER', wsUrl, onEvent = () => {}, onSnapshot = () => {}, autoReconnect = true } = {}) {
     if (!roomId) throw new TypeError('roomId is required.');
     this.roomId = roomId;
     this.initData = initData;
@@ -9,6 +9,7 @@ export class LudoRoomClient {
     this.devUserId = devUserId;
     this.devUsername = devUsername;
     this.characterId = characterId;
+    this.role = role === 'OBSERVER' ? 'OBSERVER' : 'PLAYER';
     this.wsUrl = wsUrl || `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`;
     this.onEvent = onEvent;
     this.onSnapshot = onSnapshot;
@@ -37,18 +38,29 @@ export class LudoRoomClient {
   }
 
   static async createRoom({ initData = '', getInitData = null, devUserId = '', devUsername = '', characterId = 'optimist', maxPlayers = 4, boardType = 'CLASSIC', isPublic = true, fetchImpl = globalThis.fetch } = {}) {
+    const normalizedBoardType = String(boardType ?? 'CLASSIC').trim().toUpperCase();
+    const limits = {
+      CLASSIC: { min:2, max:4 },
+      HEXA: { min:6, max:6 },
+      ROYAL: { min:4, max:4 },
+    }[normalizedBoardType];
+    if (!limits) throw new RangeError('Board type must be CLASSIC, HEXA or ROYAL.');
+    if (!Number.isInteger(maxPlayers) || maxPlayers < limits.min || maxPlayers > limits.max) {
+      throw new RangeError(`${normalizedBoardType} requires ${limits.min === limits.max ? limits.min : `between ${limits.min} and ${limits.max}`} players.`);
+    }
+
     const latestInitData = typeof getInitData === 'function' ? getInitData() : initData;
     const headers = { 'content-type': 'application/json' };
     if (latestInitData) headers['x-telegram-init-data'] = latestInitData;
     if (devUserId) { headers['x-dev-user'] = devUserId; headers['x-dev-name'] = devUsername || devUserId; }
-    const response = await fetchImpl('/api/rooms', { method: 'POST', headers, body: JSON.stringify({ maxPlayers, boardType, isPublic, characterId }) });
+    const response = await fetchImpl('/api/rooms', { method: 'POST', headers, body: JSON.stringify({ maxPlayers, boardType:normalizedBoardType, isPublic, characterId }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.message || data.error || 'Не удалось создать игровой стол.');
     return data;
   }
 
   authMessage() {
-    const auth = { type: 'AUTH', roomId: this.roomId, initData: this.getInitData() || '', characterId: this.characterId };
+    const auth = { type: 'AUTH', roomId: this.roomId, initData: this.getInitData() || '', characterId: this.characterId, role:this.role };
     if (this.resumeToken) auth.resumeToken = this.resumeToken;
     if (this.devUserId) { auth.devUserId = this.devUserId; auth.devUsername = this.devUsername; }
     return auth;
@@ -219,7 +231,7 @@ export class LudoRoomClient {
     if (!target || typeof document === 'undefined') return;
     const bubble = document.createElement('div');
     bubble.className = 'msg' + (message.senderId === this.currentUserId ? ' mine' : '');
-    const author = document.createElement('div'); author.className = 'msg-author'; author.textContent = message.senderName || 'Игрок';
+    const author = document.createElement('div'); author.className = 'msg-author'; author.textContent = message.senderType === 'OBSERVER' ? `${message.senderName || 'Гость'} · Наблюдатель` : (message.senderName || 'Игрок');
     bubble.append(author);
     if (message.voice && this.voiceClient) bubble.append(createVoiceMessagePlayer(message, this.voiceClient));
     else { const text = document.createElement('div'); text.textContent = message.text || ''; bubble.append(text); }

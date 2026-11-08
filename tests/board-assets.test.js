@@ -1,14 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const THEMES = ['classic', 'neon', 'elite', 'marble'];
 const readBoard = (theme) => readFile(resolve('assets/boards', `optimist-ludo-${theme}.svg`), 'utf8');
 const packageJson = JSON.parse(await readFile(resolve('package.json'), 'utf8'));
 
-test('authored vector boards keep the 720x720 contract and are not rebuilt implicitly', async () => {
-  assert.equal(packageJson.scripts['build:boards'], 'node scripts/build-board-assets.mjs');
+test('authored vector boards keep the 720x720 contract and are validated without regeneration', async () => {
+  assert.equal(packageJson.scripts['validate:classic-boards'], 'node scripts/validate-classic-boards.mjs');
+  assert.equal(packageJson.scripts['build:boards'], undefined);
   assert.equal(packageJson.scripts.pretest, undefined);
   assert.equal(packageJson.scripts.prestart, undefined);
   const svgs = await Promise.all(THEMES.map(readBoard));
@@ -26,4 +27,10 @@ test('all four authored board themes preserve the same logical cell set', async 
   const canonical = cells(svgs[0]);
   assert.equal(new Set(canonical).size, 72);
   for (const svg of svgs.slice(1)) assert.deepEqual(cells(svg), canonical);
+});
+
+test('obsolete PENTA and legacy HEX SVGs are not shipped with the three-board release', async () => {
+  const files = await readdir(resolve('assets/boards'));
+  const legacy = files.filter((name) => /^optimist-ludo-(?:penta|hex)-/i.test(name));
+  assert.deepEqual(legacy, []);
 });

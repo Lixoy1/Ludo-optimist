@@ -10,14 +10,15 @@
 - Защищённые клетки перечислены в `SAFE_TRACK_INDICES`; они не вычисляются из визуальной темы.
 
 
-## 1.1. Дополнительные геометрии (план)
+## 1.1. Утверждённые геометрии 2.0
 
-Геометрия выбирается отдельно от визуальной темы стола. Базовый режим Classic остаётся крестовой доской 2–4 игрока. Дополнительно зафиксированы два самостоятельных формата:
+Геометрия выбирается отдельно от визуальной темы. В актуальном релизе используются ровно три режима:
 
-- **PENTA** — пятиугольная доска на пять игроков.
-- **HEX** — шестиугольная доска на шесть игроков.
+- **CLASSIC** — 4 игрока, 52 внешние клетки, 5 домашних клеток на игрока.
+- **HEXA** — 6 игроков, 72 внешние клетки, 6 домашних клеток на игрока.
+- **ROYAL** — 4 игрока, 68 внешних клеток, 7 домашних клеток на игрока.
 
-Эти форматы пока являются планом, а не готовыми игровыми режимами. Для каждого нужны собственные маршрут, безопасные клетки, домашние дорожки, посадочные слоты и тесты движка. Темы CLASSIC, NEON, ELITE и MARBLE должны применяться к любой геометрии независимо.
+Все три режима используют единый формат прогресса `stepProgress`. PENTA, прежний HEX и DIAMOND не являются игровыми режимами OPTIMIST LUDO 2.0.
 
 ## 2. Центр
 
@@ -86,13 +87,15 @@ interface CellOccupancy {
 
 ## 1.2. Vector board artwork contract
 
-Each finish is an independent SVG in `assets/boards/optimist-ludo-{classic,neon,elite,marble}.svg`. All four files use `viewBox="0 0 720 720"`, intrinsic dimensions 1440×1440 for HiDPI rendering, and the same coordinate contract as `src/board-render.js`.
+Every active geometry has four SVG material themes in `assets/boards/`: CLASSIC uses `optimist-ludo-{classic,neon,elite,marble}.svg`; HEXA uses `optimist-ludo-hexa-{classic,neon,elite,marble}.svg`; ROYAL uses `optimist-ludo-royal-{classic,neon,elite,marble}.svg`. All use the 720×720 viewBox.
 
-- Grid origin: (55, 55); logical cell pitch: 43.57 image units; tile artwork: 38 units.
-- The 52-cell route comes from `MAIN_TRACK`; protected squares come from `SAFE_TRACK_INDICES`.
-- All four five-cell home lanes come from `PLAYER_CONFIG`.
-- Each base has four pawn sockets; the four finish sockets are fixed at (336,336), (384,336), (336,384), (384,384).
-- Changing table material never changes a route cell, token anchor or game rule. Rebuild the artwork with `node scripts/build-board-assets.mjs`.
+- CLASSIC: 52 route cells, 20 home cells, 16 base sockets and four finish sockets.
+- HEXA: 72 route cells and six six-cell home lanes, generated from `src/extended-geometries.js`.
+- ROYAL: 68 route cells and four seven-cell home lanes, generated from `src/extended-geometries.js`.
+- Classic artwork is authored vector art and is validated read-only; HEXA and ROYAL SVGs are regenerated from their canonical geometry.
+- `npm run build` validates CLASSIC, regenerates extended SVGs, and exports `Coordinates_Map.json`.
+
+Changing table material never changes a route cell, token anchor, hit target or game rule.
 
 ## 1.3. Mobile scale and selection
 

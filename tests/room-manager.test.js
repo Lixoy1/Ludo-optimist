@@ -82,14 +82,15 @@ test('players can change character during the room and game without changing the
   const created = manager.createRoom({ ...red, characterId: 'optimist' });
   manager.joinRoom(created.roomId, { ...green, characterId: 'lena' });
   manager.startGame(created.roomId, red.id);
+  const originalColor = created.players[0].color;
   const changed = manager.setCharacter(created.roomId, red.id, 'poison');
-  assert.equal(changed.players[0].color, 'red');
+  assert.equal(changed.players[0].color, originalColor);
   assert.equal(changed.players[0].characterId, 'poison');
   assert.equal(changed.state.players[0].characterId, 'poison');
   assert.throws(() => manager.setCharacter(created.roomId, red.id, 'not-a-character'), /Неизвестный персонаж/);
 });
 
-for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
+for (const [boardType, maxPlayers] of [['HEXA',6],['ROYAL',4]]) {
   test(boardType + ' starts with one human and fills every missing seat with a bot', () => {
     const manager = new RoomManager({ dice: () => 1 });
     const host = { id: boardType.toLowerCase() + '-0', username: 'Host' };
@@ -100,7 +101,7 @@ for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
     const started = manager.startGame(created.roomId, host.id);
     assert.equal(started.status, 'playing');
     assert.equal(started.state.mode, boardType);
-    assert.equal(started.state.trackLength, boardType === 'PENTA' ? 65 : 78);
+    assert.equal(started.state.trackLength, boardType === 'HEXA' ? 72 : 68);
     assert.equal(started.state.players.length, maxPlayers);
     assert.equal(started.players.filter((player) => player.isBot).length, maxPlayers - 1);
     assert.equal(new Set(started.players.map((player) => player.color)).size, maxPlayers);
@@ -111,12 +112,12 @@ for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
 
 test('extended room types reject invalid capacities and public room list identifies their board', () => {
   const manager = new RoomManager();
-  assert.throws(() => manager.createRoom({ id:'bad-penta', username:'Bad' }, { boardType:'PENTA', maxPlayers:4 }), /PENTA/);
-  assert.throws(() => manager.createRoom({ id:'bad-hex', username:'Bad' }, { boardType:'HEX', maxPlayers:5 }), /HEX/);
-  const created = manager.createRoom({ id:'penta-list', username:'Penta' }, { maxPlayers:5 });
-  assert.equal(created.boardType, 'PENTA');
+  assert.throws(() => manager.createRoom({ id:'bad-hexa', username:'Bad' }, { boardType:'HEXA', maxPlayers:4 }), /HEXA/);
+  assert.throws(() => manager.createRoom({ id:'bad-royal', username:'Bad' }, { boardType:'ROYAL', maxPlayers:5 }), /ROYAL/);
+  const created = manager.createRoom({ id:'hexa-list', username:'Hexa' }, { boardType:'HEXA', maxPlayers:6 });
+  assert.equal(created.boardType, 'HEXA');
   const room = manager.listPublicRooms().find((item) => item.roomId === created.roomId);
-  assert.equal(room.boardType, 'PENTA');
+  assert.equal(room.boardType, 'HEXA');
 });
 
 
@@ -139,7 +140,7 @@ test('a one-human Classic game starts immediately with three bots that take comp
   const snapshot = manager.getSnapshot(created.roomId, red.id);
   assert.equal(snapshot.state.currentPlayer, red.id);
   for (const bot of snapshot.players.filter((player) => player.isBot)) {
-    const movedToken = Object.values(snapshot.state.tokens).find((token) => token.owner === bot.id && token.position.zone === 'track' && token.position.step === 1);
+    const movedToken = Object.values(snapshot.state.tokens).find((token) => token.owner === bot.id && token.stepProgress === 1);
     assert.ok(movedToken, `${bot.username} should release a pawn and move it one legal cell`);
   }
 });
@@ -154,7 +155,7 @@ test('Classic player capacity may be filled partly by humans and partly by bots'
 });
 
 
-for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
+for (const [boardType, maxPlayers] of [['HEXA',6],['ROYAL',4]]) {
   test(boardType + ' bots roll, release a pawn and complete a legal track move before returning the turn to the human', () => {
     let rollIndex = 0;
     const manager = new RoomManager({ dice: () => ([6, 1][rollIndex++ % 2]) });
@@ -175,7 +176,7 @@ for (const [boardType, maxPlayers] of [['PENTA',5],['HEX',6]]) {
     assert.equal(bots.length, maxPlayers - 1);
     for (const bot of bots) {
       assert.ok(Object.values(snapshot.state.tokens).some((token) =>
-        token.owner === bot.id && token.position.zone === 'track' && token.position.step === 1
+        token.owner === bot.id && token.stepProgress === 1
       ), `${boardType} bot ${bot.username} should release and move a pawn`);
     }
   });
@@ -188,6 +189,80 @@ test('server-controlled bots cannot authenticate as real room members', () => {
   const bot = started.players.find((player) => player.isBot);
   assert.ok(bot);
   assert.equal(manager.isMember(created.roomId, bot.id), false);
-  assert.throws(() => manager.getSnapshot(created.roomId, bot.id), /не участник/);
+  assert.throws(() => manager.getSnapshot(created.roomId, bot.id), /Нет доступа/);
   assert.throws(() => manager.roll(created.roomId, bot.id), /не участник/);
+});
+
+test('observers can read the game and use text and voice chat but cannot control the match', () => {
+  let now=10_000;
+  const manager = new RoomManager({ now:()=>now, dice:()=>6 });
+  const created = manager.createRoom(red, { maxPlayers:2 });
+  manager.startGame(created.roomId, red.id);
+  const observer = { id:'guest-observer', username:'Guest Observer' };
+  const joined = manager.joinAsObserver(created.roomId, observer);
+  assert.equal(joined.viewerRole,'OBSERVER');
+  assert.equal(joined.observerCount,1);
+  assert.deepEqual(joined.observers.map((item)=>item.id),[observer.id]);
+  assert.equal(manager.isMember(created.roomId,observer.id),false);
+  assert.equal(manager.isObserver(created.roomId,observer.id),true);
+  assert.equal(manager.getRole(created.roomId,observer.id),'OBSERVER');
+  assert.equal(manager.getSnapshot(created.roomId,observer.id).state.phase,'playing');
+
+  const textMessage=manager.sendChat(created.roomId,observer.id,'Привет, я смотрю игру');
+  assert.equal(textMessage.senderType,'OBSERVER');
+  assert.equal(textMessage.senderName,observer.username);
+  assert.equal(textMessage.text,'Привет, я смотрю игру');
+
+  now+=1600;
+  assert.equal(manager.assertVoiceAllowed(created.roomId,observer.id),true);
+  const voiceMessage=manager.sendVoice(created.roomId,observer.id,{
+    id:'b'.repeat(32),durationSeconds:3,mimeType:'audio/webm',sizeBytes:512,
+  });
+  assert.equal(voiceMessage.senderType,'OBSERVER');
+  assert.equal(voiceMessage.voice.id,'b'.repeat(32));
+  assert.equal(manager.getSnapshot(created.roomId,observer.id).chat.length,2);
+
+  assert.throws(()=>manager.roll(created.roomId,observer.id),/не участник/);
+  assert.throws(()=>manager.move(created.roomId,observer.id,red.id+':0'),/не участник/);
+  assert.throws(()=>manager.setCharacter(created.roomId,observer.id,'poison'),/не участник/);
+  assert.throws(()=>manager.joinRoom(created.roomId,observer),/уже началась/);
+});
+
+test('an observer can rejoin without duplicating their chat identity', () => {
+  const manager=new RoomManager();
+  const created=manager.createRoom(red,{maxPlayers:2});
+  const observer={id:'same-observer',username:'Observer'};
+  manager.joinAsObserver(created.roomId,observer);
+  manager.joinAsObserver(created.roomId,observer);
+  const snapshot=manager.getSnapshot(created.roomId,observer.id);
+  assert.equal(snapshot.observerCount,1);
+  assert.equal(snapshot.observers.length,1);
+  assert.equal(snapshot.viewerRole,'OBSERVER');
+});
+
+test('an observer in the lobby can take an open player seat before the game starts', () => {
+  const manager = new RoomManager({ dice:()=>1 });
+  const created = manager.createRoom(red,{maxPlayers:4});
+  const observer={id:'waiting-guest',username:'Waiting Guest'};
+  const observation=manager.joinAsObserver(created.roomId,observer);
+  assert.equal(observation.viewerRole,'OBSERVER');
+  assert.equal(observation.observerCount,1);
+  const promoted=manager.joinRoom(created.roomId,observer);
+  assert.equal(promoted.viewerRole,'PLAYER');
+  assert.equal(promoted.players.some((player)=>player.id===observer.id),true);
+  assert.equal(promoted.observerCount,0);
+  assert.equal(manager.isMember(created.roomId,observer.id),true);
+  assert.equal(manager.isObserver(created.roomId,observer.id),false);
+});
+
+test('observers cannot claim bot identities or exceed the per-room observer limit', () => {
+  const manager = new RoomManager({maxRooms:2,dice:()=>1});
+  const created=manager.createRoom(red,{maxPlayers:2});
+  manager.startGame(created.roomId,red.id);
+  const bot=manager.getSnapshot(created.roomId,red.id).players.find((player)=>player.isBot);
+  assert.throws(()=>manager.joinAsObserver(created.roomId,{id:bot.id,username:'Fake bot'}),/боту/);
+  for(let index=0;index<100;index++) {
+    manager.joinAsObserver(created.roomId,{id:'observer-'+index,username:'Observer '+index});
+  }
+  assert.throws(()=>manager.joinAsObserver(created.roomId,{id:'observer-overflow',username:'Too many'}),/слишком много наблюдателей/);
 });

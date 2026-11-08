@@ -11,7 +11,7 @@ const roster = [
 ];
 const token = (id, index = 0) => `${id}:${index}`;
 function onTrack(state, playerId, color, index, step) {
-  state.tokens[token(playerId, index)].position = { zone: 'track', step };
+  state.tokens[token(playerId, index)].stepProgress = step;
 }
 
 test('a token leaves base only on six', () => {
@@ -22,20 +22,20 @@ test('a token leaves base only on six', () => {
 
 test('home lane has five cells and finish requires the exact final step', () => {
   const state = createClassicState(roster);
-  state.tokens[token('u-red')].position = { zone: 'home', step: 55 };
+  state.tokens[token('u-red')].stepProgress = 54;
   assert.deepEqual(legalMoves(state, 'u-red', 1), [token('u-red')]);
   let rolled = rollClassicDice(state, 'u-red', 1);
   let moved = applyClassicMove(rolled.state, 'u-red', token('u-red'));
-  assert.deepEqual(moved.state.tokens[token('u-red')].position, { zone: 'home', step: LAST_HOME_STEP });
+  assert.deepEqual(moved.state.tokens[token('u-red')].stepProgress, LAST_HOME_STEP);
   assert.equal(moved.state.currentPlayer, 'u-green');
 
   const finishState = createClassicState(roster);
-  finishState.tokens[token('u-red')].position = { zone: 'home', step: 56 };
+  finishState.tokens[token('u-red')].stepProgress = 55;
   assert.deepEqual(legalMoves(finishState, 'u-red', 1), [token('u-red')]);
   assert.deepEqual(legalMoves(finishState, 'u-red', 2), []);
   const finalRoll = rollClassicDice(finishState, 'u-red', 1);
   const finalMove = applyClassicMove(finalRoll.state, 'u-red', token('u-red'));
-  assert.deepEqual(finalMove.state.tokens[token('u-red')].position, { zone: 'finished', step: FINISH_STEP });
+  assert.deepEqual(finalMove.state.tokens[token('u-red')].stepProgress, FINISH_STEP);
 });
 
 test('a normal move advances the turn; rolling six preserves it', () => {
@@ -73,7 +73,7 @@ test('single enemy is captured on unsafe cell and capture grants a bonus roll', 
   const rolled = rollClassicDice(state, 'u-red', 1);
   const moved = applyClassicMove(rolled.state, 'u-red', token('u-red'));
   assert.deepEqual(moved.captured, [token('u-green')]);
-  assert.deepEqual(moved.state.tokens[token('u-green')].position, { zone: 'base', step: -1 });
+  assert.deepEqual(moved.state.tokens[token('u-green')].stepProgress, -1);
   assert.equal(moved.bonusRoll, true);
   assert.equal(moved.state.currentPlayer, 'u-red');
 });
@@ -85,7 +85,7 @@ test('safe cells protect a single enemy token', () => {
   const rolled = rollClassicDice(state, 'u-red', 1);
   const moved = applyClassicMove(rolled.state, 'u-red', token('u-red'));
   assert.deepEqual(moved.captured, []);
-  assert.deepEqual(moved.state.tokens[token('u-green')].position, { zone: 'track', step: 34 });
+  assert.deepEqual(moved.state.tokens[token('u-green')].stepProgress, 34);
 });
 
 test('two same-owner tokens form a blockade that cannot be landed on or crossed', () => {
@@ -107,7 +107,7 @@ test('a six with no legal moves gives another roll; a non-six passes the turn', 
   const six = rollClassicDice(state, 'u-red', 6);
   assert.equal(six.bonusRoll, false); // There are legal exits from base.
   const noMove = createClassicState(roster);
-  for (let i = 0; i < 4; i += 1) noMove.tokens[token('u-red', i)].position = { zone: 'home', step: 56 };
+  for (let i = 0; i < 4; i += 1) noMove.tokens[token('u-red', i)].stepProgress = FINISH_STEP;
   const noMoveSix = rollClassicDice(noMove, 'u-red', 6);
   assert.equal(noMoveSix.bonusRoll, true);
   assert.equal(noMoveSix.state.currentPlayer, 'u-red');
@@ -120,20 +120,20 @@ test('state invariant checks all four tokens and the current player', () => {
   const state = createClassicState(roster);
   assert.equal(assertClassicState(state), true);
   delete state.tokens[token('u-red', 3)];
-  assert.throws(() => assertClassicState(state), /exactly four tokens/);
+  assert.throws(() => assertClassicState(state), /four tokens/);
 });
 
 test('the fourth finished token ends the match and records the winner', () => {
   const state = createClassicState(roster);
   const playerId = roster[0].id;
   const owned = Object.values(state.tokens).filter((token) => token.owner === playerId);
-  for (const token of owned.slice(0, 3)) token.position = { zone: 'finished', step: 57 };
-  owned[3].position = { zone: 'home', step: 56 };
+  for (const token of owned.slice(0, 3)) token.stepProgress = FINISH_STEP;
+  owned[3].stepProgress = LAST_HOME_STEP;
   state.currentPlayer = playerId;
   state.dice = 1;
   const result = applyClassicMove(state, playerId, owned[3].id);
   assert.equal(result.state.phase, 'finished');
   assert.equal(result.state.winner, playerId);
   assert.equal(result.state.players[0].status, 'finished');
-  assert.equal(result.state.tokens[owned[3].id].position.zone, 'finished');
+  assert.equal(result.state.tokens[owned[3].id].stepProgress, FINISH_STEP);
 });
