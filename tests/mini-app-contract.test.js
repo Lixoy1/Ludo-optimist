@@ -5,6 +5,8 @@ import { readFile, stat } from 'node:fs/promises';
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
+const client = await readFile(new URL('../src/client/room-client.js', import.meta.url), 'utf8');
+const boardRender = await readFile(new URL('../src/board-render.js', import.meta.url), 'utf8');
 
 function htmlIds(source) {
   return new Set([...source.matchAll(/\bid=["']([^"']+)["']/g)].map((match) => match[1]));
@@ -125,4 +127,20 @@ test('start action explains that vacant seats are filled by bots', async () => {
   const roomManager = await readFile(new URL('../apps/backend/room-manager.js', import.meta.url), 'utf8');
   assert.match(roomManager, /this\.fillBotSeats\(room\)/);
   assert.match(roomManager, /this\.runBotTurns\(room\)/);
+});
+
+test('pawn movement animation derives its destination from canonical stepProgress', () => {
+  assert.match(main, /positionFromStepProgress\(state\.tokens\[position\.tokenId\]\.stepProgress, progressConfig\)/);
+  assert.match(main, /tokenMovementPath\(state, position\.owner, action\.from, destination, position\.index\)/);
+  assert.doesNotMatch(main, /state\.tokens\[position\.tokenId\]\.position/);
+  assert.match(boardRender, /positionFromStepProgress\(token\.stepProgress/);
+});
+
+test('observer clients are read-only in the board UI and can be identified in shared chat', () => {
+  assert.match(main, /snapshot\.viewerRole !== 'OBSERVER'/);
+  assert.match(main, /snapshot\?\.viewerRole === 'OBSERVER'/);
+  assert.match(main, /РЕЖИМ НАБЛЮДЕНИЯ/);
+  assert.match(client, /role: this\.role/);
+  assert.match(client, /message\.senderType === 'OBSERVER'/);
+  assert.match(client, /Наблюдатель/);
 });
