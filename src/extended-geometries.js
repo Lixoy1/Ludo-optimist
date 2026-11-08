@@ -1,10 +1,10 @@
-/** Canonical HEXA and ROYAL geometry. Logical routes are independent of SVG painting. */
+/** Canonical six-player HEXA geometry. Logical routes are independent of SVG painting. */
 export const BASE_CELL_SIZE = 128;
 export const BOARD_THEMES = Object.freeze({
   classic: { bg:'#10131b', outer:'#4c3828', board:'#80603e', cell:'#fff8e8', tile2:'#ead8b8', edge:'#98734c', gold:'#d9ae60', shadow:'#08090d', ink:'#302417', accent:'#f2dba8', glow:'#f1c96d', baseBg:'#34271d' },
   neon: { bg:'#070a14', outer:'#11182a', board:'#141c2f', cell:'#fff9ed', tile2:'#e7d9bf', edge:'#9e8a67', gold:'#f2c66f', shadow:'#03050b', ink:'#1e2430', accent:'#fff0c8', glow:'#64dfff', baseBg:'#11182a' },
-  elite: { bg:'#090807', outer:'#29180f', board:'#3a2418', cell:'#f4e4c7', tile2:'#d8bf94', edge:'#997144', gold:'#e8c278', shadow:'#080504', ink:'#342317', accent:'#ffebbd', glow:'#d9a74c', baseBg:'#32180f' },
-  marble: { bg:'#09111a', outer:'#1e3340', board:'#2d4350', cell:'#f8fcff', tile2:'#d7e4ea', edge:'#91aab7', gold:'#c2dce7', shadow:'#050a10', ink:'#263f4d', accent:'#edfaff', glow:'#92d9ef', baseBg:'#203746' }
+
+
 });
 export const BOARD_PLAYER_COLORS = Object.freeze({
   hexa: [
@@ -14,12 +14,6 @@ export const BOARD_PLAYER_COLORS = Object.freeze({
     { id:'purple', label:'PURPLE', color:'#A52BEA', dark:'#51268D' },
     { id:'green', label:'GREEN', color:'#18B94B', dark:'#12623B' },
     { id:'cyan', label:'CYAN', color:'#13C9D8', dark:'#08727D' }
-  ],
-  royal: [
-    { id:'blue', label:'BLUE', color:'#168BFF', dark:'#075A8E' },
-    { id:'red', label:'RED', color:'#F02D3A', dark:'#851A2B' },
-    { id:'yellow', label:'YELLOW', color:'#F5B51B', dark:'#8C5A09' },
-    { id:'green', label:'GREEN', color:'#18B94B', dark:'#12623B' }
   ]
 });
 
@@ -200,106 +194,11 @@ function makeHexa() {
   };
 }
 
-function makeRoyal() {
-  const nativeSize = 2816;
-  const cx = nativeSize/2;
-  const cy = nativeSize/2;
-  const scale = VIEW/nativeSize;
-  const colors = BOARD_PLAYER_COLORS.royal;
-  const halfSide = 8.5;
-  const starts = { blue:0, red:17, yellow:34, green:51 };
-  const entries = Object.fromEntries(colors.map((player)=>[player.id,(starts[player.id]+66)%68]));
-  const safe = [...new Set(colors.flatMap((player)=>[starts[player.id],starts[player.id]+6,starts[player.id]+12]))].sort((a,b)=>a-b);
-  const track = [];
-
-  // 17 cells per side, with half-cell corner margins: the 68-cell square
-  // loop is continuous and remains inside the 19x19 board footprint.
-  for (let side=0; side<4; side++) {
-    for (let step=0; step<17; step++) {
-      const x = cx + (-halfSide+step)*C;
-      const y = cy - halfSide*C;
-      const native = rotate(x,y,cx,cy,side*90);
-      track.push({
-        index:track.length, sector:side, lane:'perimeter', row:step,
-        rotation:side*90,
-        nativeX:fmt(native.x), nativeY:fmt(native.y),
-        ...scaled(native,scale)
-      });
-    }
-  }
-  track.forEach((cell)=>{
-    cell.safe=safe.includes(cell.index);
-    cell.startFor=colors.find((player)=>starts[player.id]===cell.index)?.id || null;
-    cell.entryFor=colors.find((player)=>entries[player.id]===cell.index)?.id || null;
-  });
-
-  const arms = colors.map((player,index)=>{
-    const startIndex=starts[player.id];
-    const homeEntryIndex=entries[player.id];
-    const entry=track[homeEntryIndex];
-    // First step leaves the perimeter at a right angle; the remaining six
-    // steps turn gradually toward the central finish without touching the
-    // neighbouring perimeter tile.
-    const inwardNormal=rotateVector({x:1,y:0},index*90);
-    const firstNative={
-      x:entry.nativeX+inwardNormal.x*C,
-      y:entry.nativeY+inwardNormal.y*C
-    };
-    const direction=unitTowardCenter(firstNative,cx,cy);
-    const homeLane=[{
-      ...scaled(firstNative,scale),
-      nativeX:fmt(firstNative.x),nativeY:fmt(firstNative.y),
-      homeIndex:1,
-      rotation:Math.atan2(inwardNormal.y,inwardNormal.x)*180/Math.PI
-    }];
-    for(let homeIndex=1;homeIndex<7;homeIndex++) {
-      const native={
-        x:firstNative.x+direction.x*C*homeIndex,
-        y:firstNative.y+direction.y*C*homeIndex
-      };
-      homeLane.push({
-        ...scaled(native,scale),
-        nativeX:fmt(native.x),nativeY:fmt(native.y),
-        homeIndex:homeIndex+1,
-        rotation:Math.atan2(direction.y,direction.x)*180/Math.PI
-      });
-    }
-    const baseNative=rotate(cx-6*C,cy-1.5*C,cx,cy,index*90);
-    return {
-      index,player,angle:index*90,startIndex,homeEntryIndex,
-      starIndex:startIndex+6,royalSafeIndex:startIndex+12,
-      homeLane,baseCenter:scaled(baseNative,scale),
-      baseSlots:pawnSlots(baseNative,index*90,scale),
-      baseRadius:1.9*C*scale,baseRotation:index*90,
-      finishSlots:makeFinishSlots(homeLane[homeLane.length-1] && {
-        x:homeLane[homeLane.length-1].nativeX,
-        y:homeLane[homeLane.length-1].nativeY
-      },direction,scale,'royal'),
-      homeDirection:direction
-    };
-  });
-
-  const outline=polygon(8,10.35*C,cx,cy, -67.5).map((p)=>scaled(p,scale));
-  const finishVertices=polygon(4,3.5*C,cx,cy,-45).map((p)=>scaled(p,scale));
-  const routeLinkDistances=track.map((cell,index)=>fmt(distance(cell,track[(index+1)%68])/(C*scale)));
-  return {
-    id:'royal',boardId:'royal',shape:'royal-square-loop',sides:4,maxPlayers:4,tokensPerPlayer:4,
-    canvasSize:nativeSize,cellSize:C,artScale:scale,
-    trackLength:68,maxOuterSteps:66,homeCells:7,finishStep:74,
-    startIndices:starts,homeEntryIndices:entries,safeIndices:safe,
-    cellPitch:C*scale,tileSize:.82*C*scale,safeAreaSize:.8*C*scale,
-    pawnDiameter:.68*C*scale,pawnMaxWidth:.82*C*scale,pawnDiameterRatio:.68,
-    finishPawnScale:.68,touchTargetCssPx:48,
-    center:scaled({x:cx,y:cy},scale),track,arms,outline,finishVertices,
-    routeLinkDistances:[...new Set(routeLinkDistances)].sort((a,b)=>a-b)
-  };
-}
-
-export const EXTENDED_GEOMETRIES = Object.freeze({ hexa:makeHexa(), royal:makeRoyal() });
-export const EXTENDED_GEOMETRY_IDS = Object.freeze(['hexa','royal']);
+export const EXTENDED_GEOMETRIES = Object.freeze({ hexa:makeHexa() });
+export const EXTENDED_GEOMETRY_IDS = Object.freeze(['hexa']);
 export function getExtendedGeometry(id) {
   const geometry=EXTENDED_GEOMETRIES[String(id||'').toLowerCase()];
-  if(!geometry) throw new RangeError('Unknown HEXA/ROYAL geometry.');
+  if(!geometry) throw new RangeError('Unknown HEXA geometry.');
   return geometry;
 }
 export { distance };
@@ -369,10 +268,8 @@ function polygonsOverlap(a,b) {
 }
 
 export function assertExtendedGeometry(geometry) {
-  if(!geometry || !['hexa','royal'].includes(geometry.id)) throw new TypeError('Expected HEXA or ROYAL geometry.');
-  const expected=geometry.id==='hexa'
-    ? { sides:6,track:72,outer:71,home:6,finish:78 }
-    : { sides:4,track:68,outer:66,home:7,finish:74 };
+  if(!geometry || geometry.id!=='hexa') throw new TypeError('Expected HEXA geometry.');
+  const expected={ sides:6,track:72,outer:71,home:6,finish:78 };
   if(geometry.sides!==expected.sides || geometry.trackLength!==expected.track ||
      geometry.maxOuterSteps!==expected.outer || geometry.homeCells!==expected.home ||
      geometry.finishStep!==expected.finish || geometry.arms.length!==expected.sides ||
@@ -386,8 +283,8 @@ export function assertExtendedGeometry(geometry) {
   if(geometry.safeIndices.length!==12 || new Set(geometry.safeIndices).size!==12) {
     throw new Error('Each board must expose exactly twelve unique safe cells.');
   }
-  const expectedOutlineVertices=geometry.id==='hexa'?6:8;
-  const expectedFinishVertices=geometry.id==='hexa'?6:4;
+  const expectedOutlineVertices=6;
+  const expectedFinishVertices=6;
   if(geometry.outline.length!==expectedOutlineVertices ||
      geometry.finishVertices.length!==expectedFinishVertices) {
     throw new Error('Board outline or finish polygon has the wrong vertex count.');
@@ -519,11 +416,6 @@ const star=(x,y,r)=>Array.from({length:10},(_,index)=>{
   return (x+Math.cos(angle)*radius).toFixed(2)+','+(y+Math.sin(angle)*radius).toFixed(2);
 }).join(' ');
 const closedPath=(points)=>points.map((p,index)=>(index?'L':'M')+p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ')+' Z';
-
-export const BOARD_AVATARS = Object.freeze({
-  hexa: { blue:'optimist', red:'poison', yellow:'nikita', purple:'lilya-detective', green:'lena', cyan:'elvina' },
-  royal: { blue:'optimist', red:'poison', yellow:'nikita', green:'lena' }
-});
 
 function hexPoints(points) {
   return points.map((p)=>Number(p.x.toFixed(2))+','+Number(p.y.toFixed(2))).join(' ');
@@ -658,10 +550,9 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
   parts.push(`<path d="${innerPath}" fill="none" stroke="${palette.glow}" stroke-opacity=".48" stroke-width="1.8" stroke-linejoin="round"/>`);
   parts.push(`<g clip-path="url(#boardClip)">${renderTextureSpeckles(geometry)}</g>`);
 
-  // Crowned home bases with their four character artworks. The slot coordinates are the geometry anchors.
+  // Four empty illuminated pedestal wells. Live character art is layered above these anchors.
   geometry.arms.forEach((arm)=>{
     const color=arm.player.color,base=arm.baseCenter,radius=arm.baseRadius;
-    const avatar=BOARD_AVATARS[geometry.id][arm.player.id]||'optimist';
     parts.push(`<g data-base="${arm.player.id}">`);
     parts.push(`<circle cx="${base.x}" cy="${base.y}" r="${(radius+6).toFixed(2)}" fill="none" stroke="${color}" stroke-opacity=".48" stroke-width="8" filter="url(#glow)"/>`);
     parts.push(`<circle cx="${base.x}" cy="${base.y}" r="${radius.toFixed(2)}" fill="url(#base-${arm.player.id})" stroke="url(#metal)" stroke-width="4.2"/>`);
@@ -670,12 +561,11 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
     arm.baseSlots.forEach((slot,index)=>{
       const d=geometry.pawnDiameter;
       parts.push(`<g data-base-slot="${arm.index}:${index}">`);
-      parts.push(`<circle cx="${slot.x}" cy="${slot.y}" r="${(d*.78).toFixed(3)}" fill="#02050d" stroke="url(#gold)" stroke-width="1.8"/>`);
-      parts.push(`<circle cx="${slot.x}" cy="${slot.y}" r="${(d*.64).toFixed(3)}" fill="url(#player-${arm.player.id})" stroke="${color}" stroke-width=".95"/>`);
-      parts.push(`<svg data-avatar="${avatar}" x="${(slot.x-d*.9).toFixed(3)}" y="${(slot.y-d*1.23).toFixed(3)}" width="${(d*1.8).toFixed(3)}" height="${(d*1.8).toFixed(3)}" viewBox="0 0 96 96" preserveAspectRatio="xMidYMax meet" overflow="visible"><use href="#avatar-${avatar}" xlink:href="#avatar-${avatar}" x="0" y="0" width="96" height="96"/></svg>`);
+      parts.push(`<circle cx="${slot.x}" cy="${slot.y}" r="${(d*.62).toFixed(3)}" fill="#02050d" stroke="url(#gold)" stroke-width="1.8"/>`);
+      parts.push(`<circle cx="${slot.x}" cy="${slot.y}" r="${(d*.47).toFixed(3)}" fill="url(#darkWell)" stroke="${color}" stroke-opacity=".82" stroke-width=".95"/>`);
+      parts.push(`<circle cx="${slot.x-d*.12}" cy="${slot.y-d*.13}" r="${(d*.055).toFixed(3)}" fill="#ffffff" fill-opacity=".36"/>`);
       parts.push('</g>');
     });
-    parts.push(crownMarkup(base.x,base.y,.78,'url(#gold)'));
     parts.push('</g>');
   });
 
@@ -696,10 +586,12 @@ export function renderExtendedBoardSvg(geometry,theme='neon') {
     const r=geometry.pawnDiameter*geometry.finishPawnScale*.48;
     parts.push(`<g data-finish-slot="${arm.index}:${index}"><circle cx="${slot.x}" cy="${slot.y}" r="${r.toFixed(3)}" fill="#070b15" stroke="url(#gold)" stroke-width=".9"/><circle cx="${slot.x}" cy="${slot.y}" r="${(r*.42).toFixed(3)}" fill="${arm.player.color}"/></g>`);
   }));
-  const centerRadius=geometry.id==='hexa'?14:18;
-  parts.push(`<circle cx="${geometry.center.x}" cy="${geometry.center.y}" r="${centerRadius+3}" fill="#070b14" stroke="url(#metal)" stroke-width="3"/>`);
-  parts.push(`<circle cx="${geometry.center.x}" cy="${geometry.center.y}" r="${centerRadius}" fill="url(#gold)" stroke="#fff1bf" stroke-width=".9"/>`);
-  parts.push(crownMarkup(geometry.center.x,geometry.center.y+2,geometry.id==='hexa'?.46:.58,'#24170d'));
+  const logoHex=polygon(6,25,geometry.center.x,geometry.center.y,-90);
+  parts.push(`<path d="${closedPath(logoHex)}" fill="#07101e" stroke="url(#metal)" stroke-width="3.1" stroke-linejoin="round"/>`);
+  parts.push(`<path d="${closedPath(polygon(6,20.8,geometry.center.x,geometry.center.y,-90))}" fill="none" stroke="${palette.glow}" stroke-opacity=".9" stroke-width="1.15"/>`);
+  parts.push(crownMarkup(geometry.center.x,geometry.center.y-7,.38,'url(#gold)'));
+  parts.push(`<text x="${geometry.center.x}" y="${geometry.center.y+6}" text-anchor="middle" font-family="Arial,sans-serif" font-size="7.1" font-weight="900" letter-spacing=".48" fill="#fff0c2">OPTIMIST</text>`);
+  parts.push(`<text x="${geometry.center.x}" y="${geometry.center.y+14}" text-anchor="middle" font-family="Arial,sans-serif" font-size="5.8" font-weight="900" letter-spacing="1.1" fill="#f5d18b">LUDO</text>`);
 
   // Small branding sits in the border band and never shifts a logical tile or anchor.
   parts.push(`<g text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" letter-spacing="2"><text x="360" y="24" font-size="9.5" fill="#080b15" stroke="#05070d" stroke-width="3.5" paint-order="stroke">OPTIMIST LUDO</text><text x="360" y="24" font-size="9.5" fill="url(#gold)">OPTIMIST LUDO</text><text x="360" y="706" font-size="7.2" letter-spacing="1.3" fill="#fff0c4" fill-opacity=".92">${title}  ·  ${geometry.maxPlayers} PLAYERS  ·  ${geometry.trackLength} CELLS  ·  HOME ${geometry.homeCells}</text></g>`);
