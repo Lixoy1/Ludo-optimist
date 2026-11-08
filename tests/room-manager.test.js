@@ -40,6 +40,23 @@ test('room TTL removes inactive rooms', () => {
   assert.equal(manager.rooms.has(created.roomId), false);
 });
 
+test('an active match is retained when a player is idle beyond the room TTL', () => {
+  let now = 0;
+  const manager = new RoomManager({
+    now: () => now,
+    roomTtlMs: 1000,
+    dice: () => 1,
+  });
+  const created = manager.createRoom(red, { maxPlayers: 2 });
+  manager.startGame(created.roomId, red.id);
+
+  now = 100_000;
+  manager.pruneIdleRooms();
+
+  assert.equal(manager.rooms.has(created.roomId), true);
+  assert.equal(manager.getSnapshot(created.roomId, red.id).status, 'playing');
+});
+
 
 test('first chat and voice messages work when the server clock starts at zero', () => {
   let now = 0;
