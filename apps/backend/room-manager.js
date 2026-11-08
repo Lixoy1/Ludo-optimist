@@ -374,6 +374,13 @@ export class RoomManager {
 
   pruneIdleRooms() {
     const cutoff = this.now() - this.roomTtlMs;
-    for (const [roomId, room] of this.rooms) if (room.updatedAt < cutoff) this.rooms.delete(roomId);
+    for (const [roomId, room] of this.rooms) {
+      // A live match must not disappear merely because a player is asleep,
+      // the Mini App is backgrounded, or every socket temporarily disconnects.
+      // Waiting and finished tables still use the normal cleanup TTL.
+      if (room.status !== 'playing' && room.updatedAt < cutoff) {
+        this.rooms.delete(roomId);
+      }
+    }
   }
 }
