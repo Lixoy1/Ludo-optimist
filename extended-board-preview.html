@@ -1,14 +1,106 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OPTIMIST LUDO — Classic PENTA / HEX</title>
-<style>
-:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#080a13;color:#f8f3e8}*{box-sizing:border-box}body{margin:0;padding:18px;background:radial-gradient(ellipse at 50% 0,#25203f,transparent 50%),#080a13}.wrap{max-width:950px;margin:auto}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.head h1{margin:0;font-size:clamp(20px,4vw,32px);letter-spacing:.04em}.head p{color:#a8afc0;margin:5px 0}.controls{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.controls button{border:1px solid #6b5a3a;border-radius:10px;background:#141827;color:#f0d69e;padding:10px 13px;font-weight:800;letter-spacing:.05em}.controls button[aria-pressed=true]{background:#4e3922;border-color:#f0c879;box-shadow:0 0 12px #e6bc6b35}.stage{width:min(100%,650px);margin:auto;padding:7px;border-radius:20px;background:linear-gradient(140deg,#d9b76e,#1a1725 40%,#68502c);border:1px solid #d6b36d;box-shadow:0 18px 40px #000a}.stage img{display:block;width:100%;aspect-ratio:1;object-fit:contain;border-radius:14px}.details{max-width:650px;margin:12px auto 0;color:#aab2c4;font-size:13px;line-height:1.6}.details b{color:#f0d69e}.status{color:#6fe0a3}.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px auto;max-width:650px}.legend div{padding:12px;border-radius:12px;background:#121725;border:1px solid #ffffff14}.legend b{display:block;color:#f1d79f;font-size:12px;margin-bottom:5px}.legend small{color:#a3adbf;line-height:1.45}
-</style></head><body><main class="wrap"><header class="head"><div><h1>OPTIMIST LUDO</h1><p>Классические пяти- и шестиместные поля</p></div><span class="status">VECTOR · 720 × 720</span></header>
-<div class="controls" id="shape"><button data-value="penta" aria-pressed="true">PENTA · 5 ИГРОКОВ</button><button data-value="hex" aria-pressed="false">HEX · 6 ИГРОКОВ</button></div>
-<div class="controls" id="theme"><button data-value="classic" aria-pressed="false">CLASSIC</button><button data-value="neon" aria-pressed="true">NEON</button><button data-value="elite" aria-pressed="false">ELITE</button><button data-value="marble" aria-pressed="false">MARBLE</button></div>
-<section class="stage"><img id="board" src="/assets/boards/optimist-ludo-penta-neon.svg" alt="OPTIMIST LUDO PENTA — пять игроков"></section>
-<p class="details" id="description">PENTA: <b>5 игроков · 65 клеток маршрута · 5 домашних клеток на игрока · 10 безопасных клеток.</b><br>Каждый луч — три колонки и шесть рядов; четыре фишки ждут в треугольной базе.</p>
-<section class="legend"><div><b>БАЗА</b><small>Треугольный дом между лучами, четыре посадочных места 2 × 2.</small></div><div><b>МАРШРУТ</b><small>Две боковые колонки + один внешний соединитель, 13 клеток на луч.</small></div><div><b>ДОМОЙ</b><small>Пять цветных клеток по центральной колонке к отдельному сектору финиша.</small></div><div><b>ФИШКИ</b><small>Размер считается от шага клетки; зона выбора — минимум 48 CSS px.</small></div></section></main>
-<script>
-let shape='penta',theme='neon';const info={penta:'PENTA: 5 игроков · 65 клеток маршрута · 5 домашних клеток на игрока · 10 безопасных клеток.',hex:'HEX: 6 игроков · 78 клеток маршрута · 5 домашних клеток на игрока · 12 безопасных клеток.'};
-function update(){const img=document.getElementById('board');img.src='/assets/boards/optimist-ludo-'+shape+'-'+theme+'.svg';img.alt='OPTIMIST LUDO '+shape.toUpperCase()+' '+theme.toUpperCase();document.getElementById('description').innerHTML=info[shape]+'<br>Каждый луч — три колонки и шесть рядов; четыре фишки ждут в треугольной базе.';document.querySelectorAll('#shape button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.value===shape)));document.querySelectorAll('#theme button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.value===theme)));}document.querySelectorAll('#shape button').forEach(b=>b.addEventListener('click',()=>{shape=b.dataset.value;update()}));document.querySelectorAll('#theme button').forEach(b=>b.addEventListener('click',()=>{theme=b.dataset.value;update()}));update();
-</script></body></html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0d14">
+  <title>OPTIMIST LUDO — Board & Theme Preview</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#090b12;color:#f5f1e8}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;padding:clamp(14px,3vw,30px);background:radial-gradient(ellipse at 50% -15%,#29304a 0,transparent 52%),linear-gradient(145deg,#080a10,#111725 55%,#080a10)}
+    .wrap{width:min(100%,1020px);margin:0 auto}
+    header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+    h1{margin:0;font-size:clamp(22px,4vw,34px);letter-spacing:.09em}
+    .sub{margin:5px 0 0;color:#aab4c8;font-size:13px}
+    .version{border:1px solid #8c7448;border-radius:999px;padding:8px 12px;color:#e8cb8b;font-size:11px;letter-spacing:.12em}
+    .label{margin:18px 0 8px;color:#92a0b8;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    button{min-height:42px;border:1px solid #38435b;border-radius:11px;background:#131a29;color:#e5e9f1;padding:9px 14px;font-weight:800;letter-spacing:.04em;cursor:pointer}
+    button[aria-pressed=true]{border-color:#e1bd69;background:linear-gradient(145deg,#4b3c2a,#1c2231);color:#ffdf9c;box-shadow:0 0 0 1px #e1bd6940,0 5px 22px #0008}
+    button:focus-visible{outline:3px solid #72c8ff;outline-offset:2px}
+    .mode button{min-width:130px}
+    .theme button{min-width:104px}
+    .stage{width:min(100%,720px);margin:20px auto 0;padding:clamp(7px,1.4vw,12px);border-radius:24px;border:1px solid #a88a52;background:linear-gradient(145deg,#d9b76f,#1b1e2b 34%,#5e4b2f 74%,#d5b46f);box-shadow:0 25px 60px #000b,0 0 28px #5a76bc22}
+    .stage img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;border-radius:16px;background:#10141e}
+    .details{max-width:720px;margin:13px auto 0;color:#aeb7c8;font-size:13px;line-height:1.65}
+    .details strong{color:#f1d497}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .meta span{border:1px solid #ffffff18;border-radius:9px;background:#111827;padding:7px 10px;color:#c7cfdd;font-size:11px}
+    @media(max-width:520px){.mode button{flex:1;min-width:0}.theme button{flex:1;min-width:calc(50% - 8px)}.stage{border-radius:17px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <h1>OPTIMIST LUDO</h1>
+        <p class="sub">Три геометрии · четыре материальные темы · единая карта координат</p>
+      </div>
+      <span class="version">VECTOR PREVIEW · 2.0</span>
+    </header>
+
+    <p class="label">Геометрия доски</p>
+    <div class="controls mode" id="modeControls" aria-label="Выбор геометрии">
+      <button type="button" data-value="classic" aria-pressed="true">CLASSIC · 4</button>
+      <button type="button" data-value="hexa" aria-pressed="false">HEXA · 6</button>
+      <button type="button" data-value="royal" aria-pressed="false">ROYAL · 4</button>
+    </div>
+
+    <p class="label">Материал и оформление</p>
+    <div class="controls theme" id="themeControls" aria-label="Выбор темы">
+      <button type="button" data-value="classic" aria-pressed="false">CLASSIC</button>
+      <button type="button" data-value="neon" aria-pressed="true">NEON</button>
+      <button type="button" data-value="elite" aria-pressed="false">ELITE</button>
+      <button type="button" data-value="marble" aria-pressed="false">MARBLE</button>
+    </div>
+
+    <section class="stage">
+      <img id="board" src="assets/boards/optimist-ludo-neon.svg" alt="OPTIMIST LUDO CLASSIC NEON">
+    </section>
+    <p class="details" id="description" aria-live="polite"></p>
+    <div class="meta">
+      <span>720 × 720 SVG</span>
+      <span>4 фишки на игрока</span>
+      <span>stepProgress · единый движок</span>
+      <span>Координаты не меняются от темы</span>
+    </div>
+  </main>
+
+  <script>
+    const modes = {
+      classic: { name:'CLASSIC', players:4, track:52, home:5, description:'Крестовая доска для четырёх игроков. Внешний маршрут — 52 клетки, домашняя дорожка — 5 клеток на игрока.' },
+      hexa: { name:'HEXA', players:6, track:72, home:6, description:'Шестисекторная доска для шести игроков. Внешний маршрут — 72 клетки, домашняя дорожка — 6 клеток на игрока.' },
+      royal: { name:'ROYAL', players:4, track:68, home:7, description:'Королевская четырёхсекторная доска. Внешний маршрут — 68 клеток, домашняя дорожка — 7 клеток на игрока.' },
+    };
+    const themes = ['classic','neon','elite','marble'];
+    let mode = 'classic';
+    let theme = 'neon';
+
+    function assetPath() {
+      return mode === 'classic'
+        ? `assets/boards/optimist-ludo-${theme}.svg`
+        : `assets/boards/optimist-ludo-${mode}-${theme}.svg`;
+    }
+    function update() {
+      const board = modes[mode];
+      const image = document.getElementById('board');
+      image.src = assetPath();
+      image.alt = `OPTIMIST LUDO ${board.name} ${theme.toUpperCase()}`;
+      document.getElementById('description').innerHTML =
+        `<strong>${board.name}</strong> · ${board.players} игрока · ${board.track} внешних клеток · ${board.home} домашних клеток на игрока.<br>${board.description}`;
+      for (const button of document.querySelectorAll('#modeControls button')) {
+        button.setAttribute('aria-pressed', String(button.dataset.value === mode));
+      }
+      for (const button of document.querySelectorAll('#themeControls button')) {
+        button.setAttribute('aria-pressed', String(button.dataset.value === theme));
+      }
+    }
+    document.querySelectorAll('#modeControls button').forEach((button) =>
+      button.addEventListener('click', () => { mode = button.dataset.value; update(); }));
+    document.querySelectorAll('#themeControls button').forEach((button) =>
+      button.addEventListener('click', () => { theme = button.dataset.value; update(); }));
+    update();
+  </script>
+</body>
+</html>
