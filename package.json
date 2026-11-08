@@ -12,7 +12,8 @@
     "build:boards": "node scripts/build-board-assets.mjs",
     "build:extended-boards": "node scripts/build-extended-boards.js",
     "start:local": "node --env-file-if-exists=.env.local apps/backend/server.js",
-    "build": "npm run build:boards && npm run build:extended-boards"
+    "build": "npm run build:boards && npm run build:extended-boards && npm run export:coordinates",
+    "export:coordinates": "node scripts/export-coordinate-map.mjs"
   },
   "engines": {
     "node": ">=22.9.0"
