@@ -86,12 +86,12 @@ export class RoomManager {
   createRoom(user, options = {}) {
     const requestedPlayers = options.maxPlayers;
     const requestedType = String(options.boardType || (requestedPlayers === 6 ? 'HEXA' : 'CLASSIC')).toUpperCase();
-    if (!['CLASSIC', 'HEXA', 'ROYAL'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
+    if (!['CLASSIC', 'HEXA'].includes(requestedType)) throw new RoomError('INVALID_ROOM_CONFIG', 'Неизвестный тип доски.');
     const maxPlayers = requestedPlayers ?? (requestedType === 'HEXA' ? 6 : 4);
     const validCapacity = requestedType === 'CLASSIC'
       ? Number.isInteger(maxPlayers) && maxPlayers >= 2 && maxPlayers <= 4
-      : requestedType === 'HEXA' ? maxPlayers === 6 : requestedType === 'ROYAL' ? maxPlayers === 4 : false;
-    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, HEXA: ровно 6, ROYAL: ровно 4.');
+      : requestedType === 'HEXA' ? maxPlayers === 6 : false;
+    if (!validCapacity) throw new RoomError('INVALID_ROOM_CONFIG', 'Classic: 2–4, HEXA: ровно 6.');
     this.pruneIdleRooms();
     if (this.rooms.size >= this.maxRooms) throw new RoomError('ROOM_LIMIT', 'Сейчас все игровые столы заняты. Попробуй позже.', 503);
     if (!user?.id || !user?.username) throw new RoomError('INVALID_USER', 'Не удалось определить игрока.');
