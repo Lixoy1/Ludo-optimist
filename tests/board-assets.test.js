@@ -29,8 +29,12 @@ test('both authored board themes preserve the same logical cell set', async () =
   for (const svg of svgs.slice(1)) assert.deepEqual(cells(svg), canonical);
 });
 
-test('obsolete PENTA and legacy HEX SVGs are not shipped with the two-board release', async () => {
-  const files = await readdir(resolve('assets/boards'));
-  const legacy = files.filter((name) => /^optimist-ludo-(?:penta|hex)-/i.test(name));
-  assert.deepEqual(legacy, []);
+test('only the two canonical geometries and their two themes are shipped', async () => {
+  const files = (await readdir(resolve('assets/boards'))).filter((name) => name.endsWith('.svg')).sort();
+  assert.deepEqual(files, [
+    'optimist-ludo-classic.svg',
+    'optimist-ludo-hexa-classic.svg',
+    'optimist-ludo-hexa-neon.svg',
+    'optimist-ludo-neon.svg',
+  ]);
 });
